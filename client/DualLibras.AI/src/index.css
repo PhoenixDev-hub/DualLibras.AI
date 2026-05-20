@@ -210,6 +210,14 @@ body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper{
   pointer-events:auto;
 }
 
+.vpw-box , .vpw-controls,  .vpw-subtitles ,.vpw-playing, .vpw-message-box, .vp-rate-box-content, .vp-rate-box-header, .vp-enabled, .vp-button-change-avatar ,.avatar-icaro ,.vp-selected, .vp-button-change-avatar, .avatar-icaro, .vp-selected{
+  display:none !important;
+}
+
+.vlibras-center-wrapper, .emscripten, #canvas{
+  background-color: transparent !important;
+}
+
 @media (max-height: 700px){
   body [vw].enabled.vlibras-widget.vlibras-centered{
     top:45% !important;

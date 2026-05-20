@@ -1,35 +1,38 @@
 import asyncio
 import json
 import logging
-import math
 import os
-import struct
 import subprocess
 import sys
+import time
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 import websockets
-
 import Configure
 
 SAMPLE_RATE = 16000
 
 CHANNELS = 1
 
-CHUNK_SIZE = 2048
-
-NOISE_THRESHOLD = 0.010
+CHUNK_SIZE = int(os.getenv("AUDIO_CHUNK_SIZE", "1600"))
 
 PARTIAL_LINE_LIMIT = 120
 
 PARTIAL_PRINT_STEP = 180
 
-SPEECH_MODEL = "universal-streaming-multilingual"
+PARTIAL_SEND_STEP = int(os.getenv("PARTIAL_SEND_STEP", "1"))
+
+PARTIAL_SEND_INTERVAL_MS = int(os.getenv("PARTIAL_SEND_INTERVAL_MS", "120"))
+
+# SPEECH_MODEL = "universal-streaming-multilingual"
+SPEECH_MODEL = "u3-rt-pro"
+
 
 URL = (
     "wss://streaming.assemblyai.com/v3/ws"
     f"?sample_rate={SAMPLE_RATE}"
     f"&speech_model={SPEECH_MODEL}"
-    "&language_code=pt"
     "&audio_format=pcm16"
     "&format_turns=true"
 )
@@ -79,42 +82,23 @@ def selecionar_microfone():
         return None
 
 
-def calcular_audio(audio_data):
-
-    if len(audio_data) < 2:
-        return 0.0
-
-    samples = struct.unpack(
-        "<" + "h" * (len(audio_data) // 2),
-        audio_data,
-    )
-
-    valores = [abs(sample) for sample in samples]
-
-    if not valores:
-        return 0.0
-
-    valores.sort()
-
-    corte = int(len(valores) * 0.85)
-
-    filtrados = valores[:corte]
-
-    if not filtrados:
-        return 0.0
-
-    rms = math.sqrt(sum(valor * valor for valor in filtrados) / len(filtrados))
-
-    return rms / 32767.0
-
-
-async def iniciar_transcricao():
+async def iniciar_transcricao(
+    on_text: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
+):
 
     microfone = selecionar_microfone()
 
     if not microfone:
 
         print("\nMicrofone não encontrado.\n")
+        if on_text:
+            await on_text(
+                {
+                    "text": "Microfone não encontrado.",
+                    "is_final": True,
+                    "error": True,
+                }
+            )
         return
 
     print("\nMicrofone selecionado:")
@@ -135,6 +119,15 @@ async def iniciar_transcricao():
         if not resposta.get("id"):
 
             print("\nErro ao iniciar sessão.\n")
+            if on_text:
+                await on_text(
+                    {
+                        "type": "error",
+                        "text": "Erro ao iniciar sessão de transcrição.",
+                        "is_final": True,
+                        "error": True,
+                    }
+                )
             return
 
         print("=" * 60)
@@ -172,8 +165,6 @@ async def iniciar_transcricao():
 
             buffer = b""
 
-            silencio = 0
-
             try:
 
                 while True:
@@ -191,25 +182,12 @@ async def iniciar_transcricao():
 
                     if len(buffer) >= CHUNK_SIZE:
 
-                        nivel = calcular_audio(buffer)
+                        try:
 
-                        if nivel > NOISE_THRESHOLD:
+                            await ws.send(buffer)
 
-                            silencio = 0
-
-                            try:
-
-                                await ws.send(buffer)
-
-                            except Exception:
-                                break
-
-                        else:
-
-                            silencio += 1
-
-                            if silencio > 20:
-                                silencio = 20
+                        except Exception:
+                            break
 
                         buffer = b""
 
@@ -222,6 +200,10 @@ async def iniciar_transcricao():
             texto_parcial = ""
 
             parcial_impresso = 0
+
+            parcial_enviado = ""
+
+            parcial_enviado_em = 0.0
 
             tamanho_linha_anterior = 0
 
@@ -245,12 +227,6 @@ async def iniciar_transcricao():
                         if not texto:
                             continue
 
-                        texto = texto.replace(" انا ", "")
-
-                        texto = texto.replace(" the ", "")
-
-                        texto = texto.replace(" and ", "")
-
                         final = dados.get(
                             "turn_is_done",
                             False,
@@ -265,9 +241,22 @@ async def iniciar_transcricao():
                             print("-" * 60)
                             print()
 
+                            if on_text:
+                                await on_text(
+                                    {
+                                        "type": "transcript",
+                                        "text": texto,
+                                        "is_final": True,
+                                    }
+                                )
+
                             texto_parcial = ""
 
                             parcial_impresso = 0
+
+                            parcial_enviado = ""
+
+                            parcial_enviado_em = 0.0
 
                             tamanho_linha_anterior = 0
 
@@ -276,6 +265,30 @@ async def iniciar_transcricao():
                             if texto != texto_parcial:
 
                                 texto_parcial = texto
+
+                                agora = time.monotonic()
+
+                                deve_enviar_parcial = (
+                                    not parcial_enviado
+                                    or len(texto) - len(parcial_enviado)
+                                    >= PARTIAL_SEND_STEP
+                                    or (
+                                        texto != parcial_enviado
+                                        and (agora - parcial_enviado_em) * 1000
+                                        >= PARTIAL_SEND_INTERVAL_MS
+                                    )
+                                )
+
+                                if on_text and deve_enviar_parcial:
+                                    await on_text(
+                                        {
+                                            "type": "transcript",
+                                            "text": texto,
+                                            "is_final": False,
+                                        }
+                                    )
+                                    parcial_enviado = texto
+                                    parcial_enviado_em = agora
 
                                 if len(texto) - parcial_impresso >= PARTIAL_PRINT_STEP:
 
@@ -314,14 +327,23 @@ async def iniciar_transcricao():
 
                         print("\nErro da API:\n")
 
-                        print(
-                            dados.get(
-                                "error",
-                                "Erro desconhecido",
-                            )
+                        erro = dados.get(
+                            "error",
+                            "Erro desconhecido",
                         )
 
+                        print(erro)
                         print()
+
+                        if on_text:
+                            await on_text(
+                                {
+                                    "type": "error",
+                                    "text": f"Erro da API: {erro}",
+                                    "is_final": True,
+                                    "error": True,
+                                }
+                            )
 
                         break
 
@@ -344,10 +366,21 @@ async def iniciar_transcricao():
 
         try:
 
-            await asyncio.gather(
-                enviar_audio(),
-                receber_texto(),
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(enviar_audio()),
+                    asyncio.create_task(receber_texto()),
+                ],
+                return_when=asyncio.FIRST_EXCEPTION,
             )
+
+            # Cancel pending tasks
+            for task in pending:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
 
         finally:
 
@@ -374,5 +407,4 @@ async def main():
 
 
 if __name__ == "__main__":
-
     asyncio.run(main())

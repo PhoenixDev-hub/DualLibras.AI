@@ -25,13 +25,14 @@ PARTIAL_SEND_STEP = int(os.getenv("PARTIAL_SEND_STEP", "1"))
 
 PARTIAL_SEND_INTERVAL_MS = int(os.getenv("PARTIAL_SEND_INTERVAL_MS", "120"))
 
-SPEECH_MODEL = "universal-streaming-multilingual"
+# SPEECH_MODEL = "universal-streaming-multilingual"
+SPEECH_MODEL = "u3-rt-pro"
+
 
 URL = (
     "wss://streaming.assemblyai.com/v3/ws"
     f"?sample_rate={SAMPLE_RATE}"
     f"&speech_model={SPEECH_MODEL}"
-    "&language_code=pt"
     "&audio_format=pcm16"
     "&format_turns=true"
 )
