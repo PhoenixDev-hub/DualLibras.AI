@@ -23,7 +23,7 @@ Aplicação de transcrição de áudio em tempo real em português, utilizando A
 ### Backend (Python)
 ```bash
 cd server
-python3 -m venv venv
+python3 -m venv venv    
 source venv/bin/activate
 pip install -r requirements.txt
 ```

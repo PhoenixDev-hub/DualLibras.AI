@@ -13,7 +13,11 @@ const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT ?? '5455'
 const WS_URL =
   import.meta.env.VITE_BACKEND_WS_URL ??
   `ws://${BACKEND_HOST}:${BACKEND_PORT}/ws`
-const RECONNECT_DELAY_MS = 1500
+
+// Configuração de reconexão com backoff exponencial
+const INITIAL_RECONNECT_DELAY_MS = 1000
+const MAX_RECONNECT_DELAY_MS = 30000
+const MAX_RECONNECT_ATTEMPTS = 10
 
 class TranscriptSocket {
   private socket: WebSocket | null = null
@@ -22,15 +26,28 @@ class TranscriptSocket {
   private transcriptListeners = new Set<TranscriptListener>()
   private statusListeners = new Set<StatusListener>()
 
+  // Reconexão com backoff
+  private reconnectAttempts = 0
+  private currentReconnectDelay = INITIAL_RECONNECT_DELAY_MS
+
+  // Cache local
+  private transcriptCache: TranscriptMessage[] = []
+  private lastCachedMessage: TranscriptMessage | null = null
+
   connect() {
     if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+      console.debug('[WebSocket] Conexão já ativa')
       return
     }
 
     this.manuallyClosed = false
+    console.log(`[WebSocket] Conectando em ${WS_URL}`)
     this.socket = new WebSocket(WS_URL)
 
     this.socket.onopen = () => {
+      console.log('[WebSocket] Conectado com sucesso')
+      this.reconnectAttempts = 0
+      this.currentReconnectDelay = INITIAL_RECONNECT_DELAY_MS
       this.notifyStatus(true)
     }
 
@@ -42,15 +59,28 @@ class TranscriptSocket {
       }
 
       if (message.text && message.type !== 'status') {
+        // Cache da mensagem se for final
+        if (message.isFinal && message.type === 'transcript') {
+          this.lastCachedMessage = message
+          this.transcriptCache.push(message)
+          // Manter only últimas 50 transcrições
+          if (this.transcriptCache.length > 50) {
+            this.transcriptCache.shift()
+          }
+          this.saveTranscriptCache()
+        }
+
         this.transcriptListeners.forEach((listener) => listener(message))
       }
     }
 
-    this.socket.onerror = () => {
+    this.socket.onerror = (event) => {
+      console.error('[WebSocket] Erro:', event)
       this.socket?.close()
     }
 
     this.socket.onclose = () => {
+      console.warn('[WebSocket] Desconectado')
       this.notifyStatus(false)
 
       if (!this.manuallyClosed) {
@@ -60,6 +90,7 @@ class TranscriptSocket {
   }
 
   disconnect() {
+    console.log('[WebSocket] Desconectando...')
     this.manuallyClosed = true
 
     if (this.reconnectTimer) {
@@ -94,10 +125,35 @@ class TranscriptSocket {
       return
     }
 
+    // Incrementar tentativas
+    this.reconnectAttempts++
+
+    if (this.reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+      console.error(
+        `[WebSocket] Máximo de tentativas (${MAX_RECONNECT_ATTEMPTS}) atingido`
+      )
+      this.notifyStatus(false)
+      return
+    }
+
+    // Calcular delay com backoff exponencial
+    this.currentReconnectDelay = Math.min(
+      this.currentReconnectDelay * 2,
+      MAX_RECONNECT_DELAY_MS
+    )
+
+    // Adicionar jitter (randomização) para evitar thundering herd
+    const jitter = Math.random() * 0.1 * this.currentReconnectDelay
+    const delay = this.currentReconnectDelay + jitter
+
+    console.log(
+      `[WebSocket] Reconectando em ${delay.toFixed(0)}ms (tentativa ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`
+    )
+
     this.reconnectTimer = window.setTimeout(() => {
       this.reconnectTimer = null
       this.connect()
-    }, RECONNECT_DELAY_MS)
+    }, delay)
   }
 
   private notifyStatus(connected: boolean) {
@@ -126,14 +182,40 @@ class TranscriptSocket {
         error: Boolean(parsed.error),
       }
     } catch (error) {
-      console.error('Failed to parse message:', data, error)
+      console.error('[WebSocket] Erro ao parsear mensagem:', data, error)
       return {
         type: 'error',
-        text: 'Failed to parse server message',
+        text: 'Falha ao processar mensagem do servidor',
         isFinal: true,
         error: true,
       }
     }
+  }
+
+  private saveTranscriptCache() {
+    try {
+      sessionStorage.setItem('transcriptCache', JSON.stringify(this.transcriptCache))
+    } catch (error) {
+      console.warn('[WebSocket] Erro ao salvar cache:', error)
+    }
+  }
+
+  private loadTranscriptCache() {
+    try {
+      const cached = sessionStorage.getItem('transcriptCache')
+      if (cached) {
+        this.transcriptCache = JSON.parse(cached)
+        if (this.transcriptCache.length > 0) {
+          this.lastCachedMessage = this.transcriptCache[this.transcriptCache.length - 1]
+        }
+      }
+    } catch (error) {
+      console.warn('[WebSocket] Erro ao carregar cache:', error)
+    }
+  }
+
+  getLastCachedMessage(): TranscriptMessage | null {
+    return this.lastCachedMessage
   }
 }
 

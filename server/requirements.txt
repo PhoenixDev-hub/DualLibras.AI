@@ -6,3 +6,5 @@ numpy>=1.26.0
 sounddevice>=0.4.6
 rich>=13.0.0
 faster-whisper>=1.2.0
+webrtcvad>=2.0.10
+scipy>=1.10.0

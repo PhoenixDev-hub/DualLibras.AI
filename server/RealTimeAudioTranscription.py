@@ -21,6 +21,14 @@ import sounddevice as sd
 import websockets
 
 try:
+    import webrtcvad
+
+    WEBRTCVAD_AVAILABLE = True
+except ImportError:
+    WEBRTCVAD_AVAILABLE = False
+    webrtcvad = None
+
+try:
     from rich.console import Console
     from rich.live import Live
     from rich.panel import Panel
@@ -29,6 +37,7 @@ try:
     from rich.theme import Theme
 
     RICH_AVAILABLE = True
+
 except ImportError:
     RICH_AVAILABLE = False
 
@@ -63,6 +72,10 @@ class Settings:
     partial_send_interval_ms: int = int(os.getenv("PARTIAL_SEND_INTERVAL_MS", "80"))
     vad_energy_threshold: int = int(os.getenv("VAD_ENERGY_THRESHOLD", "300"))
     vad_hold_silence_ms: int = int(os.getenv("VAD_HOLD_SILENCE_MS", "240"))
+    vad_mode: int = int(
+        os.getenv("VAD_MODE", "2")
+    )  # 0=least agr, 1=normal, 2=more agr, 3=most agr
+    use_webrtc_vad: bool = os.getenv("USE_WEBRTC_VAD", "1") == "1"
     save_transcripts: bool = os.getenv("SAVE_TRANSCRIPTS", "1") == "1"
     transcript_output_dir: str = os.getenv("TRANSCRIPT_OUTPUT_DIR", "transcripts")
     local_fallback: bool = os.getenv("LOCAL_FALLBACK", "1") == "1"
@@ -546,16 +559,50 @@ async def notify(
         await on_text(message)
 
 
+class VoiceActivityDetector:
+    """Detector robusto de voz com WebRTC VAD + fallback de energia."""
+
+    def __init__(self):
+        self.use_webrtc = SETTINGS.use_webrtc_vad and WEBRTCVAD_AVAILABLE
+        if self.use_webrtc:
+            self.vad = webrtcvad.Vad(SETTINGS.vad_mode)
+            logger.info(f"WebRTC VAD ativado (modo {SETTINGS.vad_mode})")
+        else:
+            self.vad = None
+            logger.info("Usando fallback de energia para VAD")
+
+    def is_speech(self, data: bytes) -> bool:
+        """Detecta se há fala no áudio."""
+        if not data:
+            return False
+
+        if self.use_webrtc and self.vad:
+            try:
+                has_speech = self.vad.is_speech(data, SETTINGS.sample_rate)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"WebRTC VAD: {has_speech}")
+                return has_speech
+            except Exception as e:
+                logger.warning(f"Erro no WebRTC VAD: {e}, usando fallback")
+
+        return self._is_voice_energy(data)
+
+    @staticmethod
+    def _is_voice_energy(data: bytes) -> bool:
+        """Fallback simples baseado em energia RMS."""
+        samples = np.frombuffer(data, dtype=np.int16)
+        if samples.size == 0:
+            return False
+        rms = math.sqrt(float(np.mean(samples.astype(np.float32) ** 2)))
+        has_speech = rms >= SETTINGS.vad_energy_threshold
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"VAD RMS={rms} (threshold={SETTINGS.vad_energy_threshold})")
+        return has_speech
+
+
 def is_voice_energy(data: bytes) -> bool:
-    if not data:
-        return False
-    samples = np.frombuffer(data, dtype=np.int16)
-    if samples.size == 0:
-        return False
-    rms = math.sqrt(float(np.mean(samples.astype(np.float32) ** 2)))
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("VAD RMS=%s", rms)
-    return rms >= SETTINGS.vad_energy_threshold
+    """Wrapper para compatibilidade com código existente."""
+    return VoiceActivityDetector._is_voice_energy(data)
 
 
 def make_audio_queue(
@@ -565,6 +612,7 @@ def make_audio_queue(
     Callable[[Any, int, Any, Any], None],
 ]:
     buffer = AudioBuffer(max_size=SETTINGS.audio_queue_size)
+    vad_detector = VoiceActivityDetector()
     vad_active = False
     vad_silence_blocks = 0
     vad_hold_blocks = max(
@@ -580,7 +628,7 @@ def make_audio_queue(
         if status:
             logger.warning("Aviso na captura de áudio: %s", status)
         data = bytes(indata)
-        if is_voice_energy(data):
+        if vad_detector.is_speech(data):
             vad_active = True
             vad_silence_blocks = 0
             loop.call_soon_threadsafe(buffer.push, data, time.monotonic())
@@ -591,7 +639,6 @@ def make_audio_queue(
             loop.call_soon_threadsafe(buffer.push, data, time.monotonic())
             return
 
-        # Não enviar silêncio prolongado
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Silêncio detectado, pulando envio de bloco de áudio.")
 
