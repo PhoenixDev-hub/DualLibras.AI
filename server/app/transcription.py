@@ -568,7 +568,6 @@ def make_audio_queue(
             vad_silence_blocks = 0
             loop.call_soon_threadsafe(buffer.push, data, time.monotonic())
             return
-
         if vad_active and vad_silence_blocks < vad_hold_blocks:
             vad_silence_blocks += 1
             loop.call_soon_threadsafe(buffer.push, data, time.monotonic())

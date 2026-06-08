@@ -5,8 +5,8 @@ export type TranscriptMessage = {
   error: boolean
 }
 
-type TranscriptListener = (message: TranscriptMessage) => void
-type StatusListener = (connected: boolean) => void
+type OuvinteTranscricao = (mensagem: TranscriptMessage) => void
+type OuvinteStatus = (conectado: boolean) => void
 
 const BACKEND_HOST = import.meta.env.VITE_BACKEND_HOST ?? 'localhost'
 const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT ?? '5455'
@@ -14,23 +14,18 @@ const WS_URL =
   import.meta.env.VITE_BACKEND_WS_URL ??
   `ws://${BACKEND_HOST}:${BACKEND_PORT}/ws`
 
-// Configuração de reconexão com backoff exponencial
 const INITIAL_RECONNECT_DELAY_MS = 1000
 const MAX_RECONNECT_DELAY_MS = 30000
 const MAX_RECONNECT_ATTEMPTS = 10
 
-class TranscriptSocket {
+class SoqueteTranscricao {
   private socket: WebSocket | null = null
   private reconnectTimer: number | null = null
   private manuallyClosed = false
-  private transcriptListeners = new Set<TranscriptListener>()
-  private statusListeners = new Set<StatusListener>()
-
-  // Reconexão com backoff
+  private transcriptListeners = new Set<OuvinteTranscricao>()
+  private statusListeners = new Set<OuvinteStatus>()
   private reconnectAttempts = 0
   private currentReconnectDelay = INITIAL_RECONNECT_DELAY_MS
-
-  // Cache local
   private transcriptCache: TranscriptMessage[] = []
   private lastCachedMessage: TranscriptMessage | null = null
 
@@ -63,11 +58,9 @@ class TranscriptSocket {
       }
 
       if (message.text && message.type !== 'status') {
-        // Cache da mensagem se for final
         if (message.isFinal && message.type === 'transcript') {
           this.lastCachedMessage = message
           this.transcriptCache.push(message)
-          // Manter only últimas 50 transcrições
           if (this.transcriptCache.length > 50) {
             this.transcriptCache.shift()
           }
@@ -106,7 +99,7 @@ class TranscriptSocket {
     this.socket = null
   }
 
-  onTranscript(listener: TranscriptListener) {
+  onTranscript(listener: OuvinteTranscricao) {
     this.transcriptListeners.add(listener)
     this.connect()
 
@@ -115,7 +108,7 @@ class TranscriptSocket {
     }
   }
 
-  onStatus(listener: StatusListener) {
+  onStatus(listener: OuvinteStatus) {
     this.statusListeners.add(listener)
     this.connect()
 
@@ -129,7 +122,6 @@ class TranscriptSocket {
       return
     }
 
-    // Incrementar tentativas
     this.reconnectAttempts++
 
     if (this.reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
@@ -140,13 +132,11 @@ class TranscriptSocket {
       return
     }
 
-    // Calcular delay com backoff exponencial
     this.currentReconnectDelay = Math.min(
       this.currentReconnectDelay * 2,
       MAX_RECONNECT_DELAY_MS
     )
 
-    // Adicionar jitter (randomização) para evitar thundering herd
     const jitter = Math.random() * 0.1 * this.currentReconnectDelay
     const delay = this.currentReconnectDelay + jitter
 
@@ -223,6 +213,6 @@ class TranscriptSocket {
   }
 }
 
-const transcriptSocket = new TranscriptSocket()
+const transcriptSocket = new SoqueteTranscricao()
 
 export default transcriptSocket

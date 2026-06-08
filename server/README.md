@@ -10,6 +10,8 @@ Aplicação de transcrição de áudio em tempo real em português, utilizando A
 -  Interface via terminal interativo
 -  Processamento de áudio com controle de ruído
 -  Comunicação em tempo real via WebSocket
+-  **Salvamento automático de transcrições em PDF, TXT e JSON**
+-  **API REST para gerenciamento de transcrições**
 
 ## Requisitos
 
@@ -46,6 +48,7 @@ cp .env.example .env
 
 ```
 ASSEMBLYAI_API_KEY=sua_chave_aqui
+OUTPUT_PATH=./output
 ```
 
 O arquivo `.env` não será enviado para o repositório (está no .gitignore).
@@ -68,21 +71,120 @@ npm run dev
 ### Acessar a Aplicação
 Abra o navegador em `http://localhost:5173`
 
+## APIs de Transcrição
+
+### Salvar Transcrição
+```bash
+POST /save-transcript
+Content-Type: application/json
+
+{
+  "text": "Texto da transcrição aqui...",
+  "title": "Minha Transcrição",
+  "formats": ["pdf", "txt", "json"],
+  "metadata": {
+    "evento": "Festival 2026",
+    "palestrante": "Nome do palestrante"
+  }
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "message": "Transcrição salva com sucesso em 3 formato(s)",
+  "files": {
+    "pdf": "transcripts/pdfs/transcricao_20260603_120000.pdf",
+    "txt": "transcripts/texts/transcricao_20260603_120000.txt",
+    "json": "transcripts/metadata/transcricao_20260603_120000_metadata.json"
+  },
+  "metadata": {
+    "title": "Minha Transcrição",
+    "text_length": 250,
+    "formats_saved": ["pdf", "txt", "json"]
+  }
+}
+```
+
+### Listar Transcrições
+```bash
+GET /transcripts
+```
+
+**Resposta:**
+```json
+{
+  "total": 5,
+  "pdfs": ["transcricao_20260603_120000.pdf", "..."],
+  "texts": ["transcricao_20260603_120000.txt", "..."],
+  "metadata": ["transcricao_20260603_120000_metadata.json", "..."]
+}
+```
+
+### Baixar Transcrição
+```bash
+GET /transcripts/download/{filename}
+```
+
+Serve arquivos PDF, TXT ou JSON.
+
+### Status de Upload
+```bash
+GET /upload-status
+```
+
+**Resposta:**
+```json
+{
+  "paths": {
+    "base": "./output",
+    "pdfs": "./output/transcripts/pdfs",
+    "texts": "./output/transcripts/texts",
+    "metadata": "./output/transcripts/metadata"
+  },
+  "counts": {
+    "pdfs": 5,
+    "texts": 5,
+    "metadata": 5
+  },
+  "total_size_mb": 1.25,
+  "status": "online"
+}
+```
+
+## Estrutura de Pastas
+
+A aplicação organiza automaticamente as transcrições em uma estrutura clara:
+
+```
+output/
+└── transcripts/
+    ├── pdfs/              # Documentos PDF gerados
+    │   └── transcricao_20260603_120000.pdf
+    ├── texts/             # Arquivos de texto plano
+    │   └── transcricao_20260603_120000.txt
+    └── metadata/          # Informações em JSON
+        └── transcricao_20260603_120000_metadata.json
+```
+
 ## Como Funciona
 
 1. **Captura de Áudio**: O sistema detecta automaticamente o microfone via PipeWire
 2. **Transcrição**: O áudio é enviado para AssemblyAI e convertido em texto em português
 3. **Tradução**: O texto é enviado via WebSocket para o frontend
 4. **VLibras**: O widget VLibras traduz o texto para Libras com avatar 3D
+5. **Salvamento**: As transcrições podem ser salvas em múltiplos formatos via API
 
 ## Estrutura do Projeto
 
 ```
 ├── server/
 │   ├── app/
-│   │   ├── api.py
-│   │   ├── config.py
-│   │   └── transcription.py
+│   │   ├── api.py                     # API REST e WebSocket
+│   │   ├── config.py                  # Configurações
+│   │   ├── transcription.py           # Lógica de transcrição
+│   │   └── transcript_manager.py      # Gerenciador de PDFs e salvamento
 │   ├── main.py
 │   ├── requirements.txt
 │   └── .env
@@ -94,6 +196,8 @@ Abra o navegador em `http://localhost:5173`
 │   │   └── services/
 │   │       └── websocket.ts
 │   └── package.json
+└── output/
+    └── transcripts/                   # Transcrições salvas (criado automaticamente)
 ```
 
 ## APIs Utilizadas

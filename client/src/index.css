@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+div {
+  background-color: transparent !important;
+}
+
 body [vw].enabled.vlibras-widget.vlibras-centered{
   position:fixed !important;
   top:50% !important;
@@ -18,6 +22,7 @@ body [vw].enabled.vlibras-widget.vlibras-centered{
 }
 
 body [vw-access-button]{
+
   position:fixed !important;
   right:18px !important;
   bottom:18px !important;
@@ -27,6 +32,7 @@ body [vw-access-button]{
 
 body [vw].enabled.vlibras-widget.vlibras-centered [vw-access-button]{
   display:none !important;
+
 }
 
 body [vw].enabled.vlibras-widget.vlibras-centered [vw-plugin-wrapper],
@@ -41,10 +47,12 @@ body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper{
 
 .vpw-box, .vpw-controls, .vpw-subtitles, .vpw-playing, .vpw-message-box, .vp-rate-box-content, .vp-rate-box-header, .vp-enabled, .vp-button-change-avatar, .avatar-icaro, .vp-selected, .vp-button-change-avatar, .avatar-icaro, .vp-selected{
   display:none !important;
+  background-color: transparent !important;
 }
 
 .vlibras-center-wrapper, .emscripten, #canvas{
-  background-color: transparent !important;
+  height: 500px !important;
+
 }
 
 @media (max-height: 700px){
