@@ -77,15 +77,13 @@ export default function VLibras({ text, onStatusChange }: VLibrasProps) {
     const root = document.querySelector<HTMLElement>('[vw].enabled')
     const accessButton = document.querySelector<HTMLElement>('[vw-access-button]')
     const wrapper = document.querySelector<HTMLElement>('[vw-plugin-wrapper]')
-    const widgetWidth = window.innerWidth <= 640 ? '360px' : '430px'
-    const widgetHeight = window.innerHeight <= 700 ? '430px' : '610px'
-    const widgetTop = window.innerHeight <= 700 ? '46%' : '48%'
-
+    const widgetWidth = window.innerWidth <= 640 ? '600px' : '750px'
+    const widgetHeight = window.innerHeight <= 700 ? '700px' : '920px'
     if (root) {
       setImportant(root, 'position', 'fixed')
-      setImportant(root, 'top', widgetTop)
+      setImportant(root, 'top', 'auto')
+      setImportant(root, 'bottom', '0px')
       setImportant(root, 'right', 'auto')
-      setImportant(root, 'bottom', 'auto')
       setImportant(root, 'left', '50%')
       setImportant(root, 'width', widgetWidth)
       setImportant(root, 'height', widgetHeight)
@@ -94,9 +92,9 @@ export default function VLibras({ text, onStatusChange }: VLibrasProps) {
       setImportant(root, 'max-width', '96vw')
       setImportant(root, 'background', 'transparent')
       setImportant(root, 'background-color', 'transparent')
-      setImportant(root, 'transform', 'translate(-50%, -50%)')
+      setImportant(root, 'transform', 'translateX(-50%)')
       setImportant(root, 'margin-top', '0')
-      setImportant(root, 'z-index', '2147483646')
+      setImportant(root, 'z-index', '10')
       setImportant(root, 'pointer-events', 'auto')
     }
 
@@ -116,7 +114,7 @@ export default function VLibras({ text, onStatusChange }: VLibrasProps) {
       setImportant(wrapper, 'max-width', '100%')
       setImportant(wrapper, 'background', 'transparent')
       setImportant(wrapper, 'background-color', 'transparent')
-      setImportant(wrapper, 'z-index', '2147483646')
+      setImportant(wrapper, 'z-index', '10')
       setImportant(wrapper, 'pointer-events', 'auto')
     }
 

@@ -1,6 +1,6 @@
-# 🚀 Guia Rápido - Salvar Transcrições em PDF
+# Guia Rápido - Salvar Transcrições em PDF
 
-## Estrutura de Pastas 📁
+## Estrutura de Pastas
 
 A aplicação organiza automaticamente as transcrições em:
 

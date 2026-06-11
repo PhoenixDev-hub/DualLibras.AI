@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -13,9 +14,24 @@ from pydantic import BaseModel, Field
 try:
     from server.app.documentation_generator import DocumentationGenerator
     from server.app.transcript_manager import TranscriptManager
+    from server.app.config import SETTINGS
+    from server.app.transcription import AudioBuffer, classify_speaker, TranscriptSaver, is_internet_available
 except ImportError:
     from app.documentation_generator import DocumentationGenerator
     from app.transcript_manager import TranscriptManager
+    from app.config import SETTINGS
+    from app.transcription import AudioBuffer, classify_speaker, TranscriptSaver, is_internet_available
+
+import numpy as np
+
+# Try importing aiortc
+try:
+    from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
+    AIORTC_AVAILABLE = True
+except ImportError:
+    AIORTC_AVAILABLE = False
+
+import websockets
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
@@ -25,11 +41,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 PORT = int(os.getenv("PORT", "5455"))
 
-SEND_TIMEOUT = 5.0
-
 transcript_manager = TranscriptManager()
 doc_generator = DocumentationGenerator()
 
+# Global whisper model cache
+local_model = None
+
+def get_local_model():
+    global local_model
+    if local_model is None:
+        from faster_whisper import WhisperModel
+        logger.info(f"Carregando modelo Faster-Whisper: {SETTINGS.local_fallback_model}")
+        # Use CPU/Auto device
+        local_model = WhisperModel(SETTINGS.local_fallback_model, device="auto")
+    return local_model
 
 class SaveTranscriptRequest(BaseModel):
     text: str = Field(..., min_length=1, description="Texto da transcrição")
@@ -41,155 +66,360 @@ class SaveTranscriptRequest(BaseModel):
         default_factory=dict, description="Dados adicionais"
     )
 
-
 class TranscriptResponse(BaseModel):
-
     success: bool
     message: str
     files: dict[str, str]
     metadata: dict[str, Any]
 
-
 class TranscriptListResponse(BaseModel):
-
     total: int
     pdfs: list[str]
     texts: list[str]
     metadata: list[str]
 
 
-clientes: set[WebSocket] = set()
-transcricao_task: asyncio.Task | None = None
+class ClientSession:
+    def __init__(self, websocket: WebSocket):
+        self.websocket = websocket
+        self.audio_buffer = AudioBuffer(max_size=SETTINGS.audio_queue_size)
+        self.pc = None
+        self.dc = None
+        self.assembly_ws = None
+        self.tasks = []
+        self.active = True
+        self.saver = TranscriptSaver() if SETTINGS.save_transcripts else None
 
-
-async def enviar_para_front(mensagem: dict[str, Any] | str) -> None:
-    desconectados = []
-    payload = mensagem if isinstance(mensagem, str) else json.dumps(mensagem)
-
-    if not payload:
-        logger.warning("Tentativa de enviar mensagem vazia")
-        return
-
-    try:
-        if isinstance(mensagem, dict):
-            msg = mensagem
-            if msg.get("type") == "transcript" and msg.get("is_final"):
-                if os.getenv("AUTO_SAVE_TRANSCRIPTS", "0") == "1":
-                    formats = os.getenv("AUTO_SAVE_FORMATS", "pdf,txt,json").split(",")
-                    try:
-                        transcript_manager.save_transcript(
-                            text=msg.get("text", ""),
-                            title=msg.get("title", "Transcrição"),
-                            formats=[f.strip() for f in formats if f.strip()],
-                            evento=msg.get("evento"),
-                            speaker=msg.get("speaker"),
-                        )
-                        logger.info(
-                            "Transcrição final salva automaticamente (AUTO_SAVE_TRANSCRIPTS=1)"
-                        )
-                    except Exception as e:
-                        logger.error(
-                            f"Falha ao salvar transcrição automaticamente: {e}"
-                        )
-    except Exception:
-        logger.exception("Erro ao processar auto-save de transcrição")
-
-    logger.debug(f"Enviando para {len(clientes)} cliente(s): {payload[:100]}...")
-
-    for cliente in list(clientes):
+    async def send_to_client(self, message: dict[str, Any]):
+        if not self.active:
+            return
         try:
-            await asyncio.wait_for(cliente.send_text(payload), timeout=SEND_TIMEOUT)
-        except asyncio.TimeoutError:
-            logger.warning(f"Timeout ao enviar para cliente {cliente.client}")
-            desconectados.append(cliente)
-        except Exception as exc:
-            logger.warning(f"Erro ao enviar para cliente: {type(exc).__name__}: {exc}")
-            desconectados.append(cliente)
+            payload = json.dumps(message)
+            # Send via WebSockets
+            await self.websocket.send_text(payload)
+            # Also send via WebRTC Data Channel if open for low latency
+            if self.dc and self.dc.readyState == "open":
+                self.dc.send(payload)
+        except Exception as e:
+            logger.warning(f"Erro ao enviar mensagem para o cliente: {e}")
 
-    for cliente in desconectados:
-        clientes.discard(cliente)
-        logger.debug(f"Cliente removido. Restantes: {len(clientes)}")
-
-
-async def executar_transcricao_com_retry(max_tentativas: int = 3) -> None:
-    for tentativa in range(max_tentativas):
+    async def send_audio_to_assembly(self):
         try:
-            try:
-                from server.app.transcription import iniciar_transcricao
-            except ImportError:
-                from app.transcription import iniciar_transcricao
+            buffer = bytearray()
+            while self.active:
+                # Get audio chunks from our queue
+                try:
+                    data, captured_at = await asyncio.wait_for(
+                        self.audio_buffer.queue.get(), 
+                        timeout=1.0
+                    )
+                except asyncio.TimeoutError:
+                    continue
 
-            logger.info(
-                f"Iniciando transcrição (tentativa {tentativa + 1}/{max_tentativas})"
-            )
-            await iniciar_transcricao(on_text=enviar_para_front)
+                buffer.extend(data)
+                
+                # AssemblyAI v2 expects chunks of audio. We send them as binary frames.
+                while len(buffer) >= SETTINGS.chunk_size:
+                    chunk = bytes(buffer[:SETTINGS.chunk_size])
+                    del buffer[:SETTINGS.chunk_size]
+                    
+                    if self.assembly_ws:
+                        await self.assembly_ws.send(chunk)
+                        if self.audio_buffer.stats.sent % 50 == 0:
+                            logger.info(f"Enviado chunk de áudio {self.audio_buffer.stats.sent} para AssemblyAI.")
+                    
+                    # Update stats
+                    self.audio_buffer.stats.sent += 1
+                    self.audio_buffer.stats.total_bytes_sent += len(chunk)
+                    
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.error(f"Erro ao transmitir áudio para AssemblyAI: {e}")
+
+    async def receive_from_assembly(self):
+        try:
+            while self.active:
+                if not self.assembly_ws:
+                    await asyncio.sleep(0.1)
+                    continue
+                
+                raw = await self.assembly_ws.recv()
+                msg = json.loads(raw)
+                
+                msg_type = msg.get("type")
+                
+                # Log general message type from AssemblyAI
+                logger.info(f"Mensagem recebida da AssemblyAI: {msg_type}")
+                
+                if msg_type == "Turn":
+                    text = msg.get("transcript", "").strip()
+                    logger.info(f"Transcrição parcial recebida: '{text}' (is_final={msg.get('turn_is_done')})")
+                    if text:
+                        is_final = bool(msg.get("turn_is_done"))
+                        speaker = msg.get("speaker")
+                        if not speaker:
+                            speaker = classify_speaker(text)
+                        
+                        # Auto save if final
+                        if is_final:
+                            if self.saver:
+                                self.saver.save_final(text, speaker)
+                            
+                            if os.getenv("AUTO_SAVE_TRANSCRIPTS", "0") == "1":
+                                formats = os.getenv("AUTO_SAVE_FORMATS", "pdf,txt,json").split(",")
+                                try:
+                                    transcript_manager.save_transcript(
+                                        text=text,
+                                        title="Transcrição Automática",
+                                        formats=[f.strip() for f in formats if f.strip()],
+                                        speaker=speaker,
+                                    )
+                                except Exception as e:
+                                    logger.error(f"Auto-save falhou: {e}")
+                        
+                        # Send result back to client
+                        await self.send_to_client({
+                            "type": "transcript",
+                            "text": text,
+                            "is_final": is_final,
+                            "speaker": speaker
+                        })
+                elif msg_type == "SessionBegins":
+                    logger.info(f"AssemblyAI SessionBegins: {msg.get('id')}")
+                elif msg_type == "Error":
+                    logger.error(f"AssemblyAI Error message: {msg}")
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.error(f"Erro ao receber dados da AssemblyAI: {e}")
+
+    async def run_local_transcription(self):
+        try:
+            model = get_local_model()
+        except Exception as e:
+            logger.error(f"Não foi possível carregar o modelo local Faster-Whisper: {e}")
+            await self.send_to_client({
+                "type": "error",
+                "text": f"Erro no modelo local: {e}",
+                "error": True,
+                "is_final": True
+            })
             return
 
-        except asyncio.CancelledError:
-            logger.info("Transcrição cancelada")
-            raise
+        local_data = bytearray()
+        
+        def transcribe_audio(audio_bytes: bytes) -> list[str]:
+            audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+            segments, _ = model.transcribe(
+                audio_np,
+                beam_size=1,
+                language="pt",
+                word_timestamps=False,
+                vad_filter=True,
+            )
+            return [segment.text.strip() for segment in segments if segment.text.strip()]
 
-        except Exception as exc:
-            logger.exception(f"Erro na tentativa {tentativa + 1}: {exc}")
+        logger.info("Fallback local de transcrição iniciado.")
+        while self.active:
+            try:
+                try:
+                    data, _ = await asyncio.wait_for(
+                        self.audio_buffer.queue.get(), 
+                        timeout=1.5
+                    )
+                    local_data.extend(data)
+                    
+                    # Se acumulamos mais que 8 segundos de áudio, transcrevemos
+                    if len(local_data) >= SETTINGS.sample_rate * 2 * 8:
+                        chunk = bytes(local_data)
+                        local_data.clear()
+                        
+                        texts = await asyncio.to_thread(transcribe_audio, chunk)
+                        for text in texts:
+                            speaker = classify_speaker(text)
+                            if self.saver:
+                                self.saver.save_final(text, speaker)
+                            await self.send_to_client({
+                                "type": "transcript",
+                                "text": text,
+                                "is_final": True,
+                                "speaker": speaker
+                            })
+                except asyncio.TimeoutError:
+                    # Silêncio longo / Pausa detectada -> transcreve o resto do buffer acumulado
+                    if len(local_data) >= SETTINGS.sample_rate * 2 * 0.5:
+                        chunk = bytes(local_data)
+                        local_data.clear()
+                        
+                        try:
+                            texts = await asyncio.to_thread(transcribe_audio, chunk)
+                            for text in texts:
+                                speaker = classify_speaker(text)
+                                if self.saver:
+                                    self.saver.save_final(text, speaker)
+                                await self.send_to_client({
+                                    "type": "transcript",
+                                    "text": text,
+                                    "is_final": True,
+                                    "speaker": speaker
+                                })
+                        except Exception as e:
+                            logger.error(f"Erro ao processar áudio acumulado no silêncio: {e}")
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Erro no loop do fallback local: {e}")
+                await asyncio.sleep(1)
 
-            if tentativa < max_tentativas - 1:
-                delay = 2**tentativa
-                logger.info(f"Aguardando {delay}s antes de tentar novamente...")
-                await asyncio.sleep(delay)
-            else:
-                logger.error("Todas as tentativas falharam")
-                await enviar_para_front(
-                    {
-                        "type": "error",
-                        "text": f"Erro ao executar transcrição: {exc}",
-                        "is_final": True,
-                        "error": True,
-                    }
+    async def start(self):
+        # Determine if we can use AssemblyAI
+        auth_key = SETTINGS.assemblyai_api_key
+        internet = is_internet_available()
+        
+        if internet and auth_key:
+            try:
+                # Connect to AssemblyAI Real-Time WebSocket v3
+                url = f"wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&speech_model={SETTINGS.speech_model}"
+                logger.info(f"Conectando ao AssemblyAI em {url}")
+                
+                self.assembly_ws = await websockets.connect(
+                    url,
+                    additional_headers={"Authorization": auth_key},
+                    ping_interval=10,
+                    ping_timeout=30
                 )
+                
+                # Read the initial SessionBegins confirmation message
+                first_msg = await self.assembly_ws.recv()
+                logger.info(f"AssemblyAI Session iniciada: {first_msg}")
+                
+                # Start tasks
+                self.tasks.append(asyncio.create_task(self.send_audio_to_assembly()))
+                self.tasks.append(asyncio.create_task(self.receive_from_assembly()))
+                
+                await self.send_to_client({
+                    "type": "status",
+                    "text": "Conectado com AssemblyAI",
+                    "connected": True,
+                    "mode": "assemblyai"
+                })
+                return
+            except Exception as e:
+                logger.error(f"Falha ao conectar na AssemblyAI: {e}. Iniciando fallback local.")
+                
+        # If offline or connection fails, use local fallback
+        if SETTINGS.local_fallback:
+            self.tasks.append(asyncio.create_task(self.run_local_transcription()))
+            await self.send_to_client({
+                "type": "status",
+                "text": "Conectado via Fallback Local",
+                "connected": True,
+                "mode": "local"
+            })
+        else:
+            await self.send_to_client({
+                "type": "error",
+                "text": "Sem conexão de internet e fallback local desativado.",
+                "error": True,
+                "is_final": True
+            })
 
+    async def handle_webrtc_offer(self, sdp: str):
+        if not AIORTC_AVAILABLE:
+            logger.warning("aiortc não disponível. Ignorando offer WebRTC.")
+            return
 
-async def iniciar_transcricao_se_necessario() -> None:
-    global transcricao_task
+        try:
+            config = RTCConfiguration(
+                iceServers=[RTCIceServer(urls="stun:stun.l.google.com:19302")]
+            )
+            pc = RTCPeerConnection(configuration=config)
+            self.pc = pc
+            
+            @pc.on("datachannel")
+            def on_datachannel(channel):
+                self.dc = channel
+                logger.info("WebRTC Data Channel criado e aberto pelo cliente!")
+                
+                @channel.on("message")
+                def on_message(message):
+                    if isinstance(message, bytes):
+                        # Pushes PCM audio chunk into our local queue
+                        self.audio_buffer.push(message, time.monotonic())
+                    elif isinstance(message, str):
+                        try:
+                            # Parse JSON if text is sent on data channel
+                            data = json.loads(message)
+                            if data.get("type") == "ping":
+                                channel.send(json.dumps({"type": "pong"}))
+                        except Exception as e:
+                            logger.error(f"Erro ao processar mensagem texto no Data Channel: {e}")
+                            
+                @channel.on("close")
+                def on_close():
+                    logger.info("WebRTC Data Channel fechado.")
+                    
+            @pc.on("iceconnectionstatechange")
+            async def on_iceconnectionstatechange():
+                logger.info(f"ICE Connection State mudou para: {pc.iceConnectionState}")
+                if pc.iceConnectionState in ["failed", "closed"]:
+                    await pc.close()
+            
+            # Create an event to wait for ICE gathering completion
+            ice_gathering_complete = asyncio.Event()
 
-    if transcricao_task and not transcricao_task.done():
-        logger.debug("Transcrição já em executação")
-        return
+            @pc.on("icegatheringstatechange")
+            def on_icegatheringstatechange():
+                logger.info(f"ICE Gathering State mudou para: {pc.iceGatheringState}")
+                if pc.iceGatheringState == "complete":
+                    ice_gathering_complete.set()
+            
+            await pc.setRemoteDescription(RTCSessionDescription(sdp=sdp, type="offer"))
+            answer = await pc.createAnswer()
+            await pc.setLocalDescription(answer)
+            
+            # Wait for ICE gathering to complete before sending the answer
+            if pc.iceGatheringState != "complete":
+                logger.info("Aguardando gathering de ICE completar...")
+                try:
+                    await asyncio.wait_for(ice_gathering_complete.wait(), timeout=5.0)
+                except asyncio.TimeoutError:
+                    logger.warning("Timeout aguardando gathering de ICE completar. Enviando SDP parcial.")
+            
+            # Send answer to client
+            await self.send_to_client({
+                "type": "webrtc_answer",
+                "sdp": pc.localDescription.sdp
+            })
+        except Exception as e:
+            logger.error(f"Erro ao processar offer WebRTC: {e}")
 
-    logger.info("Iniciando transcrição para cliente(s) conectado(s)")
-    transcricao_task = asyncio.create_task(executar_transcricao_com_retry())
-
-
-async def parar_transcricao() -> None:
-    global transcricao_task
-
-    if not transcricao_task:
-        return
-
-    if transcricao_task.done():
-        logger.debug("Transcrição já finalizou")
-        return
-
-    logger.info("Parando transcrição...")
-    transcricao_task.cancel()
-
-    try:
-        await asyncio.wait_for(transcricao_task, timeout=5.0)
-    except asyncio.CancelledError:
-        logger.debug("Transcrição cancelada com sucesso")
-    except asyncio.TimeoutError:
-        logger.warning("Timeout ao parar transcrição")
-    except Exception as exc:
-        logger.error(f"Erro ao parar transcrição: {exc}")
-    finally:
-        transcricao_task = None
-
-
-async def parar_transcricao_se_sem_clientes() -> None:
-    if clientes:
-        logger.debug(f"Ainda há {len(clientes)} cliente(s) conectado(s)")
-        return
-
-    await parar_transcricao()
+    async def stop(self):
+        self.active = False
+        
+        # Stop all tasks
+        for task in self.tasks:
+            task.cancel()
+        if self.tasks:
+            await asyncio.gather(*self.tasks, return_exceptions=True)
+            self.tasks.clear()
+            
+        # Clean up peer connection
+        if self.pc:
+            await self.pc.close()
+            self.pc = None
+            self.dc = None
+            
+        # Clean up AssemblyAI socket
+        if self.assembly_ws:
+            try:
+                await self.assembly_ws.close()
+            except Exception:
+                pass
+            self.assembly_ws = None
+            
+        logger.info("Sessão limpa com sucesso.")
 
 
 @asynccontextmanager
@@ -199,9 +429,6 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         logger.info("Finalizando aplicação...")
-        await parar_transcricao()
-        logger.info("Transcrição finalizada")
-
 
 app = FastAPI(
     title="DualLibras.AI Backend",
@@ -223,24 +450,16 @@ app.add_middleware(
 async def health():
     return {
         "status": "ok",
-        "clientes_conectados": len(clientes),
-        "transcricao_ativa": bool(transcricao_task and not transcricao_task.done()),
         "porta": PORT,
+        "webrtc_suportado": AIORTC_AVAILABLE
     }
 
 
 @app.post("/test-message")
 async def test_message():
-    mensagem = {
-        "type": "transcript",
-        "text": "Mensagem de teste do backend.",
-        "is_final": True,
-    }
-    await enviar_para_front(mensagem)
     return {
-        "enviado": True,
-        "clientes": len(clientes),
-        "mensagem": mensagem,
+        "status": "ok",
+        "message": "Teste do backend. Conexão ok."
     }
 
 
@@ -252,48 +471,41 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.error(f"Erro ao aceitar conexão WebSocket: {exc}")
         raise
 
-    clientes.add(websocket)
-    logger.info(f"Cliente conectado de {websocket.client}. Total: {len(clientes)}")
-
-    try:
-        await asyncio.wait_for(
-            websocket.send_text(
-                json.dumps(
-                    {
-                        "type": "status",
-                        "text": "",
-                        "is_final": False,
-                        "connected": True,
-                    }
-                )
-            ),
-            timeout=SEND_TIMEOUT,
-        )
-    except Exception as exc:
-        logger.warning(f"Erro ao enviar status inicial: {exc}")
-
-    await iniciar_transcricao_se_necessario()
+    logger.info(f"Novo cliente WebSocket conectado. Criando sessão.")
+    session = ClientSession(websocket)
+    await session.start()
 
     try:
         while True:
-            try:
-                data = await asyncio.wait_for(
-                    websocket.receive_text(),
-                    timeout=60.0,
-                )
-                logger.debug(f"Mensagem recebida: {data[:50]}...")
-            except asyncio.TimeoutError:
-                logger.debug("Timeout na recepção, client ainda conectado")
-                continue
-
+            # Wait for text or binary frames from client
+            message = await websocket.receive()
+            
+            if "bytes" in message:
+                # Binary audio bytes
+                session.audio_buffer.push(message["bytes"], time.monotonic())
+                if session.audio_buffer.stats.queued % 100 == 1:
+                    logger.info(f"WebSocket recebeu chunk de áudio {session.audio_buffer.stats.queued}. Tamanho da fila: {session.audio_buffer.queue.qsize()}")
+                
+            elif "text" in message:
+                try:
+                    data = json.loads(message["text"])
+                    msg_type = data.get("type")
+                    
+                    if msg_type == "webrtc_offer":
+                        sdp = data.get("sdp")
+                        logger.info("Recebeu WebRTC offer do cliente pelo WebSocket")
+                        await session.handle_webrtc_offer(sdp)
+                    elif msg_type == "ping":
+                        await session.send_to_client({"type": "pong"})
+                except Exception as e:
+                    logger.error(f"Erro ao processar mensagem JSON: {e}")
+                    
     except WebSocketDisconnect:
-        logger.info(f"Cliente desconectado de {websocket.client}")
+        logger.info("Cliente WebSocket desconectado")
     except Exception as exc:
-        logger.error(f"Erro no WebSocket: {type(exc).__name__}: {exc}")
+        logger.error(f"Erro na conexão do WebSocket: {type(exc).__name__}: {exc}")
     finally:
-        clientes.discard(websocket)
-        logger.info(f"Cliente removido. Total: {len(clientes)}")
-        await parar_transcricao_se_sem_clientes()
+        await session.stop()
 
 
 @app.post("/save-transcript", response_model=TranscriptResponse)

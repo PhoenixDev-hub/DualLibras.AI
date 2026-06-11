@@ -21,6 +21,22 @@ const REPLACEMENTS: Array<[RegExp, string]> = [
   [/\bfornecer\b/gi, 'dar'],
   [/\butilizar\b/gi, 'usar'],
   [/\butiliza\b/gi, 'usa'],
+  [/\bfotossíntese\b/gi, 'planta transforma luz em energia'],
+  [/\bmitocôndria\b/gi, 'usina de energia da célula'],
+  [/\bclorofila\b/gi, 'verde da folha que pega luz'],
+  [/\bDNA\b|\bácido desoxirribonucleico\b/gi, 'código da vida'],
+  [/\bcromossomo\b/gi, 'pacotinho de DNA'],
+  [/\becossistema\b/gi, 'conjunto da natureza'],
+  [/\bmembrana plasmática\b/gi, 'capa da célula'],
+  [/\bcitoplasma\b/gi, 'interior da célula'],
+  [/\bribossomo\b/gi, 'fábrica de proteínas da célula'],
+  [/\bpróton\b/gi, 'carga positiva do átomo'],
+  [/\belétron\b/gi, 'carga negativa do átomo'],
+  [/\bnêutron\b/gi, 'carga neutra do átomo'],
+  [/\bosmose\b/gi, 'passagem de água pela membrana'],
+  [/\bmitose\b/gi, 'divisão celular para crescimento'],
+  [/\bmeiose\b/gi, 'divisão celular para reprodução'],
+  [/\bmetamorfose\b/gi, 'transformação do corpo'],
 ]
 
 const MAX_SENTENCE_LENGTH = 90

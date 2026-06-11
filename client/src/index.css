@@ -68,8 +68,9 @@ body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper{
 }
 
 .vlibras-center-wrapper, .emscripten, #canvas{
-  height: 500px !important;
-
+  marginw: 10px !important;
+  height: 700px !important;
+  width: 416px !important;
 }
 
 @media (max-height: 700px){

@@ -640,6 +640,7 @@ async def send_audio(
                 last_log = now
 
             if not buffer:
+
                 buffer_started_at = 0.0
 
 
@@ -675,7 +676,6 @@ async def receive_transcripts(
                 raise_api_error(message)
     finally:
         terminal.stop()
-
 
 async def receive_json(ws: Any) -> dict[str, Any]:
     try:
