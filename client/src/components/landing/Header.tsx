@@ -2,7 +2,16 @@ import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 
-const navItems = [
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+interface NavLinkState {
+  isActive: boolean;
+}
+
+const navItems: NavItem[] = [
   { label: 'Início', href: '/' },
   { label: 'Problema', href: '/problema' },
   { label: 'Solução', href: '/solucao' },
@@ -15,21 +24,30 @@ export default function Header() {
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [mobileOpen]);
 
-  const linkClass = ({ isActive }) =>
-    `font-ui text-sm tracking-wide transition-colors ${
+  const linkClass = ({ isActive }: NavLinkState): string =>
+    `relative font-ui text-sm tracking-wide py-1 transition-colors after:absolute after:left-0 after:-bottom-0.5 after:h-px after:bg-primary after:transition-all after:duration-300 ${
+      isActive
+        ? 'text-primary after:w-full'
+        : 'text-text-light/80 hover:text-primary after:w-0 hover:after:w-full'
+    }`;
+
+  const mobileLinkClass = ({ isActive }: NavLinkState): string =>
+    `block px-2 py-1 text-sm tracking-wide transition-colors ${
       isActive ? 'text-primary' : 'text-text-light/80 hover:text-primary'
     }`;
 
   return (
-    <header className="relative bg-background-dark sticky top-0 z-50">
+    <header className="relative bg-background-dark sticky top-0 z-50 motion-safe:opacity-0 motion-safe:animate-[fadeInDown_0.5s_ease-out_forwards]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link
             to="/"
-            className="text-2xl font-logo font-bold text-primary tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+            className="text-2xl font-logo font-bold text-primary tracking-tight transition-transform duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
           >
             DualLibras.ai
           </Link>
@@ -49,7 +67,7 @@ export default function Header() {
               </Link>
               <Link
                 to="/cadastrar"
-                className="px-5 py-2 font-ui text-sm font-semibold tracking-wide text-text-light bg-gradient-to-r from-primary to-secondary rounded-full hover:brightness-110 transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-dark"
+                className="px-5 py-2 font-ui text-sm font-semibold tracking-wide text-text-light bg-gradient-to-r from-primary to-secondary rounded-full hover:brightness-110 hover:scale-[1.03] transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-dark"
               >
                 Cadastrar
               </Link>
@@ -78,11 +96,7 @@ export default function Header() {
               <NavLink
                 key={item.label}
                 to={item.href}
-                className={({ isActive }) =>
-                  `block px-2 py-1 text-sm tracking-wide transition-colors ${
-                    isActive ? 'text-primary' : 'text-text-light/80 hover:text-primary'
-                  }`
-                }
+                className={mobileLinkClass}
                 onClick={() => setMobileOpen(false)}
               >
                 {item.label}
@@ -108,7 +122,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* linha de assinatura no lugar do vidro/borda cinza */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
     </header>
   );

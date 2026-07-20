@@ -1,5 +1,6 @@
 import Header from '../components/landing/Header';
 import Hero from '../components/landing/Hero';
+import Problema from '../components/landing/Problema';
 
 export default function LandingPage() {
   return (
@@ -7,6 +8,7 @@ export default function LandingPage() {
       <Header />
       <main className="flex-1">
         <Hero />
+        <Problema />
       </main>
     </div>
   );
