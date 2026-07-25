@@ -1,6 +1,40 @@
 version: '3.9'
 
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: duallibras-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - duallibras-network
+
+  auth:
+    build:
+      context: ./server/auth
+      dockerfile: Dockerfile
+    container_name: duallibras-auth
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - duallibras-network
+
   backend:
     build:
       context: ./server/ai
@@ -48,9 +82,12 @@ services:
       - VITE_BACKEND_HOST=backend
       - VITE_BACKEND_PORT=5455
       - VITE_BACKEND_WS_URL=ws://localhost:5455/ws
+      - VITE_AUTH_URL=http://localhost:4000
     depends_on:
       backend:
         condition: service_healthy
+      auth:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
@@ -67,4 +104,6 @@ networks:
 
 volumes:
   transcripts:
+    driver: local
+  db-data:
     driver: local
