@@ -1,7 +1,7 @@
 import { Router } from 'express';
+import { userController } from '../controllers/user.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
 
 export const userRoutes = Router();
 
-userRoutes.get('/me', (req, res) => {
-    res.json({ message: 'User profile endpoint' });
-});
+userRoutes.get('/me', authMiddleware, userController.me);

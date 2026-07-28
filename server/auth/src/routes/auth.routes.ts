@@ -1,11 +1,9 @@
 import { Router } from 'express';
+import { authController } from '../controllers/auth.controller';
+import { validate } from '../middlewares/validate.middleware';
+import { loginSchema, registerSchema } from '../schemas/auth.schema';
 
 export const authRoutes = Router();
 
-authRoutes.post('/login', (req, res) => {
-    res.json({ message: 'Login endpoint' });
-});
-
-authRoutes.post('/register', (req, res) => {
-    res.json({ message: 'Register endpoint' });
-});
+authRoutes.post('/cadastro', validate(registerSchema), authController.register);
+authRoutes.post('/login', validate(loginSchema), authController.login);

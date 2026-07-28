@@ -1,9 +1,9 @@
-import cors from 'cors';
 import express from 'express';
+import cors from 'cors';
 import { env } from './config/env';
-import { errorMiddleware } from './middlewares/error.middleware';
 import { authRoutes } from './routes/auth.routes';
 import { userRoutes } from './routes/user.routes';
+import { errorMiddleware } from './middlewares/error.middleware';
 
 export function createApp() {
   const app = express();
@@ -19,5 +19,6 @@ export function createApp() {
   app.use('/users', userRoutes);
 
   app.use(errorMiddleware);
+
   return app;
 }
