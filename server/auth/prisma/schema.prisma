@@ -13,12 +13,291 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  createdAt    String   @default("")
-  email        String   @unique
-  name         String?
-  password     String?  @map("senha")
+enum Role {
+  PROFESSOR
+  ALUNO
+  SOCIEDADE
+  ADMIN
+}
 
-  @@map("user")
+enum LessonStatus {
+  AGENDADA
+  EM_ANDAMENTO
+  FINALIZADA
+  CANCELADA
+}
+
+enum MaterialType {
+  PDF
+  DOCX
+  PPTX
+  OUTRO
+}
+
+enum SessionStatus {
+  ATIVA
+  FINALIZADA
+  CANCELADA
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
+  teacherProfile TeacherProfile?
+  studentProfile StudentProfile?
+  societyProfile SocietyProfile?
+
+  classroomsOwned Classroom[] @relation("TeacherClassrooms")
+  memberships     ClassroomMember[]
+
+  lessonsAsTeacher Lesson[] @relation("TeacherLessons")
+
+  materials Material[] @relation("UploadedMaterials")
+
+  transcriptionSessions TranscriptionSession[]
+
+  glossaries Glossary[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@index([schoolId])
+}
+
+model TeacherProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  discipline  String?
+  institution String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StudentProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  registrationNumber String?
+  institution        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SocietyProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model School {
+  id    String @id @default(uuid())
+  name  String
+  city  String?
+  state String?
+
+  users      User[]
+  classrooms Classroom[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Classroom {
+  id       String @id @default(uuid())
+  name     String
+  code     String @unique
+
+  teacherId String
+  schoolId  String?
+
+  teacher User    @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Cascade)
+  school  School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
+  members ClassroomMember[]
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teacherId])
+  @@index([schoolId])
+}
+
+model ClassroomMember {
+  classroomId String
+  userId      String
+
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+
+  @@id([classroomId, userId])
+  @@index([userId])
+}
+
+model Lesson {
+  id String @id @default(uuid())
+
+  title       String
+  description String?
+  lessonPlan  String?
+
+  status LessonStatus @default(AGENDADA)
+
+  classroomId String
+  teacherId   String
+  glossaryId  String?
+
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  teacher   User      @relation("TeacherLessons", fields: [teacherId], references: [id], onDelete: Cascade)
+  glossary  Glossary? @relation(fields: [glossaryId], references: [id], onDelete: SetNull)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  materials             Material[]
+  transcriptionSessions TranscriptionSession[]
+  summary               Summary?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([classroomId])
+  @@index([teacherId])
+  @@index([glossaryId])
+  @@index([status])
+}
+
+model Material {
+  id String @id @default(uuid())
+
+  name String
+  url  String
+  type MaterialType
+
+  lessonId     String?
+  uploadedById String
+
+  lesson     Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  uploadedBy User    @relation("UploadedMaterials", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lessonId])
+  @@index([uploadedById])
+}
+
+model TranscriptionSession {
+  id String @id @default(uuid())
+
+  status SessionStatus @default(ATIVA)
+
+  userId   String
+  lessonId String?
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  transcript String?
+
+  segments TranscriptSegment[]
+
+  startedAt  DateTime @default(now())
+  finishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lessonId])
+  @@index([status])
+}
+
+model TranscriptSegment {
+  id String @id @default(uuid())
+
+  sessionId String
+
+  text String
+
+  startTime Float?
+  endTime   Float?
+
+  session TranscriptionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model Summary {
+  id String @id @default(uuid())
+
+  lessonId String @unique
+
+  content String
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Glossary {
+  id String @id @default(uuid())
+
+  name        String
+  description String?
+  subject     String
+
+  ownerId String
+  owner   User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  terms  GlossaryTerm[]
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([subject])
+}
+
+model GlossaryTerm {
+  id String @id @default(uuid())
+
+  term        String
+  definition  String?
+  correction  String?
+  librasValue String?
+
+  glossaryId String
+  glossary   Glossary @relation(fields: [glossaryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([glossaryId])
+  @@index([term])
 }
