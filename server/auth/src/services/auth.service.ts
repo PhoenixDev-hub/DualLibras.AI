@@ -16,22 +16,26 @@ export const authService = {
       name: data.name,
       email: data.email,
       passwordHash,
+      role: data.role,
+      institution: data.institution,
+      discipline: data.discipline,
+      registrationNumber: data.registrationNumber,
     });
 
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
     };
   },
 
   async login(data: LoginInput) {
     const user = await userService.findByEmail(data.email);
-    if (!user || !user.password) {
+    if (!user || !user.passwordHash) {
       throw new AppError('E-mail ou senha inválidos', 401);
     }
 
-    const passwordMatches = await comparePassword(data.password, user.password);
+    const passwordMatches = await comparePassword(data.password, user.passwordHash);
     if (!passwordMatches) {
       throw new AppError('E-mail ou senha inválidos', 401);
     }
@@ -39,7 +43,7 @@ export const authService = {
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
     };
   },
 };

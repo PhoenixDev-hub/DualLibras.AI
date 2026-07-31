@@ -1,0 +1,14 @@
+alter table public."User" enable row level security;
+alter table public."TeacherProfile" enable row level security;
+alter table public."StudentProfile" enable row level security;
+alter table public."SocietyProfile" enable row level security;
+alter table public."School" enable row level security;
+alter table public."Classroom" enable row level security;
+alter table public."ClassroomMember" enable row level security;
+alter table public."Lesson" enable row level security;
+alter table public."Material" enable row level security;
+alter table public."TranscriptionSession" enable row level security;
+alter table public."TranscriptSegment" enable row level security;
+alter table public."Summary" enable row level security;
+alter table public."Glossary" enable row level security;
+alter table public."GlossaryTerm" enable row level security;
