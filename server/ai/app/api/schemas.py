@@ -26,3 +26,17 @@ class TranscriptListResponse(BaseModel):
     pdfs: list[str]
     texts: list[str]
     metadata: list[str]
+
+
+class MaterialIngestRequest(BaseModel):
+    material_id: str
+    filename: str
+    display_type: str
+    content_base64: str
+    uploaded_by: str | None = None
+
+
+class MaterialIngestResponse(BaseModel):
+    success: bool
+    message: str
+    file: str

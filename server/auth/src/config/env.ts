@@ -19,4 +19,7 @@ export const env = {
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
   cookieName: process.env.AUTH_COOKIE_NAME ?? 'festival_session',
   cookieSecure: process.env.COOKIE_SECURE === 'true',
+  materialUploadDir: process.env.MATERIAL_UPLOAD_DIR ?? './uploads/materials',
+  materialMaxBytes: Number(process.env.MATERIAL_MAX_BYTES ?? 25 * 1024 * 1024),
+  aiBackendUrl: process.env.AI_BACKEND_URL ?? 'http://localhost:5455',
 };

@@ -1,3 +1,6 @@
+import { classroomService } from './classroom.service';
+import { formatMaterial, materialService } from './material.service';
+
 type UserRole = 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE' | 'ADMIN';
 
 export type DashboardSection =
@@ -220,12 +223,50 @@ export const dashboardService = {
     };
   },
 
-  getDashboard(role: string) {
+  async getDashboard(userId: string, role: string) {
     const access = this.getAccess(role);
+    const [classrooms, materials] = await Promise.all([
+      classroomService.listForUser(userId, role),
+      materialService.listForUser(userId, role),
+    ]);
+    const managementSections = { ...dashboardData.managementSections };
+    const formattedMaterials = materials.map(formatMaterial);
+
+    managementSections['Minhas Turmas'] = {
+      ...managementSections['Minhas Turmas'],
+      rows: classrooms.length > 0
+        ? classrooms.map((classroom) => ({
+            title: classroom.name,
+            detail: `Código ${classroom.code} • ${classroom.members.length} aluno(s)`,
+            meta: `${classroom.lessons.length} aula(s) vinculada(s)`,
+            action: 'Configurar',
+            capability: 'editClass',
+          }))
+        : [],
+    };
+
+    managementSections.Materiais = {
+      ...managementSections.Materiais,
+      rows: formattedMaterials.length > 0
+        ? formattedMaterials.map((material) => ({
+            title: material.name,
+            detail: material.displayType,
+            meta: 'Disponível para processamento da IA',
+            action: 'Abrir',
+          }))
+        : [],
+    };
+
     return {
       access,
       menuItems: menuItems.filter((item) => access.sections.includes(item.label as DashboardSection)),
       ...dashboardData,
+      stats: dashboardData.stats.map((stat) => (
+        stat.label === 'Materiais da disciplina'
+          ? { ...stat, value: String(formattedMaterials.length), detail: 'Arquivos enviados para IA' }
+          : stat
+      )),
+      managementSections,
     };
   },
 };

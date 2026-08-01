@@ -20,6 +20,24 @@ export type DashboardAccess = {
   capabilities: Record<string, boolean>
 }
 
+export type Classroom = {
+  id: string
+  name: string
+  code: string
+  studentsCount: number
+  lessonsCount: number
+  createdAt: string
+}
+
+export type Material = {
+  id: string
+  name: string
+  url: string
+  type: string
+  displayType: string
+  createdAt: string
+}
+
 export type DashboardData = {
   access: DashboardAccess
   menuItems: Array<{ label: DashboardSection; icon: string }>
@@ -96,5 +114,27 @@ export const authApi = {
 
   logout() {
     return request<void>('/auth/logout', { method: 'POST' })
+  },
+
+  classrooms() {
+    return request<{ classrooms: Classroom[] }>('/classrooms')
+  },
+
+  createClassroom(name: string) {
+    return request<{ classroom: Classroom }>('/classrooms', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    })
+  },
+
+  materials() {
+    return request<{ materials: Material[] }>('/materials')
+  },
+
+  uploadMaterial(data: { filename: string; contentBase64: string }) {
+    return request<{ material: Material; ai: { sent: boolean; status: 'enviado' | 'pendente' } }>('/materials', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
   },
 }

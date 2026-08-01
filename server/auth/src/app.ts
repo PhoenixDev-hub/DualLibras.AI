@@ -4,6 +4,8 @@ import { env } from './config/env';
 import { authRoutes } from './routes/auth.routes';
 import { userRoutes } from './routes/user.routes';
 import { dashboardRoutes } from './routes/dashboard.routes';
+import { classroomRoutes } from './routes/classroom.routes';
+import { materialRoutes } from './routes/material.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
 
 export function createApp() {
@@ -13,7 +15,7 @@ export function createApp() {
     origin: env.corsOrigin === '*' ? true : env.corsOrigin,
     credentials: true,
   }));
-  app.use(express.json());
+  app.use(express.json({ limit: '35mb' }));
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
@@ -22,6 +24,8 @@ export function createApp() {
   app.use('/auth', authRoutes);
   app.use('/users', userRoutes);
   app.use('/dashboard', dashboardRoutes);
+  app.use('/classrooms', classroomRoutes);
+  app.use('/materials', materialRoutes);
 
   app.use(errorMiddleware);
 

@@ -1,8 +1,10 @@
+import base64
 import json
 import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +13,8 @@ from fastapi.responses import FileResponse
 try:
     from server.app.api.schemas import (
         SaveTranscriptRequest,
+        MaterialIngestRequest,
+        MaterialIngestResponse,
         TranscriptListResponse,
         TranscriptResponse,
     )
@@ -20,6 +24,8 @@ try:
 except ImportError:
     from app.api.schemas import (
         SaveTranscriptRequest,
+        MaterialIngestRequest,
+        MaterialIngestResponse,
         TranscriptListResponse,
         TranscriptResponse,
     )
@@ -34,6 +40,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 PORT = int(os.getenv("PORT", "5455"))
+MATERIAL_OUTPUT_DIR = os.getenv("MATERIAL_OUTPUT_DIR", "./output/materials")
 
 transcript_manager = TranscriptManager()
 doc_generator = DocumentationGenerator()
@@ -76,6 +83,49 @@ async def health():
 @app.post("/test-message")
 async def test_message():
     return {"status": "ok", "message": "Teste do backend. Conexão ok."}
+
+
+@app.post("/materials/ingest", response_model=MaterialIngestResponse)
+async def ingest_material(request: MaterialIngestRequest) -> MaterialIngestResponse:
+    try:
+        output_dir = Path(MATERIAL_OUTPUT_DIR).resolve()
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        safe_filename = Path(request.filename).name
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Nome de arquivo inválido")
+
+        raw_content = base64.b64decode(request.content_base64)
+        filepath = output_dir / f"{request.material_id}_{safe_filename}"
+        filepath.write_bytes(raw_content)
+
+        metadata_path = output_dir / f"{request.material_id}.json"
+        metadata_path.write_text(
+            json.dumps(
+                {
+                    "material_id": request.material_id,
+                    "filename": safe_filename,
+                    "display_type": request.display_type,
+                    "uploaded_by": request.uploaded_by,
+                    "file": str(filepath),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        logger.info("Material ingerido para IA: %s", filepath)
+        return MaterialIngestResponse(
+            success=True,
+            message="Material recebido pela IA",
+            file=str(filepath),
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Erro ao ingerir material: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao ingerir material: {str(exc)}")
 
 
 @app.websocket("/ws")

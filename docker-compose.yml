@@ -29,6 +29,11 @@ services:
       - "4000:4000"
     env_file:
       - .env
+    environment:
+      - AI_BACKEND_URL=http://backend:5455
+      - MATERIAL_UPLOAD_DIR=/app/uploads/materials
+    volumes:
+      - ./server/auth/uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -57,10 +62,12 @@ services:
       - USE_PORTUGUESE_PROMPT=1
       - SAVE_TRANSCRIPTS=1
       - TRANSCRIPT_OUTPUT_DIR=/app/transcripts
+      - MATERIAL_OUTPUT_DIR=/app/materials
       - LOG_LEVEL=INFO
       - PORT=5455
     volumes:
       - ./server/ai/transcripts:/app/transcripts
+      - ./server/ai/materials:/app/materials
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5455/health', timeout=5)"]
       interval: 30s

@@ -5,14 +5,28 @@ import type { DashboardData } from '../../services/authApi'
 type ManagementSectionProps = {
   section: Exclude<DashboardSection, 'Dashboard'>
   dashboard: DashboardData
+  onCreateClassroom: () => void
+  onUploadMaterial: () => void
 }
 
-export default function ManagementSection({ section, dashboard }: ManagementSectionProps) {
+export default function ManagementSection({ section, dashboard, onCreateClassroom, onUploadMaterial }: ManagementSectionProps) {
   const content = dashboard.managementSections[section]
   const Icon = getIcon(content.icon)
   const canUse = (capability?: string) => (
     capability ? dashboard.access.capabilities[capability] : true
   )
+  const isClassroomSection = section === 'Minhas Turmas'
+  const isMaterialSection = section === 'Materiais'
+
+  function handlePrimaryAction() {
+    if (isClassroomSection && content.primaryCapability === 'createClass') {
+      onCreateClassroom()
+    }
+
+    if (isMaterialSection && content.primaryCapability === 'uploadMaterial') {
+      onUploadMaterial()
+    }
+  }
 
   return (
     <section>
@@ -30,7 +44,7 @@ export default function ManagementSection({ section, dashboard }: ManagementSect
           </p>
         </article>
         {canUse(content.primaryCapability) && (
-          <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 text-sm font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800">
+          <button onClick={handlePrimaryAction} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 text-sm font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800">
             <Plus className="h-5 w-5" aria-hidden="true" />
             {content.primaryAction}
           </button>
@@ -40,6 +54,11 @@ export default function ManagementSection({ section, dashboard }: ManagementSect
       <section className="mt-7 grid gap-5 xl:grid-cols-[1.4fr_0.6fr]">
         <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-black">Itens principais</h2>
+          {content.rows.length === 0 && (
+            <p className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+              Nenhuma sala cadastrada ainda.
+            </p>
+          )}
           <ul className="mt-4 space-y-3">
             {content.rows.map((row) => (
               <li key={row.title} className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950 sm:flex-row sm:items-center sm:justify-between">

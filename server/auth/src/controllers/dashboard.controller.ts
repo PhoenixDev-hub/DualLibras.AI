@@ -12,7 +12,7 @@ export const dashboardController = {
       const user = await userService.findById(userId);
       if (!user) throw new AppError('Usuário não encontrado', 404);
 
-      res.json(dashboardService.getDashboard(user.role));
+      res.json(await dashboardService.getDashboard(user.id, user.role));
     } catch (err) {
       next(err);
     }

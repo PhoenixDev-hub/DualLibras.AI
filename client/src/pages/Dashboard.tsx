@@ -48,5 +48,5 @@ export default function Dashboard() {
     return <Navigate to="/entrar" replace />
   }
 
-  return <DashboardLayout user={user} dashboard={dashboard} />
+  return <DashboardLayout user={user} dashboard={dashboard} onDashboardChange={setDashboard} />
 }
