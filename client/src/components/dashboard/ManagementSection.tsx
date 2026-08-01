@@ -1,13 +1,18 @@
 import { CheckCircle2, Plus } from 'lucide-react'
-import { type DashboardSection, managementSections } from './dashboardData'
+import { getIcon, type DashboardSection } from './dashboardData'
+import type { DashboardData } from '../../services/authApi'
 
 type ManagementSectionProps = {
   section: Exclude<DashboardSection, 'Dashboard'>
+  dashboard: DashboardData
 }
 
-export default function ManagementSection({ section }: ManagementSectionProps) {
-  const content = managementSections[section]
-  const Icon = content.icon
+export default function ManagementSection({ section, dashboard }: ManagementSectionProps) {
+  const content = dashboard.managementSections[section]
+  const Icon = getIcon(content.icon)
+  const canUse = (capability?: string) => (
+    capability ? dashboard.access.capabilities[capability] : true
+  )
 
   return (
     <section>
@@ -24,10 +29,12 @@ export default function ManagementSection({ section }: ManagementSectionProps) {
             {content.description}
           </p>
         </article>
-        <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 text-sm font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800">
-          <Plus className="h-5 w-5" aria-hidden="true" />
-          {content.primaryAction}
-        </button>
+        {canUse(content.primaryCapability) && (
+          <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 text-sm font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800">
+            <Plus className="h-5 w-5" aria-hidden="true" />
+            {content.primaryAction}
+          </button>
+        )}
       </header>
 
       <section className="mt-7 grid gap-5 xl:grid-cols-[1.4fr_0.6fr]">
@@ -44,9 +51,11 @@ export default function ManagementSection({ section }: ManagementSectionProps) {
                     {row.meta}
                   </span>
                 </span>
-                <button className="inline-flex min-h-10 items-center justify-center rounded-lg bg-blue-700 px-4 text-sm font-bold text-white transition hover:bg-blue-800">
-                  {row.action}
-                </button>
+                {canUse(row.capability) && (
+                  <button className="inline-flex min-h-10 items-center justify-center rounded-lg bg-blue-700 px-4 text-sm font-bold text-white transition hover:bg-blue-800">
+                    {row.action}
+                  </button>
+                )}
               </li>
             ))}
           </ul>

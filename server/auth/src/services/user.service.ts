@@ -7,11 +7,25 @@ type CreateUserInput = Omit<RegisterInput, 'password'> & {
 
 export const userService = {
   findByEmail(email: string) {
-    return prisma.user.findUnique({ where: { email } });
+    return prisma.user.findUnique({
+      where: { email },
+      include: {
+        teacherProfile: true,
+        studentProfile: true,
+        societyProfile: true,
+      },
+    });
   },
 
   findById(id: string) {
-    return prisma.user.findUnique({ where: { id } });
+    return prisma.user.findUnique({
+      where: { id },
+      include: {
+        teacherProfile: true,
+        studentProfile: true,
+        societyProfile: true,
+      },
+    });
   },
 
   create(data: CreateUserInput) {

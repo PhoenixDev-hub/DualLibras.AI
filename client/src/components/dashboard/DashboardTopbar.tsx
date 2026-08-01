@@ -1,12 +1,17 @@
 import { Bell, Menu, Moon, Search } from 'lucide-react'
-import { type DashboardSection, menuItems } from './dashboardData'
+import { getInitials, type DashboardSection } from './dashboardData'
+import type { DashboardData, DashboardUser } from '../../services/authApi'
 
 type DashboardTopbarProps = {
   activeSection: DashboardSection
+  menuItems: DashboardData['menuItems']
+  user: DashboardUser
   onSectionChange: (section: DashboardSection) => void
 }
 
-export default function DashboardTopbar({ activeSection, onSectionChange }: DashboardTopbarProps) {
+export default function DashboardTopbar({ activeSection, menuItems, user, onSectionChange }: DashboardTopbarProps) {
+  const profileLabel = user.discipline ?? user.institution ?? user.access.roleLabel
+
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/88 sm:px-6 lg:px-8">
       <nav className="flex items-center justify-between gap-4" aria-label="Barra superior">
@@ -32,11 +37,11 @@ export default function DashboardTopbar({ activeSection, onSectionChange }: Dash
             <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-blue-700 ring-2 ring-white dark:ring-slate-950" />
           </button>
           <span className="hidden text-right sm:block">
-            <span className="block text-sm font-bold">Professor João</span>
-            <span className="block text-xs text-slate-500 dark:text-slate-400">Matemática</span>
+            <span className="block text-sm font-bold">{user.name}</span>
+            <span className="block text-xs text-slate-500 dark:text-slate-400">{profileLabel}</span>
           </span>
           <span className="grid h-11 w-11 place-items-center rounded-lg bg-blue-700 text-sm font-bold text-white">
-            PJ
+            {getInitials(user.name)}
           </span>
         </section>
       </nav>

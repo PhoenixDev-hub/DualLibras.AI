@@ -3,12 +3,16 @@ import cors from 'cors';
 import { env } from './config/env';
 import { authRoutes } from './routes/auth.routes';
 import { userRoutes } from './routes/user.routes';
+import { dashboardRoutes } from './routes/dashboard.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
 
 export function createApp() {
   const app = express();
 
-  app.use(cors({ origin: env.corsOrigin }));
+  app.use(cors({
+    origin: env.corsOrigin === '*' ? true : env.corsOrigin,
+    credentials: true,
+  }));
   app.use(express.json());
 
   app.get('/health', (_req, res) => {
@@ -17,6 +21,7 @@ export function createApp() {
 
   app.use('/auth', authRoutes);
   app.use('/users', userRoutes);
+  app.use('/dashboard', dashboardRoutes);
 
   app.use(errorMiddleware);
 

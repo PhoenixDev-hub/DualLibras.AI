@@ -25,7 +25,14 @@ export const authService = {
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        discipline: data.discipline,
+        institution: data.institution,
+      },
     };
   },
 
@@ -43,7 +50,15 @@ export const authService = {
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        discipline: user.teacherProfile?.discipline,
+        institution: user.teacherProfile?.institution ?? user.studentProfile?.institution,
+        registrationNumber: user.studentProfile?.registrationNumber,
+      },
     };
   },
 };

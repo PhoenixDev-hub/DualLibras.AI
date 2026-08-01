@@ -17,4 +17,6 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
+  cookieName: process.env.AUTH_COOKIE_NAME ?? 'festival_session',
+  cookieSecure: process.env.COOKIE_SECURE === 'true',
 };

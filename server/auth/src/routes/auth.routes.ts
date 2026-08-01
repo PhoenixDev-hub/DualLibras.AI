@@ -7,3 +7,4 @@ export const authRoutes = Router();
 
 authRoutes.post('/cadastro', validate(registerSchema), authController.register);
 authRoutes.post('/login', validate(loginSchema), authController.login);
+authRoutes.post('/logout', authController.logout);

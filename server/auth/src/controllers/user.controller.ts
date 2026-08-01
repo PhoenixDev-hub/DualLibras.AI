@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { userService } from '../services/user.service';
 import { AppError } from '../middlewares/error.middleware';
+import { dashboardService } from '../services/dashboard.service';
 
 export const userController = {
   async me(req: Request, res: Response, next: NextFunction) {
@@ -15,6 +16,11 @@ export const userController = {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
+        discipline: user.teacherProfile?.discipline,
+        institution: user.teacherProfile?.institution ?? user.studentProfile?.institution,
+        registrationNumber: user.studentProfile?.registrationNumber,
+        access: dashboardService.getAccess(user.role),
         createdAt: user.createdAt,
       });
     } catch (err) {

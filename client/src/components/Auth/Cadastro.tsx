@@ -2,19 +2,9 @@ import { ArrowRight, BookOpen, Building2, Eye, EyeOff, Hash, Lock, Mail, User, U
 import { type FormEvent, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import heroBg from '../../assets/hero-bg.png';
-import { AUTH_API_BASE } from '../../config/backend';
+import { authApi } from '../../services/authApi';
 
 type Role = 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE';
-
-interface RegisterResponse {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: Role;
-  };
-}
 
 const roleOptions: Array<{ value: Role; label: string }> = [
   { value: 'ALUNO', label: 'Aluno' },
@@ -81,29 +71,15 @@ export default function Cadastro() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${AUTH_API_BASE}/auth/cadastro`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role,
-          institution: role === 'SOCIEDADE' ? undefined : institution || undefined,
-          discipline: role === 'PROFESSOR' ? discipline : undefined,
-          registrationNumber: role === 'ALUNO' ? registrationNumber : undefined,
-        }),
+      await authApi.register({
+        name,
+        email,
+        password,
+        role,
+        institution: role === 'SOCIEDADE' ? undefined : institution || undefined,
+        discipline: role === 'PROFESSOR' ? discipline : undefined,
+        registrationNumber: role === 'ALUNO' ? registrationNumber : undefined,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? 'Não foi possível criar a conta.');
-      }
-
-      const result = data as RegisterResponse;
-      localStorage.setItem('authToken', result.token);
-      localStorage.setItem('authUser', JSON.stringify(result.user));
       navigate('/app');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível criar a conta.');

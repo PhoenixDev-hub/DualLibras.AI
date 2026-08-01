@@ -2,17 +2,7 @@ import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import heroBg from '../../assets/hero-bg.png';
-import { AUTH_API_BASE } from '../../config/backend';
-
-interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  };
-}
+import { authApi } from '../../services/authApi';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,21 +18,7 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${AUTH_API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? 'Não foi possível entrar.');
-      }
-
-      const result = data as LoginResponse;
-      localStorage.setItem('authToken', result.token);
-      localStorage.setItem('authUser', JSON.stringify(result.user));
+      await authApi.login(email, password);
       navigate('/app');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível entrar.');
