@@ -22,7 +22,7 @@ except ImportError:
 try:
     from server.app.config import SETTINGS
     from server.app.services import assemblyai
-    from server.app.services.local_whisper import run_local_transcription
+    from server.app.services.local_whisper import get_local_model, run_local_transcription
     from server.app.transcript_manager import TranscriptManager
     from server.app.transcription import (
         AudioBuffer,
@@ -33,7 +33,7 @@ try:
 except ImportError:
     from app.config import SETTINGS
     from app.services import assemblyai
-    from app.services.local_whisper import run_local_transcription
+    from app.services.local_whisper import get_local_model, run_local_transcription
     from app.transcript_manager import TranscriptManager
     from app.transcription import (
         AudioBuffer,
@@ -57,7 +57,9 @@ class ClientSession:
         self.dc = None
         self.assembly_ws = None
         self.tasks: list[asyncio.Task[Any]] = []
+        self.provider_task: asyncio.Task[Any] | None = None
         self.active = True
+        self.mode: str | None = None
         self.saver = TranscriptSaver() if SETTINGS.save_transcripts else None
         self.transcript_manager = transcript_manager
 
@@ -73,6 +75,98 @@ class ClientSession:
             logger.warning("Erro ao enviar mensagem para o cliente: %s", exc)
 
     async def start(self) -> None:
+        await self.switch_provider("assemblyai", allow_fallback=True)
+
+    async def request_provider_switch(self, provider: str) -> None:
+        if self.provider_task and not self.provider_task.done():
+            await self.send_to_client(
+                {
+                    "type": "status",
+                    "text": "Aguarde a troca de provedor terminar",
+                    "connected": True,
+                    "mode": self.mode or "assemblyai",
+                }
+            )
+            return
+
+        self.provider_task = asyncio.create_task(self.switch_provider(provider))
+
+    async def switch_provider(self, provider: str, allow_fallback: bool = False) -> None:
+        if provider not in {"assemblyai", "local"}:
+            await self.send_to_client(
+                {
+                    "type": "error",
+                    "text": f"Provedor de transcrição inválido: {provider}",
+                    "error": True,
+                    "is_final": True,
+                }
+            )
+            return
+
+        previous_mode = self.mode
+
+        # Prepare the local model before stopping AssemblyAI. If the dependency
+        # or model is unavailable, the current provider keeps receiving audio.
+        local_model = None
+        if provider == "local":
+            try:
+                await self.send_to_client(
+                    {
+                        "type": "status",
+                        "text": "Verificando Faster-Whisper local",
+                        "connected": True,
+                        "mode": previous_mode or "assemblyai",
+                    }
+                )
+                local_model = await asyncio.to_thread(get_local_model)
+            except Exception as exc:
+                logger.error("Faster-Whisper não está disponível: %s", exc)
+                await self.send_to_client(
+                    {
+                        "type": "error",
+                        "text": f"Faster-Whisper indisponível: {exc}",
+                        "error": True,
+                        "is_final": True,
+                        "mode": previous_mode or "assemblyai",
+                    }
+                )
+                if previous_mode:
+                    await self.send_to_client(
+                        {
+                            "type": "status",
+                            "text": f"Continuando com {previous_mode}",
+                            "connected": True,
+                            "mode": previous_mode,
+                        }
+                    )
+                return
+
+        await self._stop_transcription_tasks()
+        self.audio_buffer.drain_stale()
+
+        if provider == "assemblyai":
+            started = await self._start_assemblyai(notify_error=not allow_fallback)
+            if started:
+                return
+            if not allow_fallback:
+                if previous_mode == "local" and SETTINGS.local_fallback:
+                    await self._start_local()
+                return
+
+        if SETTINGS.local_fallback:
+            await self._start_local(local_model)
+        else:
+            self.mode = None
+            await self.send_to_client(
+                {
+                    "type": "error",
+                    "text": "Fallback local desativado.",
+                    "error": True,
+                    "is_final": True,
+                }
+            )
+
+    async def _start_assemblyai(self, notify_error: bool = True) -> bool:
         auth_key = SETTINGS.assemblyai_api_key
         internet = is_internet_available()
 
@@ -97,6 +191,7 @@ class ClientSession:
                         )
                     )
                 )
+                self.mode = "assemblyai"
 
                 await self.send_to_client(
                     {
@@ -106,41 +201,46 @@ class ClientSession:
                         "mode": "assemblyai",
                     }
                 )
-                return
+                return True
             except Exception as exc:
                 logger.error(
                     "Falha ao conectar na AssemblyAI: %s. Iniciando fallback local.",
                     exc,
                 )
 
-        if SETTINGS.local_fallback:
-            self.tasks.append(
-                asyncio.create_task(
-                    run_local_transcription(
-                        self.audio_buffer,
-                        self.saver,
-                        lambda: self.active,
-                        self.send_to_client,
-                    )
-                )
-            )
-            await self.send_to_client(
-                {
-                    "type": "status",
-                    "text": "Conectado via Fallback Local",
-                    "connected": True,
-                    "mode": "local",
-                }
-            )
-        else:
+        self.mode = None
+        if notify_error:
             await self.send_to_client(
                 {
                     "type": "error",
-                    "text": "Sem conexão de internet e fallback local desativado.",
+                    "text": "AssemblyAI indisponível. Verifique internet e ASSEMBLYAI_API_KEY.",
                     "error": True,
                     "is_final": True,
                 }
             )
+        return False
+
+    async def _start_local(self, model: Any = None) -> None:
+        self.mode = "local"
+        await self.send_to_client(
+            {
+                "type": "status",
+                "text": "Conectado via Fallback Local",
+                "connected": True,
+                "mode": "local",
+            }
+        )
+        self.tasks.append(
+            asyncio.create_task(
+                run_local_transcription(
+                    self.audio_buffer,
+                    self.saver,
+                    lambda: self.active and self.mode == "local",
+                    self.send_to_client,
+                    model=model,
+                )
+            )
+        )
 
     async def handle_assembly_turn(
         self,
@@ -255,6 +355,21 @@ class ClientSession:
 
     async def stop(self) -> None:
         self.active = False
+        if self.provider_task and not self.provider_task.done():
+            self.provider_task.cancel()
+            await asyncio.gather(self.provider_task, return_exceptions=True)
+            self.provider_task = None
+        await self._stop_transcription_tasks()
+
+        if self.pc:
+            await self.pc.close()
+            self.pc = None
+            self.dc = None
+
+        logger.info("Sessão limpa com sucesso.")
+
+    async def _stop_transcription_tasks(self) -> None:
+        self.mode = None
 
         for task in self.tasks:
             task.cancel()
@@ -262,16 +377,9 @@ class ClientSession:
             await asyncio.gather(*self.tasks, return_exceptions=True)
             self.tasks.clear()
 
-        if self.pc:
-            await self.pc.close()
-            self.pc = None
-            self.dc = None
-
         if self.assembly_ws:
             try:
                 await self.assembly_ws.close()
             except Exception:
                 pass
             self.assembly_ws = None
-
-        logger.info("Sessão limpa com sucesso.")

@@ -161,6 +161,20 @@ async def websocket_endpoint(websocket: WebSocket):
                     if msg_type == "webrtc_offer":
                         logger.info("Recebeu WebRTC offer do cliente pelo WebSocket")
                         await session.handle_webrtc_offer(data.get("sdp"))
+                    elif msg_type == "set_provider":
+                        provider = data.get("provider")
+                        if provider not in {"assemblyai", "local"}:
+                            await session.send_to_client(
+                                {
+                                    "type": "error",
+                                    "text": "Provider inválido. Use 'assemblyai' ou 'local'.",
+                                    "error": True,
+                                    "is_final": True,
+                                }
+                            )
+                        else:
+                            logger.info("Alternando provedor de transcrição para %s", provider)
+                            await session.request_provider_switch(provider)
                     elif msg_type == "ping":
                         await session.send_to_client({"type": "pong"})
                 except Exception as exc:

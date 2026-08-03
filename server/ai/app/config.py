@@ -42,7 +42,39 @@ class Settings:
     save_transcripts: bool = os.getenv("SAVE_TRANSCRIPTS", "1") == "1"
     transcript_output_dir: str = os.getenv("TRANSCRIPT_OUTPUT_DIR", "transcripts")
     local_fallback: bool = os.getenv("LOCAL_FALLBACK", "1") == "1"
-    local_fallback_model: str = os.getenv("LOCAL_FALLBACK_MODEL", "small")
+    local_fallback_model: str = os.getenv("LOCAL_FALLBACK_MODEL", "base")
+    local_whisper_device: str = os.getenv("LOCAL_WHISPER_DEVICE", "cpu")
+    local_whisper_compute_type: str = os.getenv(
+        "LOCAL_WHISPER_COMPUTE_TYPE", "int8"
+    )
+    local_whisper_cpu_threads: int = int(
+        os.getenv("LOCAL_WHISPER_CPU_THREADS", "0")
+    )
+    local_whisper_beam_size: int = int(os.getenv("LOCAL_WHISPER_BEAM_SIZE", "1"))
+    local_whisper_vad_filter: bool = os.getenv("LOCAL_WHISPER_VAD_FILTER", "1") == "1"
+    local_whisper_vad_min_silence_ms: int = int(
+        os.getenv("LOCAL_WHISPER_VAD_MIN_SILENCE_MS", "500")
+    )
+    local_whisper_vad_speech_pad_ms: int = int(
+        os.getenv("LOCAL_WHISPER_VAD_SPEECH_PAD_MS", "300")
+    )
+    local_whisper_no_speech_threshold: float = float(
+        os.getenv("LOCAL_WHISPER_NO_SPEECH_THRESHOLD", "0.6")
+    )
+    local_whisper_hotwords: str = os.getenv(
+        "LOCAL_WHISPER_HOTWORDS",
+        "aluno, aluna, alunos, alunas, professor, professora, aula, turma, escola, conteúdo, explicação",
+    )
+    local_whisper_initial_prompt: str = os.getenv(
+        "LOCAL_WHISPER_INITIAL_PROMPT",
+        "Transcrição em português do Brasil de uma aula. Fala do professor e dos alunos.",
+    )
+    local_transcription_chunk_seconds: float = float(
+        os.getenv("LOCAL_TRANSCRIPTION_CHUNK_SECONDS", "3.0")
+    )
+    local_transcription_min_seconds: float = float(
+        os.getenv("LOCAL_TRANSCRIPTION_MIN_SECONDS", "1.0")
+    )
     probe_host: str = os.getenv("INTERNET_PROBE_HOST", "1.1.1.1")
     probe_port: int = int(os.getenv("INTERNET_PROBE_PORT", "53"))
     probe_timeout: float = float(os.getenv("INTERNET_PROBE_TIMEOUT", "2"))

@@ -1,10 +1,12 @@
 import {
   AlertTriangle,
+  Cpu,
   FolderOpen,
   Maximize,
   Mic,
   MicOff,
   Minimize,
+  RefreshCcw,
   Volume2,
   Wifi,
   WifiOff
@@ -69,6 +71,7 @@ export default function AppPrincipal() {
     connectionMode,
     useVadGating,
     setUseVadGating,
+    switchTranscriptionProvider,
     iniciarCaptura,
     pararCaptura,
   } = useAudioCapture({ onTranscript: handleTranscript })
@@ -173,6 +176,8 @@ export default function AppPrincipal() {
         : 'Iniciando...'
 
   const captionStatusClass = conectado ? 'text-[#82E3FF]' : 'text-[#53B8FF]'
+  const nextProvider = connectionMode === 'assemblyai' ? 'local' : 'assemblyai'
+  const providerButtonLabel = nextProvider === 'local' ? 'Usar Faster-Whisper' : 'Usar AssemblyAI'
 
   return (
     <main className="relative min-h-screen w-screen overflow-hidden bg-black text-[#F2F6FF] font-sans">
@@ -272,6 +277,26 @@ export default function AppPrincipal() {
             {useVadGating ? (speaking ? 'Falando' : 'Silêncio') : 'Fluxo Contínuo'}
           </button>
 
+          {/* Motor de transcrição */}
+          <button
+            type="button"
+            onClick={() => switchTranscriptionProvider(nextProvider)}
+            disabled={!conectado}
+            className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
+              conectado
+                ? 'border-[#82E3FF]/30 bg-[#145DFF]/20 text-[#82E3FF] hover:bg-[#145DFF]/35'
+                : 'cursor-not-allowed border-white/10 bg-white/5 text-white/35'
+            }`}
+            title="Alternar entre AssemblyAI e Faster-Whisper local"
+          >
+            {nextProvider === 'local' ? (
+              <Cpu className="w-3.5 h-3.5" />
+            ) : (
+              <RefreshCcw className="w-3.5 h-3.5" />
+            )}
+            {providerButtonLabel}
+          </button>
+
           {/* Latência */}
           {capturing && (
             <span
@@ -325,7 +350,7 @@ export default function AppPrincipal() {
           <div className="flex gap-2">
             <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
             <div>
-              <h4 className="text-sm font-bold text-red-300">Erro no Microfone</h4>
+              <h4 className="text-sm font-bold text-red-300">Erro na transcrição</h4>
               <p className="mt-1 text-xs text-red-200">{audioError}</p>
             </div>
           </div>

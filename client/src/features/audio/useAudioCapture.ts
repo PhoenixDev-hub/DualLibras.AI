@@ -5,6 +5,7 @@ import { WS_URL } from '../../config/backend'
 import { parseTranscriptMessage, type TranscriptMessage } from '../../services/websocket'
 
 type ConnectionMode = 'assemblyai' | 'local' | 'offline'
+type TranscriptionProvider = Exclude<ConnectionMode, 'offline'>
 
 type UseAudioCaptureOptions = {
   onTranscript: (message: TranscriptMessage) => void
@@ -148,6 +149,12 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
           }
         } else if (data.type === 'status') {
           setConnectionMode(data.mode || 'assemblyai')
+        } else if (data.type === 'error') {
+          if (data.mode === 'assemblyai' || data.mode === 'local') {
+            setConnectionMode(data.mode)
+          }
+          setAudioError(data.text || 'O provedor de transcrição não está disponível.')
+          handleTranscriptPayload(data)
         } else if (data.type === 'transcript') {
           handleTranscriptPayload(data)
         }
@@ -251,10 +258,11 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
         if (!useVadGatingRef.current || speakingRef.current) {
           lastSendTimeRef.current = Date.now()
 
-          if (rtcDcRef.current && rtcDcRef.current.readyState === 'open') {
-            rtcDcRef.current.send(buffer)
-          } else if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          // Keep audio transport independent from the transcription provider.
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             wsRef.current.send(buffer)
+          } else if (rtcDcRef.current && rtcDcRef.current.readyState === 'open') {
+            rtcDcRef.current.send(buffer)
           }
         }
       }
@@ -346,6 +354,23 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
     analyserRef.current = null
   }
 
+  const switchTranscriptionProvider = (provider?: TranscriptionProvider) => {
+    const nextProvider = provider ?? (connectionMode === 'assemblyai' ? 'local' : 'assemblyai')
+
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      setAudioError('Backend de transcrição desconectado. Aguarde a reconexão antes de trocar o motor.')
+      return
+    }
+
+    setAudioError('')
+    wsRef.current.send(
+      JSON.stringify({
+        type: 'set_provider',
+        provider: nextProvider,
+      }),
+    )
+  }
+
   useEffect(() => {
     carregarDispositivos()
   }, [])
@@ -386,6 +411,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
     connectionMode,
     useVadGating,
     setUseVadGating,
+    switchTranscriptionProvider,
     iniciarCaptura,
     pararCaptura,
   }
