@@ -1,98 +1,32 @@
 [
   {
-    "timestamp": "00:00:07",
-    "seconds": 7.91,
+    "timestamp": "00:00:24",
+    "seconds": 24.99,
     "speaker": "Professor",
-    "text": "Ai, que..."
+    "text": "Bom dia."
   },
   {
-    "timestamp": "00:00:15",
-    "seconds": 15.19,
+    "timestamp": "00:00:45",
+    "seconds": 45.01,
     "speaker": "Professor",
-    "text": "Luljeia."
-  },
-  {
-    "timestamp": "00:00:18",
-    "seconds": 18.81,
-    "speaker": "Professor",
-    "text": "Vamos até lá."
-  },
-  {
-    "timestamp": "00:00:26",
-    "seconds": 26.84,
-    "speaker": "Professor",
-    "text": "Um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um, um"
-  },
-  {
-    "timestamp": "00:00:36",
-    "seconds": 36.71,
-    "speaker": "Professor",
-    "text": "Deixando-o esta vida mais..."
-  },
-  {
-    "timestamp": "00:00:43",
-    "seconds": 43.48,
-    "speaker": "Professor",
-    "text": "Descermos, senhor, diamante."
-  },
-  {
-    "timestamp": "00:00:56",
-    "seconds": 56.1,
-    "speaker": "Professor",
-    "text": "Mousa."
+    "text": "Meu nome é Pedro Neto."
   },
   {
     "timestamp": "00:00:59",
-    "seconds": 59.83,
-    "speaker": "Aluno",
-    "text": "O que a gente pode fazer?"
-  },
-  {
-    "timestamp": "00:01:38",
-    "seconds": 98.74,
+    "seconds": 59.41,
     "speaker": "Professor",
-    "text": "O frio de..."
+    "text": "Obrigado."
   },
   {
-    "timestamp": "00:01:44",
-    "seconds": 104.06,
+    "timestamp": "00:01:16",
+    "seconds": 76.53,
     "speaker": "Professor",
-    "text": "Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do professor e dos alunos. Fala do"
+    "text": "Bom dia, professor."
   },
   {
-    "timestamp": "00:01:47",
-    "seconds": 107.94,
-    "speaker": "Aluno",
-    "text": "Hoje eu me reficcinei ao aluno."
-  },
-  {
-    "timestamp": "00:01:54",
-    "seconds": 114.67,
+    "timestamp": "00:01:31",
+    "seconds": 91.09,
     "speaker": "Professor",
-    "text": "Deito de um."
-  },
-  {
-    "timestamp": "00:01:59",
-    "seconds": 119.97,
-    "speaker": "Aluno",
-    "text": "O que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o"
-  },
-  {
-    "timestamp": "00:02:03",
-    "seconds": 123.75,
-    "speaker": "Professor",
-    "text": "Fala do professor e dos alunos."
-  },
-  {
-    "timestamp": "00:02:08",
-    "seconds": 128.87,
-    "speaker": "Aluno",
-    "text": "O que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o"
-  },
-  {
-    "timestamp": "00:02:13",
-    "seconds": 133.53,
-    "speaker": "Aluno",
-    "text": "E aí, o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o que é o"
+    "text": "Oi, professor."
   }
 ]

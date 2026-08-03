@@ -38,8 +38,14 @@ def get_local_model() -> Any:
     return local_model
 
 
-def transcribe_audio(model: Any, audio_bytes: bytes) -> list[str]:
+def transcribe_audio(model: Any, audio_bytes: bytes, previous_text: str = "") -> list[str]:
     audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+    prompt = SETTINGS.local_whisper_initial_prompt
+    if previous_text:
+        # Prepend recent context to guide Whisper's grammar and domain vocabulary
+        recent_context = previous_text[-150:]
+        prompt = f"{prompt} {recent_context}".strip()
+
     segments, _ = model.transcribe(
         audio_np,
         beam_size=SETTINGS.local_whisper_beam_size,
@@ -51,7 +57,7 @@ def transcribe_audio(model: Any, audio_bytes: bytes) -> list[str]:
             "speech_pad_ms": SETTINGS.local_whisper_vad_speech_pad_ms,
         },
         condition_on_previous_text=False,
-        initial_prompt=SETTINGS.local_whisper_initial_prompt,
+        initial_prompt=prompt,
         hotwords=SETTINGS.local_whisper_hotwords,
         no_speech_threshold=SETTINGS.local_whisper_no_speech_threshold,
         temperature=0.0,
@@ -142,7 +148,7 @@ async def _send_texts(
     send_to_client: Callable[[dict[str, Any]], Awaitable[None]],
     last_text: str = "",
 ) -> str:
-    texts = await asyncio.to_thread(transcribe_audio, model, chunk)
+    texts = await asyncio.to_thread(transcribe_audio, model, chunk, last_text)
     emitted_text = last_text
     for text in texts:
         normalized = " ".join(text.lower().split())
