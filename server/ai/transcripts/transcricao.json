@@ -1,32 +1,122 @@
 [
   {
-    "timestamp": "00:00:24",
-    "seconds": 24.99,
+    "timestamp": "00:00:54",
+    "seconds": 54.67,
     "speaker": "Professor",
-    "text": "Bom dia."
+    "text": "Ativa."
   },
   {
-    "timestamp": "00:00:45",
-    "seconds": 45.01,
+    "timestamp": "00:01:09",
+    "seconds": 69.24,
     "speaker": "Professor",
-    "text": "Meu nome é Pedro Neto."
+    "text": "Transcrição e legendas pela comunidade Amara.org"
   },
   {
-    "timestamp": "00:00:59",
-    "seconds": 59.41,
+    "timestamp": "00:01:21",
+    "seconds": 81.74,
     "speaker": "Professor",
-    "text": "Obrigado."
+    "text": "em específicos de gravação."
   },
   {
-    "timestamp": "00:01:16",
-    "seconds": 76.53,
+    "timestamp": "00:01:34",
+    "seconds": 94.89,
     "speaker": "Professor",
-    "text": "Bom dia, professor."
+    "text": "Em nossa aula de diálogo, tem que ter um..."
   },
   {
-    "timestamp": "00:01:31",
-    "seconds": 91.09,
+    "timestamp": "00:01:47",
+    "seconds": 107.69,
+    "speaker": "Aluno",
+    "text": "E o que eu aparei que ele erra bem menos."
+  },
+  {
+    "timestamp": "00:02:00",
+    "seconds": 120.49,
     "speaker": "Professor",
-    "text": "Oi, professor."
+    "text": "Então, olha para aquele vídeo para ver se está funcionando."
+  },
+  {
+    "timestamp": "00:02:12",
+    "seconds": 132.74,
+    "speaker": "Professor",
+    "text": "É possível também."
+  },
+  {
+    "timestamp": "00:02:23",
+    "seconds": 143.25,
+    "speaker": "Professor",
+    "text": "Muito obrigado."
+  },
+  {
+    "timestamp": "00:02:33",
+    "seconds": 153.65,
+    "speaker": "Professor",
+    "text": "Entradão, saída."
+  },
+  {
+    "timestamp": "00:02:43",
+    "seconds": 163.79,
+    "speaker": "Professor",
+    "text": "O meu..."
+  },
+  {
+    "timestamp": "00:02:53",
+    "seconds": 173.92,
+    "speaker": "Professor",
+    "text": "Eu não sei se eu posso te fazer essa mais, ainda não."
+  },
+  {
+    "timestamp": "00:03:05",
+    "seconds": 185.46,
+    "speaker": "Professor",
+    "text": "Ou que seria melhor para ser mais rápido."
+  },
+  {
+    "timestamp": "00:03:17",
+    "seconds": 197.97,
+    "speaker": "Professor",
+    "text": "É isso aí."
+  },
+  {
+    "timestamp": "00:03:31",
+    "seconds": 211.28,
+    "speaker": "Professor",
+    "text": "Muito obrigado, professor."
+  },
+  {
+    "timestamp": "00:03:44",
+    "seconds": 224.63,
+    "speaker": "Professor",
+    "text": "Então, pelo menos, 1,5..."
+  },
+  {
+    "timestamp": "00:03:59",
+    "seconds": 239.65,
+    "speaker": "Professor",
+    "text": "Transcrição e legendas pela comunidade Amara.org"
+  },
+  {
+    "timestamp": "00:05:03",
+    "seconds": 303.54,
+    "speaker": "Professor",
+    "text": "Oh."
+  },
+  {
+    "timestamp": "00:05:18",
+    "seconds": 318.5,
+    "speaker": "Professor",
+    "text": "Aqui."
+  },
+  {
+    "timestamp": "00:05:28",
+    "seconds": 328.94,
+    "speaker": "Professor",
+    "text": "Esses daqui são sem microfone."
+  },
+  {
+    "timestamp": "00:05:41",
+    "seconds": 341.43,
+    "speaker": "Professor",
+    "text": "Viste."
   }
 ]

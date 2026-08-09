@@ -42,7 +42,6 @@ def transcribe_audio(model: Any, audio_bytes: bytes, previous_text: str = "") ->
     audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
     prompt = SETTINGS.local_whisper_initial_prompt
     if previous_text:
-        # Prepend recent context to guide Whisper's grammar and domain vocabulary
         recent_context = previous_text[-150:]
         prompt = f"{prompt} {recent_context}".strip()
 
