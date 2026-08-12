@@ -11,17 +11,17 @@ const problems: ProblemItem[] = [
   {
     icon: EarOff,
     title: 'Acesso limitado em sala',
-    text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti. Integer nec odio.',
+    text: 'Alunos surdos frequentemente enfrentam dificuldades para acompanhar aulas em tempo real sem suporte visual direto.',
   },
   {
     icon: Clock3,
     title: 'Atraso na tradução',
-    text: 'Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet.',
+    text: 'A falta de ferramentas de transcrição instantânea impede a inclusão e a participação ativa durante a exposição dos conteúdos.',
   },
   {
     icon: BookX,
     title: 'Conteúdo simplificado ausente',
-    text: 'Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa.',
+    text: 'Nem sempre há materiais adaptados ou intérpretes disponíveis em tempo integral em todas as disciplinas.',
   },
 ];
 
@@ -49,8 +49,7 @@ export default function Problema() {
           </h2>
 
           <p className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-gray-mid leading-relaxed font-text">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum
-            vestibulum. Cras venenatis euismod malesuada.
+            Identificamos desafios centrais na comunicação educacional que motivaram a criação deste projeto de tecnologia assistiva.
           </p>
         </div>
 

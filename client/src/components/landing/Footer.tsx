@@ -10,7 +10,7 @@ const productLinks: FooterLink[] = [
   { label: 'Problema', href: '#problema' },
   { label: 'Funcionamento', href: '#funcionamento' },
   { label: 'Tecnologias', href: '#tecnologias' },
-  { label: 'Impacto', href: '#impacto' },
+  { label: 'Sobre o Projeto', href: '#impacto' },
 ];
 
 const socialLinks = [

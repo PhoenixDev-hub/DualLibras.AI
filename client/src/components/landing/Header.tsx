@@ -12,7 +12,7 @@ const navItems: NavItem[] = [
   { label: 'Problema', href: '#problema' },
   { label: 'Funcionamento', href: '#funcionamento' },
   { label: 'Tecnologias', href: '#tecnologias' },
-  { label: 'Impacto', href: '#impacto' },
+  { label: 'Sobre o Projeto', href: '#impacto' },
 ];
 
 export default function Header() {
@@ -47,18 +47,12 @@ export default function Header() {
                 {item.label}
               </a>
             ))}
-            <div className="flex items-center space-x-3 ml-4">
+            <div className="flex items-center ml-4">
               <Link
-                to="/entrar"
-                className="px-4 py-2 font-ui text-sm font-medium tracking-wide text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastrar"
+                to="/app"
                 className="px-5 py-2 font-ui text-sm font-semibold tracking-wide text-text-light bg-gradient-to-r from-primary to-secondary rounded-full hover:brightness-110 hover:scale-[1.03] transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-dark"
               >
-                Cadastrar
+                Ver Protótipo
               </Link>
             </div>
           </nav>
@@ -91,20 +85,13 @@ export default function Header() {
                 {item.label}
               </a>
             ))}
-            <div className="flex flex-col space-y-2 pt-3 border-t border-primary/10">
+            <div className="flex flex-col pt-3 border-t border-primary/10">
               <Link
-                to="/entrar"
-                className="px-4 py-2 text-center text-sm text-primary hover:text-primary/80"
-                onClick={() => setMobileOpen(false)}
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastrar"
+                to="/app"
                 className="px-4 py-2 text-center text-sm font-semibold text-text-light bg-gradient-to-r from-primary to-secondary rounded-full hover:brightness-110 transition-all"
                 onClick={() => setMobileOpen(false)}
               >
-                Cadastrar
+                Ver Protótipo
               </Link>
             </div>
           </nav>

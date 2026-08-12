@@ -3,17 +3,6 @@ import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import heroBg from '../../assets/hero-bg.png';
 
-interface Stat {
-  value: string;
-  label: string;
-}
-
-const stats: Stat[] = [
-  { value: '98%', label: 'de compreensão em sala' },
-  { value: '+40', label: 'escolas parceiras' },
-  { value: '<1s', label: 'de latência na tradução' },
-];
-
 const revealClass =
   'motion-safe:opacity-0 motion-safe:animate-[fadeInUp_0.7s_ease-out_forwards]';
 const revealStyle = (delayMs: number): CSSProperties => ({ animationDelay: `${delayMs}ms` });
@@ -72,22 +61,9 @@ export default function Hero() {
             className="inline-flex items-center gap-2 px-7 py-3.5 text-text-light font-ui font-semibold tracking-wide rounded-full border border-text-light/20 hover:border-primary/60 hover:text-primary hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-dark"
           >
             <PlayCircle size={20} strokeWidth={1.75} aria-hidden="true" />
-            Ver demonstração
+            Ver protótipo
           </Link>
         </div>
-
-        <dl
-          className={`mt-16 grid grid-cols-3 gap-6 sm:gap-12 w-full max-w-lg ${revealClass}`}
-          style={revealStyle(400)}
-        >
-          {stats.map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center">
-              <dt className="sr-only">{stat.label}</dt>
-              <dd className="font-logo text-2xl md:text-3xl font-bold text-primary">{stat.value}</dd>
-              <span className="mt-1 text-xs text-gray-mid font-text leading-snug">{stat.label}</span>
-            </div>
-          ))}
-        </dl>
       </div>
 
       <div className="absolute z-10 bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-mid motion-safe:animate-bounce">

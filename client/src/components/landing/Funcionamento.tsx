@@ -11,17 +11,17 @@ const steps: Step[] = [
   {
     icon: Mic,
     title: 'Captura da fala',
-    text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti in sagittis.',
+    text: 'O microfone capta o áudio do professor ou palestrante diretamente através da interface web.',
   },
   {
     icon: Cpu,
     title: 'Processamento em tempo real',
-    text: 'Praesent libero sed cursus ante dapibus diam. Sed nisi nulla quis sem at nibh.',
+    text: 'O sistema converte o áudio em texto simplificado utilizando reconhecimento de voz em tempo real.',
   },
   {
     icon: Hand,
     title: 'Tradução para Libras',
-    text: 'Duis sagittis ipsum praesent mauris fusce nec tellus sed augue semper porta.',
+    text: 'O conteúdo traduzido é transmitido ao avatar 3D ou exibido em texto acessível para o estudante.',
   },
 ];
 
@@ -49,8 +49,7 @@ export default function Funcionamento() {
           </h2>
 
           <p className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-gray-mid leading-relaxed font-text">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum
-            vestibulum. Cras venenatis euismod malesuada.
+            Nossa solução conecta o áudio da aula à conversão textual e acessibilidade em Libras de forma contínua e automatizada.
           </p>
         </div>
 
