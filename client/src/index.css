@@ -43,46 +43,52 @@ div {
   background-color: transparent !important;
 }
 
-/* Style do widget da VLibras */
-body [vw].enabled.vlibras-widget.vlibras-centered{
+body [vw].enabled.vlibras-widget.vlibras-centered,
+body #vlibras-app-root {
   position:fixed !important;
   top:50% !important;
   right:auto !important;
   bottom:auto !important;
   left:50% !important;
-  width:316px !important;
-  height:454px !important;
-  min-width:316px !important;
-  min-height:454px !important;
+  width:320px !important;
+  height:440px !important;
+  min-width:320px !important;
+  min-height:440px !important;
   max-width:92vw !important;
-  transform:translate(-50%, -50%) !important;
+  transform:translate(-50%, -50%) scale(1.4) !important;
+  transform-origin:center center !important;
   margin-top:0 !important;
-  z-index:2147483646 !important;
-  pointer-events:auto;
+  z-index:10 !important;
+  pointer-events:none;
 }
 
-body [vw-access-button]{
+body [vw].enabled.vlibras-widget.vlibras-centered *,
+body #vlibras-app-root * {
+  pointer-events:none !important;
+}
 
+body [vw-access-button],
+body #vlibras-access-wrapper {
   position:fixed !important;
   right:18px !important;
   bottom:18px !important;
   z-index:999999 !important;
-  pointer-events:auto;
+  pointer-events:none;
+  display:none !important;
 }
 
-body [vw].enabled.vlibras-widget.vlibras-centered [vw-access-button]{
+body [vw].enabled.vlibras-widget.vlibras-centered [vw-access-button] {
   display:none !important;
-
 }
 
 body [vw].enabled.vlibras-widget.vlibras-centered [vw-plugin-wrapper],
-body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper{
-  width:316px !important;
-  height:454px !important;
-  min-height:454px !important;
+body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper {
+  width:320px !important;
+  height:440px !important;
+  min-height:440px !important;
   max-width:100% !important;
-  z-index:2147483646 !important;
-  pointer-events:auto;
+  z-index:10 !important;
+  pointer-events:none;
 }
 
 .vpw-box, .vpw-controls, .vpw-subtitles, .vpw-playing, .vpw-message-box, .vp-rate-box-content, .vp-rate-box-header, .vp-enabled, .vp-button-change-avatar, .avatar-icaro, .vp-selected, .vp-button-change-avatar, .avatar-icaro, .vp-selected{
@@ -90,22 +96,46 @@ body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper{
   background-color: transparent !important;
 }
 
-.vlibras-center-wrapper, .emscripten, #canvas{
-  margin: 10px !important;
-  height: 700px !important;
-  width: 416px !important;
+.vlibras-center-wrapper, .emscripten, #canvas {
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
 }
 
 @media (max-height: 700px){
-  body [vw].enabled.vlibras-widget.vlibras-centered{
-    top:45% !important;
-    height:358px !important;
-    min-height:358px !important;
+  body [vw].enabled.vlibras-widget.vlibras-centered,
+  body #vlibras-app-root {
+    top:50% !important;
+    width:260px !important;
+    height:360px !important;
+    min-width:260px !important;
+    min-height:360px !important;
+    transform:translate(-50%, -50%) scale(1.2) !important;
   }
 
   body [vw].enabled.vlibras-widget.vlibras-centered [vw-plugin-wrapper],
-  body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper{
-    height:358px !important;
-    min-height:358px !important;
+  body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper {
+    width:260px !important;
+    height:360px !important;
+    min-height:360px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body [vw].enabled.vlibras-widget.vlibras-centered,
+  body #vlibras-app-root {
+    width:260px !important;
+    height:360px !important;
+    min-width:260px !important;
+    min-height:360px !important;
+    transform:translate(-50%, -50%) scale(1.2) !important;
+  }
+
+  body [vw].enabled.vlibras-widget.vlibras-centered [vw-plugin-wrapper],
+  body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper {
+    width:260px !important;
+    height:360px !important;
+    min-height:360px !important;
   }
 }

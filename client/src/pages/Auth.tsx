@@ -1,5 +1,5 @@
-import Cadastro from '../components/Auth/Cadastro';
-import Login from '../components/Auth/Login';
+import Cadastro from '../features/auth/components/Cadastro';
+import Login from '../features/auth/components/Login';
 
 interface AuthProps {
   mode: 'login' | 'cadastro';

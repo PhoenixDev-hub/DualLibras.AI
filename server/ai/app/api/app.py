@@ -40,7 +40,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 PORT = int(os.getenv("PORT", "5455"))
-MATERIAL_OUTPUT_DIR = os.getenv("MATERIAL_OUTPUT_DIR", "./output/materials")
+MATERIAL_OUTPUT_DIR = os.getenv("MATERIAL_OUTPUT_DIR", "../../storage/materials/ai")
 
 transcript_manager = TranscriptManager()
 doc_generator = DocumentationGenerator()

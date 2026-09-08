@@ -27,7 +27,7 @@ ENV PATH=/root/.local/bin:$PATH \
     PORT=5455 \
     LOG_LEVEL=INFO
 
-RUN mkdir -p /app/transcripts
+RUN mkdir -p /app/storage
 
 COPY . .
 

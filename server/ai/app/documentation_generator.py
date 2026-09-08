@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -15,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 class DocumentationGenerator:
     def __init__(self, output_dir: Optional[str] = None):
-        self.output_dir = Path(output_dir or "./output/documentation")
+        self.output_dir = Path(
+            output_dir or os.getenv("DOCUMENTATION_OUTPUT_DIR", "../../storage/documentation")
+        )
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_project_documentation(

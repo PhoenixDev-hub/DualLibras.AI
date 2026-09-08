@@ -40,7 +40,9 @@ class Settings:
     vad_mode: int = int(os.getenv("VAD_MODE", "2"))
     use_webrtc_vad: bool = os.getenv("USE_WEBRTC_VAD", "1") == "1"
     save_transcripts: bool = os.getenv("SAVE_TRANSCRIPTS", "1") == "1"
-    transcript_output_dir: str = os.getenv("TRANSCRIPT_OUTPUT_DIR", "transcripts")
+    transcript_output_dir: str = os.getenv(
+        "TRANSCRIPT_OUTPUT_DIR", "../../storage/transcripts/live"
+    )
     local_fallback: bool = os.getenv("LOCAL_FALLBACK", "1") == "1"
     local_fallback_model: str = os.getenv("LOCAL_FALLBACK_MODEL", "medium")
     local_whisper_device: str = os.getenv("LOCAL_WHISPER_DEVICE", "cpu")

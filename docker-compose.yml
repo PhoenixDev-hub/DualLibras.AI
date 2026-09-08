@@ -31,9 +31,9 @@ services:
       - .env
     environment:
       - AI_BACKEND_URL=http://backend:5455
-      - MATERIAL_UPLOAD_DIR=/app/uploads/materials
+      - MATERIAL_UPLOAD_DIR=/app/storage/materials/auth
     volumes:
-      - ./server/auth/uploads:/app/uploads
+      - ./storage:/app/storage
     depends_on:
       db:
         condition: service_healthy
@@ -72,13 +72,14 @@ services:
       - LOCAL_TRANSCRIPTION_MIN_SECONDS=${LOCAL_TRANSCRIPTION_MIN_SECONDS:-1.2}
       - USE_PORTUGUESE_PROMPT=1
       - SAVE_TRANSCRIPTS=1
-      - TRANSCRIPT_OUTPUT_DIR=/app/transcripts
-      - MATERIAL_OUTPUT_DIR=/app/materials
+      - TRANSCRIPT_OUTPUT_DIR=/app/storage/transcripts/live
+      - OUTPUT_PATH=/app/storage
+      - MATERIAL_OUTPUT_DIR=/app/storage/materials/ai
+      - DOCUMENTATION_OUTPUT_DIR=/app/storage/documentation
       - LOG_LEVEL=INFO
       - PORT=5455
     volumes:
-      - ./server/ai/transcripts:/app/transcripts
-      - ./server/ai/materials:/app/materials
+      - ./storage:/app/storage
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5455/health', timeout=5)"]
       interval: 30s

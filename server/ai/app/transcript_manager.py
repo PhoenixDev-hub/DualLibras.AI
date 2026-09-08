@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class TranscriptManager:
     def __init__(self, base_path: Optional[str] = None):
-        self.base_path = Path(base_path or os.getenv("OUTPUT_PATH", "./output"))
+        self.base_path = Path(base_path or os.getenv("OUTPUT_PATH", "../../storage"))
         self.transcripts_dir = self.base_path / "transcripts"
         self.pdfs_dir = self.transcripts_dir / "pdfs"
         self.texts_dir = self.transcripts_dir / "texts"

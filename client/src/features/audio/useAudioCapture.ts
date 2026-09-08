@@ -225,7 +225,6 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
       const ctx = new AudioContext({ sampleRate: 16000 })
       audioContextRef.current = ctx
 
-      // Faltam tipos completos no simple-rnnoise-wasm
       const { RNNoiseNode, rnnoise_loadAssets } = await import('simple-rnnoise-wasm')
       const assets = await rnnoise_loadAssets({
         scriptSrc: '/rnnoise.worklet.js',
@@ -258,7 +257,6 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
         if (!useVadGatingRef.current || speakingRef.current) {
           lastSendTimeRef.current = Date.now()
 
-          // Keep audio transport independent from the transcription provider.
           if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             wsRef.current.send(buffer)
           } else if (rtcDcRef.current && rtcDcRef.current.readyState === 'open') {
@@ -386,8 +384,6 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
         wsRef.current.close()
       }
     }
-    // Conecta uma vez no mount; recriar pela identidade da função reinicia o socket.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const selectDevice = (deviceId: string) => {

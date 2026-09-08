@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider     = "prisma-client"
   output       = "../src/generated/prisma"
@@ -12,6 +7,10 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// =========================
+// ENUMS
+// =========================
 
 enum Role {
   PROFESSOR
@@ -40,29 +39,44 @@ enum SessionStatus {
   CANCELADA
 }
 
+// =========================
+// USER
+// =========================
+
 model User {
-  id           String   @id @default(uuid())
+  id           String @id @default(uuid())
   name         String
-  email        String   @unique
+  email        String @unique
   passwordHash String
   role         Role
 
   schoolId String?
-  school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  school   School? @relation(
+    fields: [schoolId],
+    references: [id],
+    onDelete: SetNull
+  )
 
   teacherProfile TeacherProfile?
   studentProfile StudentProfile?
   societyProfile SocietyProfile?
 
+  // Salas criadas pelo professor
   classroomsOwned Classroom[] @relation("TeacherClassrooms")
-  memberships     ClassroomMember[]
 
+  // Salas das quais o usuário participa
+  memberships ClassroomMember[]
+
+  // Aulas ministradas
   lessonsAsTeacher Lesson[] @relation("TeacherLessons")
 
+  // Materiais enviados
   materials Material[] @relation("UploadedMaterials")
 
+  // Sessões de transcrição
   transcriptionSessions TranscriptionSession[]
 
+  // Glossários criados
   glossaries Glossary[]
 
   createdAt DateTime @default(now())
@@ -72,6 +86,10 @@ model User {
   @@index([schoolId])
 }
 
+// =========================
+// PROFILES
+// =========================
+
 model TeacherProfile {
   id     String @id @default(uuid())
   userId String @unique
@@ -79,7 +97,11 @@ model TeacherProfile {
   discipline  String?
   institution String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -92,7 +114,11 @@ model StudentProfile {
   registrationNumber String?
   institution        String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -102,11 +128,19 @@ model SocietyProfile {
   id     String @id @default(uuid())
   userId String @unique
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// =========================
+// SCHOOL
+// =========================
 
 model School {
   id    String @id @default(uuid())
@@ -121,19 +155,47 @@ model School {
   updatedAt DateTime @updatedAt
 }
 
+// =========================
+// CLASSROOM
+// =========================
+
 model Classroom {
-  id       String @id @default(uuid())
-  name     String
-  code     String @unique
+  id String @id @default(uuid())
 
+  name        String
+  description String?
+
+  // Código utilizado pelos alunos
+  // para entrar na sala
+  code String @unique
+
+  // Professor dono da sala
   teacherId String
-  schoolId  String?
 
-  teacher User    @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Cascade)
-  school  School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  // Escola é opcional
+  schoolId String?
 
+  teacher User @relation(
+    "TeacherClassrooms",
+    fields: [teacherId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  school School? @relation(
+    fields: [schoolId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  // Alunos/membros
   members ClassroomMember[]
+
+  // Aulas
   lessons Lesson[]
+
+  // Glossários da sala
+  glossaries Glossary[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -142,42 +204,86 @@ model Classroom {
   @@index([schoolId])
 }
 
+// =========================
+// CLASSROOM MEMBER
+// =========================
+
 model ClassroomMember {
   classroomId String
   userId      String
 
-  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(
+    fields: [classroomId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   joinedAt DateTime @default(now())
 
+  // Impede que o mesmo aluno entre
+  // duas vezes na mesma sala
   @@id([classroomId, userId])
+
   @@index([userId])
 }
+
+// =========================
+// LESSON
+// =========================
 
 model Lesson {
   id String @id @default(uuid())
 
   title       String
   description String?
-  lessonPlan  String?
+
+  // Planejamento da aula
+  lessonPlan String?
 
   status LessonStatus @default(AGENDADA)
 
+  // Sala da aula
   classroomId String
-  teacherId   String
-  glossaryId  String?
 
-  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  teacher   User      @relation("TeacherLessons", fields: [teacherId], references: [id], onDelete: Cascade)
-  glossary  Glossary? @relation(fields: [glossaryId], references: [id], onDelete: SetNull)
+  // Professor responsável
+  teacherId String
+
+  // Glossário específico opcional
+  glossaryId String?
+
+  classroom Classroom @relation(
+    fields: [classroomId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  teacher User @relation(
+    "TeacherLessons",
+    fields: [teacherId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  glossary Glossary? @relation(
+    fields: [glossaryId],
+    references: [id],
+    onDelete: SetNull
+  )
 
   startedAt  DateTime?
   finishedAt DateTime?
 
-  materials             Material[]
+  materials Material[]
+
   transcriptionSessions TranscriptionSession[]
-  summary               Summary?
+
+  summary Summary?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -187,6 +293,10 @@ model Lesson {
   @@index([glossaryId])
   @@index([status])
 }
+
+// =========================
+// MATERIAL
+// =========================
 
 model Material {
   id String @id @default(uuid())
@@ -198,8 +308,18 @@ model Material {
   lessonId     String?
   uploadedById String
 
-  lesson     Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  uploadedBy User    @relation("UploadedMaterials", fields: [uploadedById], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(
+    fields: [lessonId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  uploadedBy User @relation(
+    "UploadedMaterials",
+    fields: [uploadedById],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -208,19 +328,37 @@ model Material {
   @@index([uploadedById])
 }
 
+// =========================
+// TRANSCRIPTION
+// =========================
+
 model TranscriptionSession {
   id String @id @default(uuid())
 
   status SessionStatus @default(ATIVA)
 
-  userId   String
+  // Quem iniciou a transcrição
+  userId String
+
+  // Aula relacionada
   lessonId String?
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
 
+  lesson Lesson? @relation(
+    fields: [lessonId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  // Transcrição completa
   transcript String?
 
+  // Partes da transcrição
   segments TranscriptSegment[]
 
   startedAt  DateTime @default(now())
@@ -234,6 +372,10 @@ model TranscriptionSession {
   @@index([status])
 }
 
+// =========================
+// TRANSCRIPT SEGMENT
+// =========================
+
 model TranscriptSegment {
   id String @id @default(uuid())
 
@@ -241,28 +383,46 @@ model TranscriptSegment {
 
   text String
 
+  // Tempo do áudio em segundos
   startTime Float?
   endTime   Float?
 
-  session TranscriptionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session TranscriptionSession @relation(
+    fields: [sessionId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
 
   @@index([sessionId])
 }
 
+// =========================
+// SUMMARY
+// =========================
+
 model Summary {
   id String @id @default(uuid())
 
+  // Uma aula possui um resumo
   lessonId String @unique
 
   content String
 
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(
+    fields: [lessonId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// =========================
+// GLOSSARY
+// =========================
 
 model Glossary {
   id String @id @default(uuid())
@@ -271,29 +431,65 @@ model Glossary {
   description String?
   subject     String
 
+  // Professor que criou
   ownerId String
-  owner   User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  terms  GlossaryTerm[]
+  // Sala onde o glossário é utilizado
+  classroomId String?
+
+  owner User @relation(
+    fields: [ownerId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  classroom Classroom? @relation(
+    fields: [classroomId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  terms GlossaryTerm[]
+
+  // Aulas que utilizam este glossário
   lessons Lesson[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([ownerId])
+  @@index([classroomId])
   @@index([subject])
 }
+
+// =========================
+// GLOSSARY TERM
+// =========================
 
 model GlossaryTerm {
   id String @id @default(uuid())
 
-  term        String
-  definition  String?
-  correction  String?
+  // Palavra original
+  term String
+
+  // Explicação da palavra
+  definition String?
+
+  // Forma corrigida para auxiliar
+  // reconhecimento/transcrição
+  correction String?
+
+  // Representação utilizada
+  // na tradução para Libras
   librasValue String?
 
   glossaryId String
-  glossary   Glossary @relation(fields: [glossaryId], references: [id], onDelete: Cascade)
+
+  glossary Glossary @relation(
+    fields: [glossaryId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

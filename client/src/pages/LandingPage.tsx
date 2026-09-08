@@ -1,25 +1,23 @@
 import { useEffect } from 'react';
-import Footer from '../components/landing/Footer';
-import Funcionamento from '../components/landing/Funcionamento';
-import Header from '../components/landing/Header';
-import Hero from '../components/landing/Hero';
-import Impacto from '../components/landing/Impacto';
-import Problema from '../components/landing/Problema';
-import Tecnologias from '../components/landing/tecnologia';
+import Footer from '../components/layout/Footer';
+import Header from '../components/layout/Header';
+import Dicionario from '../features/landing/sections/Dicionario';
+import Funcionamento from '../features/landing/sections/Funcionamento';
+import Hero from '../features/landing/sections/Hero';
+import Impacto from '../features/landing/sections/Impacto';
+import Problema from '../features/landing/sections/Problema';
+import Tecnologias from '../features/landing/sections/tecnologia';
 
 export default function LandingPage() {
   useEffect(() => {
-    // Desativa a restauração automática de scroll do navegador ao recarregar
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
 
-    // Se houver hash na URL no recarregamento, limpa para evitar rolagem automática
     if (window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname);
     }
 
-    // Força o scroll para o topo da Landing Page
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, []);
 
@@ -30,6 +28,7 @@ export default function LandingPage() {
         <Hero />
         <Problema />
         <Funcionamento />
+        <Dicionario />
         <Tecnologias />
         <Impacto />
         <Footer />

@@ -12,7 +12,7 @@ import {
   WifiOff
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import VLibras from '../components/VLibras'
+import VLibras from '../components/ui/VLibras'
 import { useAudioCapture } from '../features/audio/useAudioCapture'
 import { HistoryPanel } from '../features/history/HistoryPanel'
 import { useTranscriptHistory } from '../features/history/useTranscriptHistory'
@@ -107,7 +107,6 @@ export default function AppPrincipal() {
     return simplifyText(textoBase)
   }, [textoBase])
 
-  // Buffer VLibras
   const [, setVlibrasBuffer] = useState('')
   const [textoEnviadoAoVLibras, setTextoEnviadoAoVLibras] = useState('')
   const timerRef = useRef<number | null>(null)
@@ -130,7 +129,6 @@ export default function AppPrincipal() {
 
     if (!newPart) return
 
-    // Pausa natural
     const endsWithPause = /[.,/#!$%^&*;:{}=_`~()?-]/.test(newPart.slice(-1))
 
     if (endsWithPause) {
@@ -210,9 +208,7 @@ export default function AppPrincipal() {
           </div>
         </div>
 
-        {/* Controles */}
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          {/* Microfone */}
           <div className="flex items-center gap-1.5 rounded-lg border border-[#82E3FF]/20 bg-[#031A5C]/40 px-2.5 py-1 text-xs">
             <Volume2 className="w-3.5 h-3.5 text-[#82E3FF]" />
             <select
@@ -228,7 +224,6 @@ export default function AppPrincipal() {
             </select>
           </div>
 
-          {/* Captura */}
           <button
             onClick={capturing ? pararCaptura : iniciarCaptura}
             className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
@@ -248,7 +243,6 @@ export default function AppPrincipal() {
             )}
           </button>
 
-          {/* Medidor visual */}
           {capturing && (
             <div className="flex items-center gap-1 rounded-lg border border-[#82E3FF]/10 bg-black/40 px-2 py-2 h-[34px]">
               <span className="text-[10px] text-[#B7C8EF] font-bold">Nível:</span>
@@ -261,7 +255,6 @@ export default function AppPrincipal() {
             </div>
           )}
 
-          {/* Filtro VAD */}
           <button
             onClick={() => setUseVadGating(!useVadGating)}
             className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all duration-300 ${
@@ -277,7 +270,6 @@ export default function AppPrincipal() {
             {useVadGating ? (speaking ? 'Falando' : 'Silêncio') : 'Fluxo Contínuo'}
           </button>
 
-          {/* Motor de transcrição */}
           <button
             type="button"
             onClick={() => switchTranscriptionProvider(nextProvider)}
@@ -297,7 +289,6 @@ export default function AppPrincipal() {
             {providerButtonLabel}
           </button>
 
-          {/* Latência */}
           {capturing && (
             <span
               className={`flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
@@ -311,7 +302,6 @@ export default function AppPrincipal() {
             </span>
           )}
 
-          {/* Conexão */}
           <span className="flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg border border-[#82E3FF]/20 bg-[#031A5C]/60 px-3 py-1.5 text-xs font-bold text-[#F2F6FF]">
             {connectionMode === 'assemblyai' ? (
               <>
@@ -344,7 +334,6 @@ export default function AppPrincipal() {
         </div>
       </header>
 
-      {/* Erros de áudio */}
       {audioError && (
         <div className="absolute left-1/2 top-24 z-40 -translate-x-1/2 w-[90vw] max-w-[500px] rounded-lg border border-red-500/40 bg-red-950/90 p-4 shadow-xl backdrop-blur-md">
           <div className="flex gap-2">
@@ -371,7 +360,6 @@ export default function AppPrincipal() {
         gerarDocumentacao={gerarDocumentacao}
       />
 
-      {/* Sair modo foco */}
       {modoProjetor && (
         <button
           onClick={() => setModoProjetor(false)}
@@ -381,7 +369,6 @@ export default function AppPrincipal() {
         </button>
       )}
 
-      {/* Cores e legenda */}
       {(() => {
         const isAluno = activeSpeaker.toLowerCase().includes('aluno') || activeSpeaker.toLowerCase().includes('speaker')
         const colorBorder = isAluno ? 'border-[#FFB042]/50' : 'border-[#82E3FF]/40'
