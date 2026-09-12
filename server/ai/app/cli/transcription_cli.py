@@ -34,28 +34,16 @@ except ImportError:
     WEBRTCVAD_AVAILABLE = False
     webrtcvad = None
 
-try:
-    from server.app.config import KEYTERMS_PROMPT, PORTUGUESE_PROMPT, SETTINGS
-    from server.app.services.local_whisper import run_local_transcription
-    from server.app.transcription import (
-        AudioBuffer,
-        AudioStats,
-        TranscriptSaver,
-        classify_speaker,
-        format_timestamp,
-        is_internet_available,
-    )
-except ImportError:
-    from app.config import KEYTERMS_PROMPT, PORTUGUESE_PROMPT, SETTINGS
-    from app.services.local_whisper import run_local_transcription
-    from app.transcription import (
-        AudioBuffer,
-        AudioStats,
-        TranscriptSaver,
-        classify_speaker,
-        format_timestamp,
-        is_internet_available,
-    )
+from ..config import KEYTERMS_PROMPT, PORTUGUESE_PROMPT, SETTINGS
+from ..services.local_whisper import run_local_transcription
+from ..realtime.audio import (
+    AudioBuffer,
+    AudioStats,
+    TranscriptSaver,
+    classify_speaker,
+    format_timestamp,
+    is_internet_available,
+)
 
 logger = logging.getLogger(__name__)
 console = (

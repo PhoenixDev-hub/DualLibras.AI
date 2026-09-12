@@ -1,6 +1,6 @@
-try:
-    from server.app.api.app import app
-except ImportError:
+if __package__:
+    from .app.api.app import app
+else:
     from app.api.app import app
 
 if __name__ == "__main__":

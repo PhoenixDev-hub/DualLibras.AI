@@ -1,65 +1,34 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$PROJECT_DIR"
 
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Preserve os ambientes e arquivos locais já configurados.
+for service in client server/auth server/ai; do
+    if [[ ! -f "$service/.env" ]]; then
+        cp "$service/.env.example" "$service/.env"
+        echo "Exemplo copiado para $service/.env; revise os valores antes de iniciar."
+    fi
+done
 
-echo -e "${BLUE}==================================${NC}"
-echo -e "${BLUE}DualLibras.AI - Dev Environment${NC}"
-echo -e "${BLUE}==================================${NC}"
-echo ""
-
-echo -e "${YELLOW} Setup Backend...${NC}"
-cd "$SCRIPT_DIR/server"
-
-if [ ! -d "venv" ]; then
-    echo "Criando virtual environment..."
-    python3 -m venv venv
+if [[ ! -d server/ai/venv ]]; then
+    python3 -m venv server/ai/venv
 fi
+server/ai/venv/bin/python -m pip install -r server/ai/requirements.txt
+npm --prefix server/auth ci
+npm --prefix client ci
 
-source venv/bin/activate 2>/dev/null || . venv/Scripts/activate 2>/dev/null || true
+cat <<'GUIDE'
+Dependências instaladas. Configure server/auth/.env antes de gerar o cliente Prisma:
+  cd server/auth
+  npm run prisma:generate
+  npm run dev
 
-if [ ! -f ".env" ]; then
-    echo "Copiando .env.example para .env..."
-    cp .env.example .env
-    echo -e "${YELLOW}  Configure o .env conforme necessário${NC}"
-fi
+Em outros terminais, a partir da raiz:
+  cd server/ai && venv/bin/python main.py
+  cd client && npm run dev
 
-echo "Instalando dependências..."
-pip install -r requirements.txt -q
-
-echo -e "${GREEN} Backend pronto${NC}"
-echo ""
-
-echo -e "${YELLOW} Setup Frontend...${NC}"
-cd "$SCRIPT_DIR/client"
-
-if [ ! -d "node_modules" ]; then
-    echo "Instalando dependências..."
-    npm install
-fi
-
-echo -e "${GREEN} Frontend pronto${NC}"
-echo ""
-
-echo -e "${GREEN}================================${NC}"
-echo -e "${GREEN} Ambiente configurado!${NC}"
-echo -e "${GREEN}================================${NC}"
-echo ""
-echo "Para iniciar:"
-echo ""
-echo "  Backend:"
-echo "    cd $SCRIPT_DIR/server"
-echo -e "    ${BLUE}source venv/bin/activate${NC}"
-echo -e "    ${BLUE}venv\\Scripts\\activate${NC}"
-echo -e "    ${BLUE}python main.py${NC}"
-echo ""
-echo "  Frontend:"
-echo "    cd $SCRIPT_DIR/client"
-echo -e "    ${BLUE}npm run dev${NC}"
-echo ""
+Este script não cria tabelas, executa migrações ou insere usuários.
+Consulte README.md para preparação do banco e docs/DEPLOYMENT.md para Docker.
+GUIDE

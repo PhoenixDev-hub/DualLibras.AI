@@ -1,153 +1,56 @@
-# Guia de Deployment - DualLibras.AI
+# Execução com Docker e pendências de deploy
 
-## Pré-requisitos
+A configuração existente contém quatro serviços: `db` (PostgreSQL 15), `auth` (Express), `backend` (FastAPI) e `frontend` (Nginx). Não foi realizado deploy nesta revisão.
 
-- Docker 20.10+
-- Docker Compose 2.0+
-- Git
+## Preparação
 
-## Deployment Local com Docker
+É necessário Docker com o plugin **Compose v2** (`docker compose`) e acesso ao daemon. A partir da raiz, copie `.env.example` para `.env` somente se ainda não existir. Substitua os valores fictícios e mantenha usuário, senha e nome do banco coerentes com `DATABASE_URL`/`DIRECT_URL`.
 
-### 1. Clonar repositório
-```bash
-git clone <https://github.com/PhoenixDev-hub/RealTimeTrascription>
-cd ProjetoFestival2026
+O Compose usa `.env` da raiz para `db` e `auth`; o serviço Python recebe as variáveis declaradas em seu bloco `environment`. O `.env` de `server/ai` serve à execução local, não é automaticamente carregado pelo container. A chave AssemblyAI é repassada explicitamente pelo Compose.
+
+**Bloqueio atual:** a validação do schema Prisma falha antes da geração em uma instalação limpa. Corrija essa pendência antes de esperar que a imagem `auth` seja construída. O build TypeScript local passou com o cliente já gerado. Consulte [resultados](VERIFICACAO.md).
+
+## Comandos previstos pela configuração
+
+Os comandos abaixo devem ser executados após resolver os bloqueios. Não foram confirmados com containers em execução nesta revisão: o plugin Compose não está disponível no ambiente e o daemon Docker retorna permissão negada.
+
+```sh
+docker compose config --quiet
+bash build.sh
+docker compose up -d
+docker compose logs -f auth backend frontend
+docker compose down
 ```
 
-### 2. Configurar variáveis
-```bash
-cp server/.env.example server/.env
-# Editar .env conforme necessário
-```
+`build.sh` usa os contextos corretos do Compose: `server/auth`, `server/ai` e `client`. Não existe Dockerfile de aplicação diretamente em `server`.
 
-### 3. Build e iniciar
-```bash
-# Opção A: Usar scripts
-./build.sh
-docker-compose up -d
+**Efeito no banco:** o comando inicial do container `auth` contém `prisma db push && npm start`. Subir esse serviço pode alterar o schema do PostgreSQL configurado. A reorganização preservou esse comportamento e não executou o comando. Não é um fluxo de migrações de produção auditado.
 
-# Opção B: Comando único
-docker-compose up -d --build
-```
+## Frontend e endereços
 
-### 4. Verificar status
-```bash
-# Health check
-curl http://localhost:5455/health
+As variáveis do Vite são incorporadas durante o build. O Compose as passa como argumentos para o Dockerfile:
 
-# Logs
-docker-compose logs -f
-```
+- `VITE_BACKEND_HTTP_URL`, padrão `http://localhost:5455`.
+- `VITE_BACKEND_WS_URL`, padrão `ws://localhost:5455/ws`.
+- `VITE_AUTH_BACKEND_HTTP_URL`, padrão `http://localhost:4000`.
 
-## Deployment em Produção
+Esses endereços devem ser alcançáveis pelo **navegador**. Nomes internos como `backend` ou `auth` não substituem URLs públicas. Em outro computador, `localhost` aponta para o computador do visitante; configure o host acessível e refaça o build. Em HTTPS, ajuste também HTTP/WebSocket para HTTPS/WSS e configure a terminação TLS; ela não está implementada no Compose.
 
-### Recomendações
+O Nginx serve a SPA com fallback para `index.html`, `/health.html`, proxy `/ws` e rotas de transcrição/documentação. Não há proxy Express nem cobertura de todos os endpoints FastAPI nessa configuração; as URLs padrão do bundle acessam as portas 4000 e 5455 diretamente. Variáveis no container Nginx após o build não reescrevem o bundle.
 
-1. **Usar variáveis de ambiente seguras**
- ```bash
- # Não commitar .env em produção
- docker-compose --env-file /secure/.env up -d
- ```
+## Portas, volumes e diagnóstico
 
-2. **Configurar reverse proxy (Nginx/Apache)**
- ```nginx
- location /ws {
- proxy_pass http://backend:5455/ws;
- proxy_http_version 1.1;
- proxy_set_header Upgrade $http_upgrade;
- proxy_set_header Connection "upgrade";
- }
- ```
+| Serviço | Porta publicada | Persistência |
+| --- | --- | --- |
+| frontend | 80 | bundle dentro da imagem |
+| auth | 4000 | bind mount `./storage:/app/storage` |
+| backend | 5455 | bind mount `./storage:/app/storage` |
+| db | 5432 | volume `db-data` |
 
-3. **Volumes persistentes**
- ```yaml
- volumes:
- - ./transcripts:/app/transcripts
- - ./logs:/app/logs
- ```
+O volume nomeado `transcripts` permanece declarado, mas não é montado por nenhum serviço. Não foi removido, pois pode estar associado a dados anteriores. Diretórios locais antigos também foram preservados.
 
-4. **Backup de transcrições**
- ```bash
- docker cp duallibras-backend:/app/transcripts ./backup/
- ```
+Após iniciar com sucesso, conferir `/health` nas portas 4000 e 5455 e `/health.html` na porta 80. Saúde HTTP não garante banco inicializado, modelo carregado ou transcrição funcional. Faça backup do PostgreSQL e de `storage` antes de operações de manutenção. Não use `down -v` para uma simples parada.
 
-## Scaling & Performance
+## Pendências antes de produção
 
-### Para múltiplas instituições
-```yaml
-services:
- backend1:
- build: ./server
- ports: ["5455:5455"]
- backend2:
- build: ./server
- ports: ["5456:5455"]
- # Load balancer configura port 5000 → 5455/5456
-```
-
-### Otimizações
-- Usar modelo `small` ou `base` no LOCAL_FALLBACK_MODEL
-- Aumentar VAD_MODE em ambientes barulhentos
-- Implementar cache Redis para histórico
-
-## Monitoramento
-
-### Logs estruturados
-```bash
-# Ver erros
-docker-compose logs backend | grep ERROR
-
-# Filtrar por timestamp
-docker-compose logs backend | grep "2026-"
-```
-
-### Health checks
-```bash
-# Backend
-curl -s http://localhost:5455/health | jq
-
-# Frontend
-curl -s http://localhost/health.html
-```
-
-## Troubleshooting Deployment
-
-### Porta já em uso
-```bash
-# Encontrar processo
-lsof -i :5455
-
-# Mudar porta no docker-compose.yml
-ports:
- - "5456:5455" # Host:Container
-```
-
-### Problemas de memória
-```bash
-# Limitar Whisper model
-LOCAL_FALLBACK_MODEL=tiny # em vez de base/small
-
-# Reduzir audio queue
-AUDIO_QUEUE_MAX_SIZE=4
-```
-
-### WebSocket timeouts
-```env
-# Aumentar timeouts
-TRANSCRIPTION_RECV_TIMEOUT_SECONDS=60
-AUDIO_READ_TIMEOUT_SECONDS=10
-```
-
----
-
-## Checklist de Deploy
-
-- [ ] Variáveis de ambiente configuradas
-- [ ] Porta 80/443 disponível (ou reverse proxy)
-- [ ] Porta 5455 acessível (ou via proxy)
-- [ ] Docker e Docker Compose instalados
-- [ ] Imagens built com sucesso
-- [ ] Health checks retornam status ok
-- [ ] Transcrições salvando no volume
-- [ ] Logs configurados
-- [ ] Backup de dados configurado
+Autenticação completa, isolamento de saídas, limites de payload/conexão, proteção do serviço Python, HTTPS, política de migrações e validação real de áudio precisam de trabalho próprio. A existência dos Dockerfiles não comprova prontidão de produção. Detalhes em [ANALYSIS.md](ANALYSIS.md).

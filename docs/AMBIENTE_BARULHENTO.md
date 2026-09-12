@@ -1,162 +1,33 @@
-# Otimizações para Ambiente Barulhento
+# Áudio, VAD e ambientes com ruído
 
-## O Desafio
+O projeto tem dois caminhos de captura. Suas configurações não são intercambiáveis:
 
-Salas de aula geralmente têm:
-- Múltiplas vozes simultâneas
-- Ruído de fundo (ar condicionado, tráfego)
-- Áudio de baixa qualidade (microfones baratos)
-- Picos de ruído (portas, buzinas)
+- **Navegador:** `features/transcription/hooks/useAudioCapture.ts` usa APIs web de áudio, RNNoise e VAD web. Os worklets/modelos ficam em `client/public`.
+- **CLI Python:** `app/cli/transcription_cli.py` usa `sounddevice`, WebRTC VAD quando disponível e fallback de energia. A API FastAPI não inicia essa captura.
 
-## Soluções Implementadas
+O VAD detecta atividade de voz; não identifica qual pessoa deve ser ouvida nem garante eliminação de ruído. A classificação de professor/aluno também pode usar heurística textual. Não há medições de precisão ou latência validadas neste repositório.
 
-### 1. Voice Activity Detection (VAD) Avançado
+## Configuração da CLI
 
-**O que é**: Detecta apenas fala humana, ignorando ruído
+Em `server/ai/.env`, os padrões do código são:
 
-**Configurações por cenário**:
-
-```env
-# MUITO BARULHENTO (sala com vários alunos falando)
+```dotenv
 USE_WEBRTC_VAD=1
-VAD_MODE=3 # Máxima agressividade
-VAD_ENERGY_THRESHOLD=500 # Alto threshold
-VAD_HOLD_SILENCE_MS=300 # Manter fala por mais tempo
-
-# BARULHENTO (sala normal com ventilador)
-USE_WEBRTC_VAD=1
-VAD_MODE=2 # Normal (recomendado)
-VAD_ENERGY_THRESHOLD=350
+VAD_MODE=2
+VAD_ENERGY_THRESHOLD=300
 VAD_HOLD_SILENCE_MS=240
-
-# SILENCIOSO (sala isolada)
-USE_WEBRTC_VAD=1
-VAD_MODE=1 # Menos agressivo
-VAD_ENERGY_THRESHOLD=250
-VAD_HOLD_SILENCE_MS=200
 ```
 
-### 2. Modelo de Transcrição
+Aumentar a agressividade ou o limiar pode descartar fala baixa; reduzir pode deixar mais ruído passar. Ajuste com amostras representativas e observe os logs. Estes números são parâmetros de partida, não resultados comprovados para uma sala específica. Execute a CLI com `python -m app.cli.transcription_cli` dentro de `server/ai`; ela acessa o microfone do servidor.
 
-**Recomendações**:
+## Transcrição local
 
-```env
-# Mais preciso mas mais lento (para fala difícil)
-LOCAL_FALLBACK_MODEL=base
+O padrão é `LOCAL_FALLBACK_MODEL=medium`, `LOCAL_WHISPER_DEVICE=cpu` e `LOCAL_WHISPER_COMPUTE_TYPE=int8`. A seleção de dispositivo usa `LOCAL_WHISPER_DEVICE`, não `WHISPER_DEVICE`. Mudar para GPU requer ambiente e dependências compatíveis; não foi validado nesta revisão.
 
-# Balanço (recomendado)
-LOCAL_FALLBACK_MODEL=small
+O fallback local utiliza suas próprias opções `LOCAL_WHISPER_VAD_*`. As janelas padrão são `LOCAL_TRANSCRIPTION_CHUNK_SECONDS=2.5` e `LOCAL_TRANSCRIPTION_MIN_SECONDS=1.2`. Modelos menores e janelas diferentes podem mudar custo, atraso e qualidade; não há comparação experimental registrada que permita prometer um resultado.
 
-# Rápido mas menos preciso (para muita fala)
-LOCAL_FALLBACK_MODEL=tiny
-```
+## Diagnóstico
 
-### 3. Qualidade de Áudio
+Confira primeiro o microfone selecionado e se a fala está audível sem saturação. No navegador, confirme carregamento dos arquivos públicos e permissão de áudio. Na CLI, `LIST_AUDIO_DEVICES` e `AUDIO_DEVICE` selecionam o hardware. Parâmetros de timeout, prompt e reconexão da CLI não devem ser apresentados como controles automáticos do fluxo `/ws`.
 
-**Como melhorar**:
-
-1. **Usar bom microfone**
- - Headset com cancellation de ruído
- - Microfone USB de boa qualidade
- - Evitar microfones integrados de notebook
-
-2. **Posicionamento**
- - Microfone próximo da boca (10-15cm)
- - Afastado do ventilador/AC
- - Evitar eco (não na esquina/parede)
-
-3. **Configuração do sistema**
- - Aumentar volume do microfone (não ao máximo)
- - Usar driver atualizado
- - Testar com: `DEBUG_LATENCY=1`
-
-## Testes Recomendados
-
-### 1. Teste de VAD em seu ambiente
-```bash
-# Ativar debug e analisar logs
-LOG_LEVEL=DEBUG python main.py
-
-# Procurar por linhas como:
-# WebRTC VAD: True/False
-# VAD RMS=2450 (threshold=300)
-```
-
-### 2. Gravar amostra de áudio
-```bash
-# Gravar 10 segundos
-sox -d -r 16000 -b 16 -c 1 teste.wav trim 0 10
-
-# Testar transcrição offline
-python -c "
-from faster_whisper import WhisperModel
-model = WhisperModel('tiny')
-segments, _ = model.transcribe('teste.wav', language='pt')
-for segment in segments:
- print(segment.text)
-"
-```
-
-### 3. Medir latência
-```bash
-# Com debug
-DEBUG_LATENCY=1 LOG_LEVEL=DEBUG python main.py
-
-# Observar: 'latencia_audio:' nos logs
-```
-
-## Troubleshooting
-
-### VAD detecta tudo como fala
-```env
-# Aumentar aggressividade
-VAD_MODE=3
-VAD_ENERGY_THRESHOLD=400
-```
-
-### VAD não detecta fala do professor
-```env
-# Diminuir aggressividade
-VAD_MODE=1
-VAD_ENERGY_THRESHOLD=200
-```
-
-### Muitos erros de transcrição
-```env
-# Usar modelo mais preciso
-LOCAL_FALLBACK_MODEL=base
-
-# Pré-processar áudio (próxima versão)
-# Adicionar filtro de frequência
-```
-
-### Latência alta
-```env
-# Usar modelo mais rápido
-LOCAL_FALLBACK_MODEL=tiny
-
-# Reduzir fila de áudio
-AUDIO_QUEUE_MAX_SIZE=4
-
-# Processar em GPU (se disponível)
-WHISPER_DEVICE=cuda
-```
-
-## Próximas Melhorias (Roadmap)
-
-- [ ] Noise suppression (noisereducer)
-- [ ] Spectral analysis para detectar ruído constante
-- [ ] Filtros de frequência para remover buzz elétrico
-- [ ] GPU acceleration para Whisper
-- [ ] Modelo otimizado para português
-- [ ] Multi-speaker diarization (saber quem falou)
-
-## Referências
-
-- WebRTC VAD: https://github.com/wiseman/py-webrtcvad
-- Faster Whisper: https://github.com/SYSTRAN/faster-whisper
-- Audio Processing: https://scipy.org/doc/scipy/reference/signal.html
-
----
-
-** Dica**: Teste em seu próprio ambiente primeiro! Cada sala tem características únicas.
+Uma falha de modelo pode depender do download inicial e do cache local. Consulte o [exemplo de ambiente](../server/ai/.env.example) e o [guia Python](../server/ai/README.md). Captura física, desempenho com ruído e comunicação com o provedor externo permanecem pendentes de validação; esta revisão não acessou microfones nem consumiu a API de transcrição.

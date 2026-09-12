@@ -1,7 +1,14 @@
 import { AUTH_API_BASE } from '../config/backend'
 
 export type UserRole = 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE' | 'ADMIN'
-export type DashboardSection = 'Dashboard' | 'Minhas Turmas' | 'Aulas' | 'Materiais' | 'Glossários' | 'Histórico' | 'Configurações'
+export type DashboardSection =
+  | 'Dashboard'
+  | 'Minhas Turmas'
+  | 'Aulas'
+  | 'Materiais'
+  | 'Glossários'
+  | 'Histórico'
+  | 'Configurações'
 
 export type DashboardUser = {
   id: string
@@ -47,16 +54,25 @@ export type DashboardData = {
   recentActivity: Array<{ label: string; detail: string; time: string }>
   weeklyClasses: number[]
   transcriptionTime: number[]
-  managementSections: Record<Exclude<DashboardSection, 'Dashboard'>, {
-    title: string
-    description: string
-    primaryAction: string
-    primaryCapability?: string
-    icon: string
-    rows: Array<{ title: string; detail: string; meta: string; action: string; capability?: string }>
-    asideTitle: string
-    asideItems: string[]
-  }>
+  managementSections: Record<
+    Exclude<DashboardSection, 'Dashboard'>,
+    {
+      title: string
+      description: string
+      primaryAction: string
+      primaryCapability?: string
+      icon: string
+      rows: Array<{
+        title: string
+        detail: string
+        meta: string
+        action: string
+        capability?: string
+      }>
+      asideTitle: string
+      asideItems: string[]
+    }
+  >
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -70,7 +86,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    const data = await response.json().catch(() => null) as { error?: string } | null
+    const data = (await response.json().catch(() => null)) as { error?: string } | null
     throw new Error(data?.error ?? 'Não foi possível completar a solicitação.')
   }
 
@@ -132,9 +148,12 @@ export const authApi = {
   },
 
   uploadMaterial(data: { filename: string; contentBase64: string }) {
-    return request<{ material: Material; ai: { sent: boolean; status: 'enviado' | 'pendente' } }>('/materials', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
+    return request<{ material: Material; ai: { sent: boolean; status: 'enviado' | 'pendente' } }>(
+      '/materials',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    )
   },
 }

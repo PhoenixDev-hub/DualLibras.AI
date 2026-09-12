@@ -1,10 +1,10 @@
-import { Cpu, Hand, Mic, type LucideIcon } from 'lucide-react';
-import { useInView } from '../../../hooks/useInView';
+import { Cpu, Hand, Mic, type LucideIcon } from 'lucide-react'
+import { useInView } from '../../../hooks/useInView'
 
 interface Step {
-  icon: LucideIcon;
-  title: string;
-  text: string;
+  icon: LucideIcon
+  title: string
+  text: string
 }
 
 const steps: Step[] = [
@@ -23,11 +23,11 @@ const steps: Step[] = [
     title: 'Tradução para Libras',
     text: 'O conteúdo traduzido é transmitido ao avatar 3D ou exibido em texto acessível para o estudante.',
   },
-];
+]
 
 export default function Funcionamento() {
-  const [headerRef, headerInView] = useInView<HTMLDivElement>();
-  const [flowRef, flowInView] = useInView<HTMLDivElement>({ threshold: 0.1 });
+  const [headerRef, headerInView] = useInView<HTMLDivElement>()
+  const [flowRef, flowInView] = useInView<HTMLDivElement>({ threshold: 0.1 })
 
   return (
     <section id="funcionamento" className="relative bg-background-dark px-4 py-24 overflow-hidden">
@@ -49,11 +49,15 @@ export default function Funcionamento() {
           </h2>
 
           <p className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-gray-mid leading-relaxed font-text">
-            Nossa solução conecta o áudio da aula à conversão textual e acessibilidade em Libras de forma contínua e automatizada.
+            Nossa solução conecta o áudio da aula à conversão textual e acessibilidade em Libras de
+            forma contínua e automatizada.
           </p>
         </div>
 
-        <div ref={flowRef} className="relative mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6">
+        <div
+          ref={flowRef}
+          className="relative mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6"
+        >
           <div
             className={`hidden md:block absolute top-8 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-primary/10 via-primary/60 to-primary/10 transition-opacity duration-700 ${
               flowInView ? 'opacity-100' : 'opacity-0'
@@ -82,5 +86,5 @@ export default function Funcionamento() {
         </div>
       </div>
     </section>
-  );
+  )
 }

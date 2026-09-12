@@ -5,12 +5,8 @@ from typing import Any
 
 import numpy as np
 
-try:
-    from server.app.config import SETTINGS
-    from server.app.transcription import AudioBuffer, TranscriptSaver, classify_speaker
-except ImportError:
-    from app.config import SETTINGS
-    from app.transcription import AudioBuffer, TranscriptSaver, classify_speaker
+from ..config import SETTINGS
+from ..realtime.audio import AudioBuffer, TranscriptSaver, classify_speaker
 
 logger = logging.getLogger(__name__)
 

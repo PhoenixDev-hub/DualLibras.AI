@@ -26,7 +26,6 @@ build/
 *.so
 
 # Local tools and editors
-docs
 uploads
 .agents/
 .codex/

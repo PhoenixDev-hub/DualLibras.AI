@@ -1,35 +1,38 @@
-import { ArrowRight, Layers, Rocket, Target, type LucideIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useInView } from '../../../hooks/useInView';
+import { ArrowRight, Layers, Rocket, Target, type LucideIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useInView } from '../../../hooks/useInView'
 
 interface PillarItem {
-  icon: LucideIcon;
-  title: string;
-  description: string;
+  icon: LucideIcon
+  title: string
+  description: string
 }
 
 const pillars: PillarItem[] = [
   {
     icon: Target,
     title: 'Objetivo de Inclusão',
-    description: 'Proporcionar uma experiência de aprendizado mais inclusiva e autônoma para alunos surdos.',
+    description:
+      'Proporcionar uma experiência de aprendizado mais inclusiva e autônoma para alunos surdos.',
   },
   {
     icon: Layers,
     title: 'Arquitetura de Testes',
-    description: 'Integração entre reconhecimento de áudio, geração de legendas e renderização em Libras.',
+    description:
+      'Integração entre reconhecimento de áudio, geração de legendas e renderização em Libras.',
   },
   {
     icon: Rocket,
     title: 'Fase de Protótipo',
-    description: 'Plataforma disponibilizada para validação experimental de usabilidade e interface.',
+    description:
+      'Plataforma disponibilizada para validação experimental de usabilidade e interface.',
   },
-];
+]
 
 export default function Impacto() {
-  const [headerRef, headerInView] = useInView<HTMLDivElement>();
-  const [pillarsRef, pillarsInView] = useInView<HTMLDivElement>({ threshold: 0.1 });
-  const [ctaRef, ctaInView] = useInView<HTMLDivElement>();
+  const [headerRef, headerInView] = useInView<HTMLDivElement>()
+  const [pillarsRef, pillarsInView] = useInView<HTMLDivElement>({ threshold: 0.1 })
+  const [ctaRef, ctaInView] = useInView<HTMLDivElement>()
 
   return (
     <section id="impacto" className="relative bg-background-dark px-4 py-24 overflow-hidden">
@@ -51,7 +54,8 @@ export default function Impacto() {
           </h2>
 
           <p className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-gray-mid leading-relaxed font-text">
-            Este projeto está em sua fase inicial de desenvolvimento e testes. Nossa meta é demonstrar a viabilidade da tradução em tempo real para acessibilidade em Libras.
+            Este projeto está em sua fase inicial de desenvolvimento e testes. Nossa meta é
+            demonstrar a viabilidade da tradução em tempo real para acessibilidade em Libras.
           </p>
         </div>
 
@@ -103,5 +107,5 @@ export default function Impacto() {
         </div>
       </div>
     </section>
-  );
+  )
 }

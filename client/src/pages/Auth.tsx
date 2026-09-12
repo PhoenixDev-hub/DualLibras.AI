@@ -1,10 +1,10 @@
-import Cadastro from '../features/auth/components/Cadastro';
-import Login from '../features/auth/components/Login';
+import Cadastro from '../features/auth/pages/Cadastro'
+import Login from '../features/auth/pages/Login'
 
 interface AuthProps {
-  mode: 'login' | 'cadastro';
+  mode: 'login' | 'cadastro'
 }
 
 export default function Auth({ mode }: AuthProps) {
-  return mode === 'login' ? <Login /> : <Cadastro />;
+  return mode === 'login' ? <Login /> : <Cadastro />
 }

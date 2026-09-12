@@ -1,0 +1,133 @@
+@reference './global.css';
+.teacher-sidebar {
+  @apply fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-background-dark;
+  transition:
+    width 0.2s,
+    transform 0.2s;
+}
+.teacher-main {
+  margin-left: 15rem;
+  transition: margin-left 0.2s;
+}
+.sidebar-small .teacher-sidebar {
+  width: 5.5rem;
+}
+.sidebar-small .teacher-main {
+  margin-left: 5.5rem;
+}
+.t-card {
+  @apply rounded-2xl border border-slate-200/80 bg-white;
+  box-shadow: 0 3px 12px #04133b03;
+}
+.t-btn,
+.t-btn-secondary,
+.t-btn-danger {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition cursor-pointer;
+}
+.t-btn {
+  @apply bg-primary text-white shadow-sm hover:bg-secondary;
+}
+.t-btn-secondary {
+  @apply border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50;
+}
+.t-btn-danger {
+  @apply bg-red-50 text-red-700 hover:bg-red-100;
+}
+.t-icon {
+  @apply inline-flex items-center justify-center rounded-lg p-2 hover:bg-slate-400/10;
+}
+.t-avatar {
+  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-xs font-bold text-primary;
+}
+.t-badge {
+  @apply inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700;
+}
+.t-badge-neutral {
+  @apply inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500;
+}
+.t-label {
+  @apply block text-sm font-semibold text-slate-600;
+}
+.t-input {
+  @apply mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-700;
+}
+select.t-input {
+  @apply mt-0 inline-block;
+}
+.t-search {
+  @apply flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-400;
+}
+.t-search input {
+  @apply min-w-0 w-full bg-transparent text-sm text-slate-700 outline-none;
+}
+.class-banner {
+  background-image:
+    radial-gradient(ellipse at 100% 0%, #ffffff20, transparent 60%),
+    linear-gradient(120deg, #25589b, #2f69b1);
+}
+.banner-teal {
+  background-image:
+    radial-gradient(ellipse at 100% 0%, #ffffff20, transparent 60%),
+    linear-gradient(120deg, #146a70, #238b8c);
+}
+.banner-violet {
+  background-image:
+    radial-gradient(ellipse at 100% 0%, #ffffff20, transparent 60%),
+    linear-gradient(120deg, #57558f, #8073af);
+}
+.teacher-modal {
+  @apply fixed rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl font-text;
+  margin: auto;
+  width: min(540px, calc(100vw - 32px));
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.teacher-modal::backdrop {
+  background: #04133b99;
+  backdrop-filter: blur(4px);
+}
+.teacher-toast {
+  @apply fixed bottom-5 right-5 z-[100] flex max-w-lg items-start gap-5 rounded-xl border border-blue-100 bg-white p-5 text-sm text-slate-700 shadow-xl;
+  max-width: calc(100vw - 40px);
+}
+.teacher-app button,
+.teacher-modal button {
+  cursor: pointer;
+}
+.teacher-app button:disabled,
+.teacher-modal button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.teacher-app :focus-visible,
+.teacher-modal :focus-visible,
+.teacher-toast :focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 4px;
+}
+.t-search:focus-within {
+  outline: 3px solid #60a5fa;
+  outline-offset: 3px;
+}
+@media (max-width: 1023px) {
+  .teacher-sidebar,
+  .sidebar-small .teacher-sidebar {
+    width: 15rem;
+    transform: translateX(-100%);
+  }
+  .teacher-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .teacher-main,
+  .sidebar-small .teacher-main {
+    margin-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .teacher-app *,
+  .teacher-app *::before,
+  .teacher-app *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

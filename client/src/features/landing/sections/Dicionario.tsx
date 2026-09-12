@@ -1,28 +1,28 @@
-import { ChevronLeft, ChevronRight, Hand } from 'lucide-react';
-import { useState } from 'react';
-import { useInView } from '../../../hooks/useInView';
+import { ChevronLeft, ChevronRight, Hand } from 'lucide-react'
+import { useState } from 'react'
+import { useInView } from '../../../hooks/useInView'
 
 const alphabet = Array.from({ length: 26 }, (_, i) => {
-  const letter = String.fromCharCode(65 + i);
-  if (letter === 'A') return { letter, description: 'Mão fechada, polegar ao lado dos dedos.' };
-  if (letter === 'B') return { letter, description: 'Mão aberta, polegar dobrado sobre a palma.' };
-  if (letter === 'C') return { letter, description: 'Mão curvada em formato de C.' };
-  return { letter, description: `Configuração de mão para a letra ${letter}.` };
-});
+  const letter = String.fromCharCode(65 + i)
+  if (letter === 'A') return { letter, description: 'Mão fechada, polegar ao lado dos dedos.' }
+  if (letter === 'B') return { letter, description: 'Mão aberta, polegar dobrado sobre a palma.' }
+  if (letter === 'C') return { letter, description: 'Mão curvada em formato de C.' }
+  return { letter, description: `Configuração de mão para a letra ${letter}.` }
+})
 
 export default function Dicionario() {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [sectionRef, sectionInView] = useInView<HTMLElement>({ threshold: 0.12 });
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [sectionRef, sectionInView] = useInView<HTMLElement>({ threshold: 0.12 })
 
-  const currentLetter = alphabet[selectedIndex];
+  const currentLetter = alphabet[selectedIndex]
 
   const handlePrevious = () => {
-    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 25));
-  };
+    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 25))
+  }
 
   const handleNext = () => {
-    setSelectedIndex((prev) => (prev < 25 ? prev + 1 : 0));
-  };
+    setSelectedIndex((prev) => (prev < 25 ? prev + 1 : 0))
+  }
 
   return (
     <section
@@ -43,13 +43,18 @@ export default function Dicionario() {
             <span className="font-ui text-xs font-semibold uppercase tracking-widest text-primary">
               Dicionário • Libras
             </span>
-            <h2 id="dicionario-title" className="mt-4 font-ui text-4xl font-extrabold leading-tight text-text-light md:text-5xl">
-              O alfabeto em Libras,<br />
+            <h2
+              id="dicionario-title"
+              className="mt-4 font-ui text-4xl font-extrabold leading-tight text-text-light md:text-5xl"
+            >
+              O alfabeto em Libras,
+              <br />
               <span className="text-primary">letra por letra.</span>
             </h2>
           </div>
           <div className="max-w-md font-text text-sm leading-relaxed text-gray-mid">
-            Lorem ipsum · Clique em qualquer letra para ver a configuração de mão correspondente. Use este mini-dicionário como ponto de partida para praticar a datilologia.
+            Lorem ipsum · Clique em qualquer letra para ver a configuração de mão correspondente.
+            Use este mini-dicionário como ponto de partida para praticar a datilologia.
           </div>
         </div>
 
@@ -63,13 +68,17 @@ export default function Dicionario() {
             </div>
 
             <div className="flex aspect-[4/3] w-full flex-col items-center justify-center rounded-2xl bg-[#F8F9FA] text-[#0A1635]">
-              <Hand size={64} strokeWidth={1}  className="text-[#f8f9fa]" />
-              <span className="mt-4 font-ui text-2xl font-bold text-[#f8f9fa]">{currentLetter.letter}</span>
+              <Hand size={64} strokeWidth={1} className="text-[#f8f9fa]" />
+              <span className="mt-4 font-ui text-2xl font-bold text-[#f8f9fa]">
+                {currentLetter.letter}
+              </span>
             </div>
 
             <div className="mt-8 flex items-end justify-between border-t border-white/10 pt-6">
               <div>
-                <span className="block font-ui text-3xl font-extrabold text-text-light">{currentLetter.letter}</span>
+                <span className="block font-ui text-3xl font-extrabold text-text-light">
+                  {currentLetter.letter}
+                </span>
                 <p className="mt-2 font-text text-sm text-gray-mid">{currentLetter.description}</p>
               </div>
               <div className="flex gap-2">
@@ -116,7 +125,8 @@ export default function Dicionario() {
                 <div>
                   <h3 className="font-ui text-sm font-bold text-text-light">Datilologia</h3>
                   <p className="font-text text-xs text-gray-mid">
-                    <span className="text-primary">•</span> Sinais com movimento · imagem estática limitada
+                    <span className="text-primary">•</span> Sinais com movimento · imagem estática
+                    limitada
                   </p>
                 </div>
               </div>
@@ -128,5 +138,5 @@ export default function Dicionario() {
         </div>
       </div>
     </section>
-  );
+  )
 }

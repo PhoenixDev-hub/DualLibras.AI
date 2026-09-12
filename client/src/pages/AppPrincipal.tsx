@@ -9,15 +9,17 @@ import {
   RefreshCcw,
   Volume2,
   Wifi,
-  WifiOff
+  WifiOff,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import VLibras from '../components/ui/VLibras'
-import { useAudioCapture } from '../features/audio/useAudioCapture'
-import { HistoryPanel } from '../features/history/HistoryPanel'
-import { useTranscriptHistory } from '../features/history/useTranscriptHistory'
-import simplifyText from '../services/simplify'
-import transcriptSocket, { type TranscriptMessage } from '../services/websocket'
+import VLibras from '../features/libras/components/VLibras'
+import { useAudioCapture } from '../features/transcription/hooks/useAudioCapture'
+import { HistoryPanel } from '../features/history/components/HistoryPanel'
+import { useTranscriptHistory } from '../features/history/hooks/useTranscriptHistory'
+import simplifyText from '../features/libras/utils/simplify'
+import transcriptSocket, {
+  type TranscriptMessage,
+} from '../features/transcription/services/websocket'
 
 const CONTENT_ID = 'conteudo-libras'
 
@@ -26,7 +28,9 @@ export default function AppPrincipal() {
   const [textoFinal, setTextoFinal] = useState('')
   const [traducaoFinal, setTraducaoFinal] = useState(false)
   const [temErro, setTemErro] = useState(false)
-  const [vlibrasStatus, setVLibrasStatus] = useState<'idle' | 'loading' | 'translating' | 'error' | 'ready'>('loading')
+  const [vlibrasStatus, setVLibrasStatus] = useState<
+    'idle' | 'loading' | 'translating' | 'error' | 'ready'
+  >('loading')
   const [historicoTick, setHistoricoTick] = useState(0)
   const [activeSpeaker, setActiveSpeaker] = useState('Professor')
   const [modoProjetor, setModoProjetor] = useState(false)
@@ -165,13 +169,16 @@ export default function AppPrincipal() {
         ? 'Legenda ao vivo'
         : 'Pronto para ouvir'
 
-  const avatarStatus = vlibrasStatus === 'ready'
-    ? (textoEnviadoAoVLibras ? 'Traduzindo...' : 'Aguardando')
-    : vlibrasStatus === 'loading'
-      ? 'Carregando avatar...'
-      : vlibrasStatus === 'error'
-        ? 'Erro no avatar'
-        : 'Iniciando...'
+  const avatarStatus =
+    vlibrasStatus === 'ready'
+      ? textoEnviadoAoVLibras
+        ? 'Traduzindo...'
+        : 'Aguardando'
+      : vlibrasStatus === 'loading'
+        ? 'Carregando avatar...'
+        : vlibrasStatus === 'error'
+          ? 'Erro no avatar'
+          : 'Iniciando...'
 
   const captionStatusClass = conectado ? 'text-[#82E3FF]' : 'text-[#53B8FF]'
   const nextProvider = connectionMode === 'assemblyai' ? 'local' : 'assemblyai'
@@ -183,10 +190,7 @@ export default function AppPrincipal() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(130,227,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(83,184,255,0.035)_1px,transparent_1px)] bg-[length:72px_72px] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.7),transparent_76%)]" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#145DFF]/10 shadow-[0_0_120px_rgba(20,93,255,0.14)]" />
 
-      <VLibras
-        text={textoEnviadoAoVLibras}
-        onStatusChange={setVLibrasStatus}
-      />
+      <VLibras text={textoEnviadoAoVLibras} onStatusChange={setVLibrasStatus} />
 
       <header
         className={`absolute left-4 right-4 top-4 z-30 flex-col gap-3 sm:left-8 sm:right-8 sm:top-5 lg:flex-row lg:items-center lg:justify-between transition-opacity duration-500 ${
@@ -264,9 +268,15 @@ export default function AppPrincipal() {
                   : 'border-white/10 bg-white/5 text-white/40 hover:bg-white/10'
                 : 'border-green-500/40 bg-green-500/20 text-green-300 shadow-[0_0_12px_rgba(34,197,94,0.3)]'
             }`}
-            title={useVadGating ? "Filtro de Silêncio Ativo (Clique para desativar e enviar áudio contínuo)" : "Envio de Áudio Contínuo (Clique para ativar filtro de silêncio)"}
+            title={
+              useVadGating
+                ? 'Filtro de Silêncio Ativo (Clique para desativar e enviar áudio contínuo)'
+                : 'Envio de Áudio Contínuo (Clique para ativar filtro de silêncio)'
+            }
           >
-            <span className={`h-2 w-2 rounded-full ${useVadGating ? (speaking ? 'bg-[#82E3FF] animate-ping' : 'bg-white/20') : 'bg-green-400'}`} />
+            <span
+              className={`h-2 w-2 rounded-full ${useVadGating ? (speaking ? 'bg-[#82E3FF] animate-ping' : 'bg-white/20') : 'bg-green-400'}`}
+            />
             {useVadGating ? (speaking ? 'Falando' : 'Silêncio') : 'Fluxo Contínuo'}
           </button>
 
@@ -370,11 +380,17 @@ export default function AppPrincipal() {
       )}
 
       {(() => {
-        const isAluno = activeSpeaker.toLowerCase().includes('aluno') || activeSpeaker.toLowerCase().includes('speaker')
+        const isAluno =
+          activeSpeaker.toLowerCase().includes('aluno') ||
+          activeSpeaker.toLowerCase().includes('speaker')
         const colorBorder = isAluno ? 'border-[#FFB042]/50' : 'border-[#82E3FF]/40'
-        const colorShadow = isAluno ? 'shadow-[0_24px_80px_rgba(43,11,2,0.76),0_0_0_1px_rgba(255,176,66,0.15)]' : 'shadow-[0_24px_80px_rgba(2,11,43,0.76),0_0_0_1px_rgba(83,184,255,0.15)]'
+        const colorShadow = isAluno
+          ? 'shadow-[0_24px_80px_rgba(43,11,2,0.76),0_0_0_1px_rgba(255,176,66,0.15)]'
+          : 'shadow-[0_24px_80px_rgba(2,11,43,0.76),0_0_0_1px_rgba(83,184,255,0.15)]'
         const colorText = isAluno ? 'text-[#FFB042]' : 'text-[#82E3FF]'
-        const bgColor = isAluno ? 'bg-[linear-gradient(180deg,rgba(43,11,2,0.80),rgba(2,11,43,0.92))]' : 'bg-[linear-gradient(180deg,rgba(3,26,92,0.80),rgba(2,11,43,0.92))]'
+        const bgColor = isAluno
+          ? 'bg-[linear-gradient(180deg,rgba(43,11,2,0.80),rgba(2,11,43,0.92))]'
+          : 'bg-[linear-gradient(180deg,rgba(3,26,92,0.80),rgba(2,11,43,0.92))]'
 
         return (
           <section
@@ -383,7 +399,9 @@ export default function AppPrincipal() {
             }`}
             aria-label="Legenda da transcrição"
           >
-            <div className={`z-10 w-full overflow-hidden rounded-lg border ${colorBorder} ${bgColor} ${colorShadow} backdrop-blur-md transition-all duration-500`}>
+            <div
+              className={`z-10 w-full overflow-hidden rounded-lg border ${colorBorder} ${bgColor} ${colorShadow} backdrop-blur-md transition-all duration-500`}
+            >
               <div
                 className={`flex flex-col items-center justify-between gap-1 border-b ${isAluno ? 'border-[#FFB042]/20' : 'border-[#82E3FF]/15'} px-4 py-2 text-xs font-extrabold uppercase tracking-normal text-[#B7C8EF] sm:flex-row sm:gap-3 sm:px-[clamp(16px,3vw,28px)]`}
                 aria-hidden="true"
@@ -391,8 +409,12 @@ export default function AppPrincipal() {
                 <span className="flex items-center gap-2">
                   {textoBase && (
                     <span className="flex h-3 w-3 items-center justify-center">
-                      <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${isAluno ? 'bg-[#FFB042]' : 'bg-[#82E3FF]'}`}></span>
-                      <span className={`relative inline-flex h-2 w-2 rounded-full ${isAluno ? 'bg-[#FFB042]' : 'bg-[#82E3FF]'}`}></span>
+                      <span
+                        className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${isAluno ? 'bg-[#FFB042]' : 'bg-[#82E3FF]'}`}
+                      ></span>
+                      <span
+                        className={`relative inline-flex h-2 w-2 rounded-full ${isAluno ? 'bg-[#FFB042]' : 'bg-[#82E3FF]'}`}
+                      ></span>
                     </span>
                   )}
                   {statusLegenda} • <span className={colorText}>{activeSpeaker}</span>

@@ -1,52 +1,115 @@
-import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
-import DashboardLayout from '../features/dashboard/components/DashboardLayout'
-import { authApi, type DashboardData, type DashboardUser } from '../services/authApi'
-
+import { Copy, X } from 'lucide-react'
+import TeacherShell from '../components/layout/TeacherShell'
+import { Modal } from '../components/ui'
+import { TeacherContext } from '../contexts/TeacherContext'
+import { useTeacherDashboard } from '../features/dashboard/hooks/useTeacherDashboard'
+import Home from '../features/dashboard/pages/Home'
+import ClassroomList from '../features/classrooms/pages/ClassroomList'
+import ClassroomDetails from '../features/classrooms/pages/ClassroomDetails'
+import Lessons from '../features/lessons/pages/Lessons'
+import LessonDetails from '../features/lessons/pages/LessonDetails'
+import LiveLesson from '../features/lessons/pages/LiveLesson'
+import StartLessonModal from '../features/lessons/components/StartLessonModal'
+import ClassroomFormModal from '../features/classrooms/components/ClassroomFormModal'
+import Students from '../features/students/pages/Students'
+import Materials from '../features/materials/pages/Materials'
+import Glossary from '../features/glossary/pages/Glossary'
+import LearnLibras from '../features/libras/pages/LearnLibras'
+import Settings from '../features/settings/pages/Settings'
+import '../styles/teacher.css'
 export default function Dashboard() {
-  const [user, setUser] = useState<DashboardUser | null>(null)
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [unauthorized, setUnauthorized] = useState(false)
+  const {
+    contextValue,
+    page,
+    classroom,
+    lesson,
+    editor,
+    setEditor,
+    createdCode,
+    setCreatedCode,
+    starting,
+    setStarting,
+    notice,
+    setNotice,
+    search,
+    searchVersion,
+    posts,
+    setPosts,
+    navigate,
+    goBack,
+    searchClassrooms,
+    copy,
+  } = useTeacherDashboard()
 
-  useEffect(() => {
-    let active = true
-
-    async function loadDashboard() {
-      try {
-        const [currentUser, dashboardData] = await Promise.all([
-          authApi.me(),
-          authApi.dashboard(),
-        ])
-
-        if (!active) return
-        setUser(currentUser)
-        setDashboard(dashboardData)
-      } catch {
-        if (active) setUnauthorized(true)
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-
-    loadDashboard()
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  if (loading) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-100">
-        <span className="text-sm font-bold">Carregando dashboard...</span>
-      </main>
-    )
-  }
-
-  if (unauthorized || !user || !dashboard) {
-    return <Navigate to="/entrar" replace />
-  }
-
-  return <DashboardLayout user={user} dashboard={dashboard} onDashboardChange={setDashboard} />
+  return (
+    <TeacherContext.Provider value={contextValue}>
+      <TeacherShell
+        page={page}
+        onNavigate={navigate}
+        onBack={lesson || classroom || page !== 'Início' ? goBack : undefined}
+        onSearch={searchClassrooms}
+        onNotice={setNotice}
+      >
+        {lesson ? (
+          lesson.status === 'live' ? (
+            <LiveLesson key={lesson.id} lesson={lesson} />
+          ) : (
+            <LessonDetails key={lesson.id} lesson={lesson} />
+          )
+        ) : classroom ? (
+          <ClassroomDetails
+            key={classroom.id}
+            classroom={classroom}
+            posts={posts}
+            setPosts={setPosts}
+          />
+        ) : (
+          <>
+            {page === 'Início' && <Home onNavigate={navigate} />}
+            {page === 'Minhas turmas' && (
+              <ClassroomList key={searchVersion} initialQuery={search} />
+            )}
+            {page === 'Minhas aulas' && <Lessons />}
+            {page === 'Meus alunos' && <Students />}
+            {page === 'Materiais' && <Materials />}
+            {page === 'Glossário' && <Glossary />}
+            {page === 'Aprender Libras' && <LearnLibras />}
+            {page === 'Configurações' && <Settings />}
+          </>
+        )}
+      </TeacherShell>
+      {notice && (
+        <section role="status" className="teacher-toast">
+          <p>{notice}</p>
+          <button aria-label="Fechar mensagem" onClick={() => setNotice('')}>
+            <X size={18} />
+          </button>
+        </section>
+      )}
+      {editor && (
+        <ClassroomFormModal
+          editor={editor}
+          onClose={() => setEditor(null)}
+          onCreated={setCreatedCode}
+        />
+      )}
+      {createdCode && (
+        <Modal title="Sua turma está pronta!" onClose={() => setCreatedCode('')}>
+          <p className="text-sm text-slate-500">
+            Compartilhe este código fictício para demonstrar o convite da turma.
+          </p>
+          <p className="my-7 rounded-xl bg-blue-50 p-6 text-center font-mono text-3xl font-bold tracking-widest text-primary">
+            {createdCode}
+          </p>
+          <button className="t-btn w-full" onClick={() => copy(createdCode)}>
+            <Copy size={16} />
+            Copiar código
+          </button>
+        </Modal>
+      )}
+      {starting !== null && (
+        <StartLessonModal starting={starting} onClose={() => setStarting(null)} />
+      )}
+    </TeacherContext.Provider>
+  )
 }

@@ -19,28 +19,16 @@ try:
 except ImportError:
     AIORTC_AVAILABLE = False
 
-try:
-    from server.app.config import SETTINGS
-    from server.app.services import assemblyai
-    from server.app.services.local_whisper import get_local_model, run_local_transcription
-    from server.app.transcript_manager import TranscriptManager
-    from server.app.transcription import (
-        AudioBuffer,
-        TranscriptSaver,
-        classify_speaker,
-        is_internet_available,
-    )
-except ImportError:
-    from app.config import SETTINGS
-    from app.services import assemblyai
-    from app.services.local_whisper import get_local_model, run_local_transcription
-    from app.transcript_manager import TranscriptManager
-    from app.transcription import (
-        AudioBuffer,
-        TranscriptSaver,
-        classify_speaker,
-        is_internet_available,
-    )
+from ..config import SETTINGS
+from ..services import assemblyai
+from ..services.local_whisper import get_local_model, run_local_transcription
+from ..services.transcripts import TranscriptManager
+from .audio import (
+    AudioBuffer,
+    TranscriptSaver,
+    classify_speaker,
+    is_internet_available,
+)
 
 logger = logging.getLogger(__name__)
 

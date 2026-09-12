@@ -1,10 +1,10 @@
-import { BookX, Clock3, EarOff, type LucideIcon } from 'lucide-react';
-import { useInView } from "../../../hooks/useInView";
+import { BookX, Clock3, EarOff, type LucideIcon } from 'lucide-react'
+import { useInView } from '../../../hooks/useInView'
 
 interface ProblemItem {
-  icon: LucideIcon;
-  title: string;
-  text: string;
+  icon: LucideIcon
+  title: string
+  text: string
 }
 
 const problems: ProblemItem[] = [
@@ -23,11 +23,11 @@ const problems: ProblemItem[] = [
     title: 'Conteúdo simplificado ausente',
     text: 'Nem sempre há materiais adaptados ou intérpretes disponíveis em tempo integral em todas as disciplinas.',
   },
-];
+]
 
 export default function Problema() {
-  const [headerRef, headerInView] = useInView<HTMLDivElement>();
-  const [gridRef, gridInView] = useInView<HTMLDivElement>({ threshold: 0.1 });
+  const [headerRef, headerInView] = useInView<HTMLDivElement>()
+  const [gridRef, gridInView] = useInView<HTMLDivElement>({ threshold: 0.1 })
 
   return (
     <section id="problema" className="relative bg-background-dark px-4 py-24 overflow-hidden">
@@ -49,7 +49,8 @@ export default function Problema() {
           </h2>
 
           <p className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-gray-mid leading-relaxed font-text">
-            Identificamos desafios centrais na comunicação educacional que motivaram a criação deste projeto de tecnologia assistiva.
+            Identificamos desafios centrais na comunicação educacional que motivaram a criação deste
+            projeto de tecnologia assistiva.
           </p>
         </div>
 
@@ -72,5 +73,5 @@ export default function Problema() {
         </div>
       </div>
     </section>
-  );
+  )
 }

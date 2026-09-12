@@ -1,15 +1,17 @@
-import { ChevronDown, Radio } from 'lucide-react';
-import type { CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
-import heroBg from '../../../assets/hero-bg.png';
+import { ChevronDown, Radio } from 'lucide-react'
+import type { CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
+import heroBg from '../../../assets/hero-bg.png'
 
-const revealClass =
-  'motion-safe:opacity-0 motion-safe:animate-[fadeInUp_0.7s_ease-out_forwards]';
-const revealStyle = (delayMs: number): CSSProperties => ({ animationDelay: `${delayMs}ms` });
+const revealClass = 'motion-safe:opacity-0 motion-safe:animate-[fadeInUp_0.7s_ease-out_forwards]'
+const revealStyle = (delayMs: number): CSSProperties => ({ animationDelay: `${delayMs}ms` })
 
 export default function Hero() {
   return (
-    <section id="inicio" className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center px-4 py-24 overflow-hidden bg-background-dark">
+    <section
+      id="inicio"
+      className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center px-4 py-24 overflow-hidden bg-background-dark"
+    >
       <div
         className="absolute inset-0 bg-cover bg-center scale-110 blur-sm"
         style={{ backgroundImage: `url(${heroBg})` }}
@@ -34,16 +36,16 @@ export default function Hero() {
           className={`font-ui font-extrabold tracking-tight leading-[1.05] text-text-light text-[2.75rem] md:text-6xl lg:text-7xl ${revealClass}`}
           style={revealStyle(100)}
         >
-          Uma ponte em tempo real{' '}
-          <span className="text-primary">entre voz e Libras.</span>
+          Uma ponte em tempo real <span className="text-primary">entre voz e Libras.</span>
         </h1>
 
         <p
           className={`mt-8 max-w-xl mx-auto text-lg md:text-xl text-gray-mid leading-relaxed font-text ${revealClass}`}
           style={revealStyle(200)}
         >
-          Nossa plataforma transforma a fala do professor em texto simplificado e tradução para Libras,
-          permitindo que alunos surdos acompanhem a aula com a mesma clareza e ritmo dos colegas ouvintes.
+          Nossa plataforma transforma a fala do professor em texto simplificado e tradução para
+          Libras, permitindo que alunos surdos acompanhem a aula com a mesma clareza e ritmo dos
+          colegas ouvintes.
         </p>
 
         <div
@@ -70,5 +72,5 @@ export default function Hero() {
         <ChevronDown size={20} strokeWidth={1.5} aria-hidden="true" />
       </div>
     </section>
-  );
+  )
 }

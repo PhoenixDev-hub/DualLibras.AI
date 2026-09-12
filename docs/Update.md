@@ -1,4 +1,15 @@
-# Ideias para Evolução do DualLibras.AI
+# Ideias para evolução do DualLibras.AI
+
+Esta lista preserva ideias anteriores como planejamento, não como promessa de disponibilidade. O estado verificado está no [README](../README.md) e na [análise](ANALYSIS.md).
+
+## Situação na revisão de 12/09/2026
+
+- Implementados no protótipo: landing page, cadastro/login, API de turmas e materiais, transcrição AssemblyAI/Faster-Whisper, widget VLibras, histórico e exportação PDF/TXT/JSON.
+- Demonstrativos: dashboard do professor, gerenciamento local de aulas/alunos/glossário, resumo, compartilhamento, controles do avatar e alfabeto com placeholders.
+- Pendentes: entrada real por código, dashboard do aluno, integração das aulas demonstrativas com APIs, geração de resumos e contexto de materiais, permissões completas, produção multiusuário, apps móveis, SDKs e integrações externas.
+- ADMIN existe no modelo, mas não é aceito pelo cadastro público. Upload/ingestão não implica uso do material pelo transcritor. Modelos de banco não equivalem a endpoints implementados.
+
+As listas abaixo são um catálogo de ideias: itens que já possuem uma versão parcial ainda precisam da integração ou ampliação descrita, não devem ser usados como checklist de funcionalidades prontas.
 
 ## Inteligência Artificial
 

@@ -10,28 +10,16 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-try:
-    from server.app.api.schemas import (
-        SaveTranscriptRequest,
-        MaterialIngestRequest,
-        MaterialIngestResponse,
-        TranscriptListResponse,
-        TranscriptResponse,
-    )
-    from server.app.documentation_generator import DocumentationGenerator
-    from server.app.realtime.session import AIORTC_AVAILABLE, ClientSession
-    from server.app.transcript_manager import TranscriptManager
-except ImportError:
-    from app.api.schemas import (
-        SaveTranscriptRequest,
-        MaterialIngestRequest,
-        MaterialIngestResponse,
-        TranscriptListResponse,
-        TranscriptResponse,
-    )
-    from app.documentation_generator import DocumentationGenerator
-    from app.realtime.session import AIORTC_AVAILABLE, ClientSession
-    from app.transcript_manager import TranscriptManager
+from .schemas import (
+    SaveTranscriptRequest,
+    MaterialIngestRequest,
+    MaterialIngestResponse,
+    TranscriptListResponse,
+    TranscriptResponse,
+)
+from ..services.documentation import DocumentationGenerator
+from ..realtime.session import AIORTC_AVAILABLE, ClientSession
+from ..services.transcripts import TranscriptManager
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),

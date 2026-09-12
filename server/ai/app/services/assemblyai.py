@@ -6,12 +6,8 @@ from typing import Any
 
 import websockets
 
-try:
-    from server.app.config import SETTINGS
-    from server.app.transcription import AudioBuffer
-except ImportError:
-    from app.config import SETTINGS
-    from app.transcription import AudioBuffer
+from ..config import SETTINGS
+from ..realtime.audio import AudioBuffer
 
 logger = logging.getLogger(__name__)
 

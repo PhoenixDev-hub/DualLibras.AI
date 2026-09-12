@@ -7,9 +7,10 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed:test-users": "npm run build && node dist/seed/test-users.js",
+    "seed:test-users": "npm run build && node dist/scripts/seed-test-users.js",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "check:database": "npm run build && node dist/scripts/check-database.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
