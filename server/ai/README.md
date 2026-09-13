@@ -73,4 +73,4 @@ A CLI é iniciada com `python -m app.cli.transcription_cli` nesta pasta. Ela pod
 
 Não há autenticação na API Python, vínculo persistido de sessão com turma/usuário, nem isolamento multiusuário das saídas. Ingestão de material apenas grava o arquivo e os metadados. O gerador de documentação usa texto estático, não inspeciona automaticamente o código. Consulte [limitações](../../docs/ANALYSIS.md).
 
-Não há suíte Python versionada ou comando próprio de build. Os testes de import/HTTP com armazenamento temporário desta revisão estão descritos em [verificações](../../docs/VERIFICACAO.md).
+Não há suíte Python versionada ou comando próprio de build. Em 13/09/2026, imports e chamadas diretas às funções das rotas passaram com armazenamento temporário; o teste de transporte HTTP não concluiu. Escopo e resultados estão descritos em [verificações](../../docs/VERIFICACAO.md).

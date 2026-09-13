@@ -1,12 +1,12 @@
+import { authApi } from '../../../services/authApi'
 import { useState } from 'react'
 import { Copy, Trash2 } from 'lucide-react'
 import { Empty, Modal, PageTitle, SearchInput } from '../../../components/ui'
 import { useTeacher } from '../../../contexts/TeacherContext'
-import { teacher } from '../../../data/teacherDemo'
 import { initials } from '../../../utils/initials'
 import type { Student } from '../../../types/education'
-export default function Students({ classroomId }: { classroomId?: number }) {
-  const { students, setStudents, classrooms, copy, notify } = useTeacher()
+export default function Students({ classroomId }: { classroomId?: string | number }) {
+  const { user: teacher, students, refresh, classrooms, copy, notify } = useTeacher()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('')
   const [selected, setSelected] = useState<Student | null>(null)
@@ -16,7 +16,7 @@ export default function Students({ classroomId }: { classroomId?: number }) {
     (student) =>
       student.classroomIds.length &&
       student.name.toLowerCase().includes(query.toLowerCase()) &&
-      (!(classroomId || filter) || student.classroomIds.includes(classroomId ?? Number(filter))),
+      (!(classroomId || filter) || student.classroomIds.includes(classroomId ?? filter)),
   )
   return (
     <>
@@ -41,7 +41,7 @@ export default function Students({ classroomId }: { classroomId?: number }) {
         <section className="t-card mb-6 flex items-center gap-4 p-5">
           <span className="t-avatar">MO</span>
           <section>
-            <h3 className="text-sm font-bold">{teacher.name}</h3>
+            <h3 className="text-sm font-bold">{room?.teacherName ?? teacher?.name}</h3>
             <p className="text-xs text-slate-500">Professor responsável</p>
           </section>
         </section>
@@ -85,7 +85,7 @@ export default function Students({ classroomId }: { classroomId?: number }) {
                   </p>
                 </section>
               </button>
-              {classroomId && (
+              {classroomId && (teacher?.role === 'PROFESSOR' || teacher?.role === 'ADMIN') && (
                 <button
                   className="t-icon text-red-500"
                   aria-label={`Remover ${student.name} da turma`}
@@ -120,7 +120,7 @@ export default function Students({ classroomId }: { classroomId?: number }) {
       {removing && (
         <Modal title="Remover aluno da turma?" onClose={() => setRemoving(null)}>
           <p className="mb-6 text-sm text-slate-500">
-            {removing.name} será removido apenas desta turma na demonstração.
+            {removing.name} será removido apenas desta turma.
           </p>
           <section className="flex justify-end gap-3">
             <button className="t-btn-secondary" onClick={() => setRemoving(null)}>
@@ -128,19 +128,16 @@ export default function Students({ classroomId }: { classroomId?: number }) {
             </button>
             <button
               className="t-btn-danger"
-              onClick={() => {
-                setStudents(
-                  students.map((item) =>
-                    item.id === removing.id
-                      ? {
-                          ...item,
-                          classroomIds: item.classroomIds.filter((id) => id !== classroomId),
-                        }
-                      : item,
-                  ),
-                )
-                setRemoving(null)
-                notify('Aluno removido da turma.')
+              onClick={async () => {
+                if (!classroomId) return
+                try {
+                  await authApi.removeMember(classroomId, removing.id)
+                  await refresh()
+                  setRemoving(null)
+                  notify('Aluno removido da turma.')
+                } catch (err) {
+                  notify(err instanceof Error ? err.message : 'Não foi possível remover.')
+                }
               }}
             >
               Remover aluno

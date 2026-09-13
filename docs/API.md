@@ -1,5 +1,7 @@
 # Contratos das APIs
 
+> Atualização de integração: consulte [contas, turmas e dados persistidos](INTEGRACAO_FRONT_BACK.md). O painel agora consulta o banco, a autenticação exige sessão válida e a geração Prisma foi corrigida. As referências abaixo ao painel local, fallback guest e falha de geração registram o estado anterior.
+
 Referência derivada das rotas, controllers, schemas e serviços existentes. Exemplos são fictícios. A interface demonstrativa do professor não chama estas APIs. Portas e URLs podem ser alteradas pelo ambiente.
 
 ## Express — `http://localhost:4000`
@@ -86,7 +88,11 @@ Rotas definidas em [app/api/app.py](../server/ai/app/api/app.py), schemas em [sc
 
 `text` é obrigatório e tem tamanho mínimo 1; somente espaços resulta em 400. `title` padrão: `Transcrição`; `formats`: PDF/TXT/JSON; `metadata`: objeto vazio. Formatos desconhecidos são ignorados pelo gerenciador, não rejeitados pelo schema. Falhas de escrita/geração resultam em 500.
 
+`formats: []` também usa os três formatos padrão. Os identificadores são minúsculos e sensíveis a maiúsculas: uma lista contendo apenas formatos desconhecidos, como `["DOCX"]`, retorna sucesso com `files: {}` e nenhum arquivo salvo.
+
 `files` mapeia os formatos salvos para caminhos relativos a `OUTPUT_PATH`, como `transcripts/pdfs/transcricao_<timestamp>.pdf`. `metadata` inclui título, tamanho e formatos salvos, além dos dados fornecidos. Evite campos reservados como `text`, `title` e `formats` dentro de `metadata`, pois ele é expandido como argumentos da função de salvamento.
+
+O arquivo JSON contém `title`, `text`, `timestamp`, `filename_base`, `formats` e os metadados adicionais. Seu campo `formats` é montado antes de registrar o próprio JSON: normalmente contém `["pdf", "txt"]`, ou `[]` numa exportação somente JSON. Para saber todos os formatos efetivamente salvos, use `files` ou `metadata.formats_saved` da resposta HTTP. Metadados fornecidos podem sobrescrever campos calculados; evite também `formats_saved`, `text_length`, `timestamp` e `filename_base`.
 
 `GET /transcripts` conta arquivos, não aulas: uma exportação em três formatos pode aumentar `total` em três. Saídas contínuas TXT/JSON/SRT em `TRANSCRIPT_OUTPUT_DIR` são separadas dessa listagem. A rota PDF não possui a mesma validação explícita do nome implementada na rota de download genérica.
 

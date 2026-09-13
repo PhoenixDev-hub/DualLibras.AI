@@ -1,3 +1,4 @@
+import { educationRoutes } from './routes/education.routes';
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
@@ -21,6 +22,7 @@ export function createApp() {
     res.json({ status: 'ok' });
   });
 
+  app.use('/education', educationRoutes);
   app.use('/auth', authRoutes);
   app.use('/users', userRoutes);
   app.use('/dashboard', dashboardRoutes);

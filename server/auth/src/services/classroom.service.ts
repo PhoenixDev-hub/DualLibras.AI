@@ -70,6 +70,7 @@ export const classroomService = {
     return prisma.classroom.create({
       data: {
         name: data.name,
+        description: data.description,
         code,
         teacherId: userId,
       },

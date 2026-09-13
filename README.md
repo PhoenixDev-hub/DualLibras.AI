@@ -1,8 +1,12 @@
 # DualLibras.AI — Projeto Festival 2026
 
+> Atualização de integração: consulte [contas, turmas e dados persistidos](docs/INTEGRACAO_FRONT_BACK.md). O painel agora consulta o banco, a autenticação exige sessão válida e a geração Prisma foi corrigida. As referências abaixo ao painel local, fallback guest e falha de geração registram o estado anterior.
+
 Aplicação educacional com uma interface de demonstração para professores e um protótipo de transcrição de voz integrado ao widget VLibras. O repositório contém três aplicações com dependências próprias; não utiliza npm workspaces.
 
 ## Estado atual
+
+Documentação conferida com o código em **13/09/2026**. O [relatório de verificação](docs/VERIFICACAO.md) registra resultados, procedimentos e validações pendentes.
 
 - **Frontend:** React 19, TypeScript, React Router 7, Vite 8, Tailwind CSS 4 e Lucide React.
 - **API de contas:** Express 5, TypeScript, Zod, JWT por cookie/Bearer e Prisma 7 com PostgreSQL.

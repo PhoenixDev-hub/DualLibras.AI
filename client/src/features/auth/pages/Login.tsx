@@ -19,8 +19,7 @@ export default function Login() {
 
     try {
       const { user } = await authApi.login(email, password)
-      const destination =
-        user.role === 'PROFESSOR' ? '/dashboard' : user.role === 'ALUNO' ? '/codigo' : '/app'
+      const destination = user.role === 'ALUNO' ? '/codigo' : '/dashboard'
       navigate(destination, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível entrar.')

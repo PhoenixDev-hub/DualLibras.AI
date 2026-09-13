@@ -3,16 +3,7 @@ import { ArrowUpRight, BookOpen, Copy, MoreHorizontal, Users } from 'lucide-reac
 import { useTeacher } from '../../../contexts/TeacherContext'
 import type { Classroom } from '../../../types/education'
 export default function ClassroomCard({ classroom }: { classroom: Classroom }) {
-  const {
-    students,
-    lessons,
-    openClassroom,
-    editClassroom,
-    copy,
-    setClassrooms,
-    classrooms,
-    notify,
-  } = useTeacher()
+  const { students, lessons, openClassroom, editClassroom, copy } = useTeacher()
   const [menu, setMenu] = useState(false)
   return (
     <article className="t-card overflow-hidden">
@@ -46,20 +37,6 @@ export default function ClassroomCard({ classroom }: { classroom: Classroom }) {
             >
               Editar turma
             </button>
-            <button
-              className="rounded-lg p-3 text-left hover:bg-slate-50"
-              onClick={() => {
-                setClassrooms(
-                  classrooms.map((item) =>
-                    item.id === classroom.id ? { ...item, archived: !item.archived } : item,
-                  ),
-                )
-                notify(classroom.archived ? 'Turma reativada.' : 'Turma arquivada.')
-                setMenu(false)
-              }}
-            >
-              {classroom.archived ? 'Reativar' : 'Arquivar'}
-            </button>
           </section>
         )}
       </header>
@@ -68,7 +45,7 @@ export default function ClassroomCard({ classroom }: { classroom: Classroom }) {
           <Users size={15} />
           {
             students.filter((student) => student.classroomIds.includes(classroom.id)).length
-          } alunos <span className="ml-auto">2026 · 2º semestre</span>
+          } alunos <span className="ml-auto"></span>
         </p>
         <section className="my-5 min-h-6">
           {lessons.some(

@@ -1,3 +1,10 @@
+import type {
+  Classroom as Room,
+  Student,
+  Lesson,
+  Material as Resource,
+  Term,
+} from '../types/education'
 import { AUTH_API_BASE } from '../config/backend'
 
 export type UserRole = 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE' | 'ADMIN'
@@ -75,6 +82,21 @@ export type DashboardData = {
   >
 }
 
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+export type EducationData = {
+  classrooms: Room[]
+  students: Student[]
+  lessons: Lesson[]
+  materials: Resource[]
+  terms: Term[]
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${AUTH_API_BASE}${path}`, {
     ...init,
@@ -87,7 +109,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as { error?: string } | null
-    throw new Error(data?.error ?? 'Não foi possível completar a solicitação.')
+    throw new ApiError(data?.error ?? 'Não foi possível completar a solicitação.', response.status)
   }
 
   if (response.status === 204) {
@@ -98,6 +120,27 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const authApi = {
+  education() {
+    return request<EducationData>('/education')
+  },
+  updateClassroom(id: string | number, data: { name: string; description: string }) {
+    return request<void>(`/education/classrooms/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
+  joinClassroom(code: string) {
+    return request<{ classroomId: string }>('/education/join', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    })
+  },
+  removeMember(id: string | number, userId: string | number) {
+    return request<void>(
+      `/education/classrooms/${encodeURIComponent(id)}/members/${encodeURIComponent(userId)}`,
+      { method: 'DELETE' },
+    )
+  },
   login(email: string, password: string) {
     return request<{ user: Omit<DashboardUser, 'access'> }>('/auth/login', {
       method: 'POST',
@@ -136,10 +179,10 @@ export const authApi = {
     return request<{ classrooms: Classroom[] }>('/classrooms')
   },
 
-  createClassroom(name: string) {
+  createClassroom(name: string, description = '') {
     return request<{ classroom: Classroom }>('/classrooms', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, description }),
     })
   },
 

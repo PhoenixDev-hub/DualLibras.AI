@@ -1,4 +1,5 @@
-import type { FormEvent } from 'react'
+import { authApi } from '../../../services/authApi'
+import { useState, type FormEvent } from 'react'
 import { Modal } from '../../../components/ui'
 import { useTeacher } from '../../../contexts/TeacherContext'
 import type { Classroom } from '../../../types/education'
@@ -13,35 +14,34 @@ export default function ClassroomFormModal({
   onClose,
   onCreated,
 }: ClassroomFormModalProps) {
-  const { classrooms, setClassrooms, notify } = useTeacher()
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const { refresh, notify } = useTeacher()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    const name = String(data.get('name')).trim()
-    const subject = String(data.get('subject')).trim()
-    if (!name || !subject) return
-    const fields = { name, subject, description: String(data.get('description')).trim() }
-    if (editor === 'new') {
-      const id = Date.now()
-      const code = `DL-${(Math.max(...classrooms.map((item) => Number(item.code.slice(3))), 1000) + 1).toString()}`
-      setClassrooms([
-        ...classrooms,
-        {
-          ...fields,
-          id,
-          code,
-          archived: false,
-          color: ['blue', 'teal', 'violet'][classrooms.length % 3],
-        },
-      ])
-      onCreated(code)
-    } else {
-      setClassrooms(
-        classrooms.map((item) => (item.id === editor.id ? { ...item, ...fields } : item)),
-      )
-      notify('Dados da turma atualizados.')
+    const fields = {
+      name: String(data.get('name')).trim(),
+      description: String(data.get('description')).trim(),
     }
-    onClose()
+    setPending(true)
+    setError('')
+    try {
+      if (editor === 'new') {
+        const result = await authApi.createClassroom(fields.name, fields.description)
+        onCreated(result.classroom.code)
+      } else await authApi.updateClassroom(editor.id, fields)
+      try {
+        await refresh()
+      } catch {
+        notify('Turma salva. Atualize a página para recarregar a lista.')
+      }
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível salvar.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -58,16 +58,6 @@ export default function ClassroomFormModal({
           />
         </label>
         <label className="t-label">
-          Disciplina
-          <input
-            className="t-input"
-            name="subject"
-            placeholder="Ex.: Programação"
-            defaultValue={editor === 'new' ? '' : editor.subject}
-            required
-          />
-        </label>
-        <label className="t-label">
           Descrição
           <textarea
             className="t-input min-h-24"
@@ -76,14 +66,15 @@ export default function ClassroomFormModal({
           />
         </label>
         <p className="text-xs text-slate-400">
-          Os dados ficam disponíveis apenas durante esta demonstração.
+          Nome e descrição são salvos no banco. A disciplina vem do perfil do professor.
         </p>
         <section className="flex justify-end gap-3">
           <button type="button" className="t-btn-secondary" onClick={onClose}>
             Cancelar
           </button>
-          <button className="t-btn">
-            {editor === 'new' ? 'Criar turma' : 'Salvar alterações'}
+          {error && <p role="alert">{error}</p>}
+          <button className="t-btn" disabled={pending}>
+            {pending ? 'Salvando…' : editor === 'new' ? 'Criar turma' : 'Salvar alterações'}
           </button>
         </section>
       </form>

@@ -8,7 +8,6 @@ import ClassroomList from '../features/classrooms/pages/ClassroomList'
 import ClassroomDetails from '../features/classrooms/pages/ClassroomDetails'
 import Lessons from '../features/lessons/pages/Lessons'
 import LessonDetails from '../features/lessons/pages/LessonDetails'
-import LiveLesson from '../features/lessons/pages/LiveLesson'
 import StartLessonModal from '../features/lessons/components/StartLessonModal'
 import ClassroomFormModal from '../features/classrooms/components/ClassroomFormModal'
 import Students from '../features/students/pages/Students'
@@ -19,6 +18,9 @@ import Settings from '../features/settings/pages/Settings'
 import '../styles/teacher.css'
 export default function Dashboard() {
   const {
+    loading,
+    error,
+    retry,
     contextValue,
     page,
     classroom,
@@ -41,6 +43,20 @@ export default function Dashboard() {
     copy,
   } = useTeacherDashboard()
 
+  if (loading)
+    return (
+      <main className="p-10" role="status">
+        Carregando sua conta e suas turmas…
+      </main>
+    )
+  if (error)
+    return (
+      <main className="p-10">
+        <p role="alert">{error}</p>
+        <button onClick={() => void retry()}>Tentar novamente</button>
+        <a href="/entrar"> Voltar ao login</a>
+      </main>
+    )
   return (
     <TeacherContext.Provider value={contextValue}>
       <TeacherShell
@@ -50,12 +66,16 @@ export default function Dashboard() {
         onSearch={searchClassrooms}
         onNotice={setNotice}
       >
+        <div className="mb-5 flex gap-4">
+          <button className="t-btn-secondary" onClick={() => void retry()}>
+            Atualizar dados
+          </button>
+          <a className="t-btn-secondary" href="/codigo">
+            Entrar com código
+          </a>
+        </div>
         {lesson ? (
-          lesson.status === 'live' ? (
-            <LiveLesson key={lesson.id} lesson={lesson} />
-          ) : (
-            <LessonDetails key={lesson.id} lesson={lesson} />
-          )
+          <LessonDetails key={lesson.id} lesson={lesson} />
         ) : classroom ? (
           <ClassroomDetails
             key={classroom.id}
@@ -96,7 +116,7 @@ export default function Dashboard() {
       {createdCode && (
         <Modal title="Sua turma está pronta!" onClose={() => setCreatedCode('')}>
           <p className="text-sm text-slate-500">
-            Compartilhe este código fictício para demonstrar o convite da turma.
+            Compartilhe este código para que os alunos entrem na turma.
           </p>
           <p className="my-7 rounded-xl bg-blue-50 p-6 text-center font-mono text-3xl font-bold tracking-widest text-primary">
             {createdCode}

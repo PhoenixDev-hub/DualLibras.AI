@@ -51,11 +51,7 @@ model User {
   role         Role
 
   schoolId String?
-  school   School? @relation(
-    fields: [schoolId],
-    references: [id],
-    onDelete: SetNull
-  )
+  school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
   teacherProfile TeacherProfile?
   studentProfile StudentProfile?
@@ -97,11 +93,7 @@ model TeacherProfile {
   discipline  String?
   institution String?
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -114,11 +106,7 @@ model StudentProfile {
   registrationNumber String?
   institution        String?
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -128,11 +116,7 @@ model SocietyProfile {
   id     String @id @default(uuid())
   userId String @unique
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,18 +159,9 @@ model Classroom {
   // Escola é opcional
   schoolId String?
 
-  teacher User @relation(
-    "TeacherClassrooms",
-    fields: [teacherId],
-    references: [id],
-    onDelete: Cascade
-  )
+  teacher User @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Cascade)
 
-  school School? @relation(
-    fields: [schoolId],
-    references: [id],
-    onDelete: SetNull
-  )
+  school School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
   // Alunos/membros
   members ClassroomMember[]
@@ -212,17 +187,9 @@ model ClassroomMember {
   classroomId String
   userId      String
 
-  classroom Classroom @relation(
-    fields: [classroomId],
-    references: [id],
-    onDelete: Cascade
-  )
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   joinedAt DateTime @default(now())
 
@@ -257,24 +224,11 @@ model Lesson {
   // Glossário específico opcional
   glossaryId String?
 
-  classroom Classroom @relation(
-    fields: [classroomId],
-    references: [id],
-    onDelete: Cascade
-  )
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
 
-  teacher User @relation(
-    "TeacherLessons",
-    fields: [teacherId],
-    references: [id],
-    onDelete: Cascade
-  )
+  teacher User @relation("TeacherLessons", fields: [teacherId], references: [id], onDelete: Cascade)
 
-  glossary Glossary? @relation(
-    fields: [glossaryId],
-    references: [id],
-    onDelete: SetNull
-  )
+  glossary Glossary? @relation(fields: [glossaryId], references: [id], onDelete: SetNull)
 
   startedAt  DateTime?
   finishedAt DateTime?
@@ -308,18 +262,9 @@ model Material {
   lessonId     String?
   uploadedById String
 
-  lesson Lesson? @relation(
-    fields: [lessonId],
-    references: [id],
-    onDelete: Cascade
-  )
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  uploadedBy User @relation(
-    "UploadedMaterials",
-    fields: [uploadedById],
-    references: [id],
-    onDelete: Cascade
-  )
+  uploadedBy User @relation("UploadedMaterials", fields: [uploadedById], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -343,17 +288,9 @@ model TranscriptionSession {
   // Aula relacionada
   lessonId String?
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lesson Lesson? @relation(
-    fields: [lessonId],
-    references: [id],
-    onDelete: Cascade
-  )
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   // Transcrição completa
   transcript String?
@@ -387,11 +324,7 @@ model TranscriptSegment {
   startTime Float?
   endTime   Float?
 
-  session TranscriptionSession @relation(
-    fields: [sessionId],
-    references: [id],
-    onDelete: Cascade
-  )
+  session TranscriptionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -410,11 +343,7 @@ model Summary {
 
   content String
 
-  lesson Lesson @relation(
-    fields: [lessonId],
-    references: [id],
-    onDelete: Cascade
-  )
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -437,17 +366,9 @@ model Glossary {
   // Sala onde o glossário é utilizado
   classroomId String?
 
-  owner User @relation(
-    fields: [ownerId],
-    references: [id],
-    onDelete: Cascade
-  )
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  classroom Classroom? @relation(
-    fields: [classroomId],
-    references: [id],
-    onDelete: Cascade
-  )
+  classroom Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
 
   terms GlossaryTerm[]
 
@@ -485,11 +406,7 @@ model GlossaryTerm {
 
   glossaryId String
 
-  glossary Glossary @relation(
-    fields: [glossaryId],
-    references: [id],
-    onDelete: Cascade
-  )
+  glossary Glossary @relation(fields: [glossaryId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

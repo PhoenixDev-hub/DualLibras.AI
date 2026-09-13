@@ -37,6 +37,6 @@ O frontend possui painel de histórico em `features/history` que chama essas rot
 
 ## Verificação e limitações
 
-Os contratos HTTP, gravação e download foram conferidos com dados fictícios em diretório temporário; os comandos curl acima são exemplos equivalentes para o serviço iniciado. Não existe `test_api.py` ou `test_transcript_manager.py` versionado. Não apague ambientes, arquivos ou processos para seguir este guia.
+Em 13/09/2026, as funções de rota, gravação e resolução dos arquivos de download foram conferidas por chamadas diretas com dados fictícios em diretório temporário. A tentativa separada de teste HTTP não concluiu; os comandos curl acima continuam sendo um roteiro para validação com o serviço iniciado. Não existe `test_api.py` ou `test_transcript_manager.py` versionado. Não apague ambientes, arquivos ou processos para seguir este guia.
 
 Verifique permissão de escrita nos diretórios configurados e mantenha o serviço iniciado a partir da pasta indicada. Os nomes contínuos são compartilhados e exportações no mesmo segundo podem colidir; o serviço não isola dados por usuário. Leia [API](API.md), [limitações](ANALYSIS.md) e [resultados](VERIFICACAO.md).

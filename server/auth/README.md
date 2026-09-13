@@ -1,5 +1,7 @@
 # API Express — contas, turmas e materiais
 
+> Atualização de integração: consulte [contas, turmas e dados persistidos](../../docs/INTEGRACAO_FRONT_BACK.md). O painel agora consulta o banco, a autenticação exige sessão válida e a geração Prisma foi corrigida. As referências abaixo ao painel local, fallback guest e falha de geração registram o estado anterior.
+
 Express 5 + TypeScript + Zod + Prisma 7/PostgreSQL. `src/server.ts` inicia o servidor; `src/app.ts` registra middlewares e rotas. Porta padrão: 4000.
 
 ## Estrutura

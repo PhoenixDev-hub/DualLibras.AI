@@ -26,7 +26,14 @@ export default function LessonList({ lessons }: { lessons: Lesson[] }) {
             {lesson.duration}
           </span>
           <span className={lesson.status === 'live' ? 't-badge' : 't-badge-neutral'}>
-            {lesson.status === 'live' ? 'Em andamento' : 'Finalizada'}
+            {
+              {
+                live: 'Em andamento',
+                finished: 'Finalizada',
+                scheduled: 'Agendada',
+                cancelled: 'Cancelada',
+              }[lesson.status]
+            }
           </span>
         </button>
       ))}

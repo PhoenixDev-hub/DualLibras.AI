@@ -4,7 +4,7 @@ import { BookOpen, Plus } from 'lucide-react'
 import { Empty, Modal, PageTitle, SearchInput } from '../../../components/ui'
 import { useTeacher } from '../../../contexts/TeacherContext'
 export default function Glossary() {
-  const { terms, setTerms, notify } = useTeacher()
+  const { terms, notify } = useTeacher()
   const [query, setQuery] = useState('')
   const [subject, setSubject] = useState('')
   const [adding, setAdding] = useState(false)
@@ -15,21 +15,7 @@ export default function Glossary() {
   )
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    const term = String(data.get('term')).trim()
-    if (!term) return
-    setTerms([
-      ...terms,
-      {
-        id: Date.now(),
-        term,
-        definition: String(data.get('definition')),
-        subject: String(data.get('subject')),
-        example: String(data.get('example')),
-      },
-    ])
-    setAdding(false)
-    notify('Termo adicionado ao glossário.')
+    notify('A criação de termos ainda não está disponível.')
   }
 
   return (
@@ -38,7 +24,12 @@ export default function Glossary() {
         title="Glossário"
         description="Palavras que abrem caminhos para o conhecimento."
         action={
-          <button className="t-btn" onClick={() => setAdding(true)}>
+          <button
+            className="t-btn"
+            disabled
+            title="Criação de termos ainda indisponível"
+            onClick={() => setAdding(true)}
+          >
             <Plus size={16} />
             Adicionar termo
           </button>

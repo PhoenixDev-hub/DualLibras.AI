@@ -55,7 +55,7 @@ select.t-input {
   @apply mt-0 inline-block;
 }
 .t-search {
-  @apply flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-400;
+  @apply flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-400 transition-[border-color,box-shadow,color];
 }
 .t-search input {
   @apply min-w-0 w-full bg-transparent text-sm text-slate-700 outline-none;
@@ -106,8 +106,12 @@ select.t-input {
   outline-offset: 4px;
 }
 .t-search:focus-within {
-  outline: 3px solid #60a5fa;
-  outline-offset: 3px;
+  border-color: #25589b;
+  box-shadow: 0 0 0 3px rgb(37 88 155 / 15%);
+  color: #25589b;
+}
+.t-search input:focus-visible {
+  outline: none;
 }
 @media (max-width: 1023px) {
   .teacher-sidebar,

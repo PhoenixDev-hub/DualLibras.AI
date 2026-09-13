@@ -1,6 +1,10 @@
+import type { DashboardUser } from '../services/authApi'
 import { createContext, useContext } from 'react'
 import type { Classroom, Lesson, Material, Student, Term } from '../types/education'
 export type TeacherState = {
+  user: DashboardUser | null
+  refresh: () => Promise<void>
+  logout: () => Promise<void>
   classrooms: Classroom[]
   students: Student[]
   lessons: Lesson[]
@@ -11,9 +15,9 @@ export type TeacherState = {
   setLessons: (value: Lesson[]) => void
   setMaterials: (value: Material[]) => void
   setTerms: (value: Term[]) => void
-  openClassroom: (id: number) => void
-  openLesson: (id: number) => void
-  startLesson: (id?: number) => void
+  openClassroom: (id: string | number) => void
+  openLesson: (id: string | number) => void
+  startLesson: (id?: string | number) => void
   editClassroom: (classroom?: Classroom) => void
   notify: (message: string) => void
   copy: (value: string) => void

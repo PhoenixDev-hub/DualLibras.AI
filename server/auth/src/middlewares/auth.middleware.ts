@@ -11,25 +11,14 @@ function getCookieValue(cookieHeader: string | undefined, name: string) {
   return found ? decodeURIComponent(found.slice(target.length)) : null;
 }
 
-export function authMiddleware(req: Request, _res: Response, next: NextFunction) {
+export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   const bearerToken = header?.startsWith('Bearer ') ? header.replace('Bearer ', '') : null;
-  const cookieToken = getCookieValue(req.headers.cookie, env.cookieName);
-  const token = bearerToken ?? cookieToken;
-
-  if (token) {
-    try {
-      req.user = verifyToken(token);
-    } catch {
-    }
-  }
-
-  if (!req.user) {
-    req.user = {
-      sub: 'guest-prototype-user-id',
-      email: 'prototipo@duallibras.ai',
-    };
-  }
-
+  let token: string | null;
+  try { token = bearerToken ?? getCookieValue(req.headers.cookie, env.cookieName); }
+  catch { res.status(401).json({ error: 'Sessão inválida. Entre novamente.' }); return; }
+  if (!token) { res.status(401).json({ error: 'Entre para continuar.' }); return; }
+  try { req.user = verifyToken(token); }
+  catch { res.status(401).json({ error: 'Sessão expirada ou inválida.' }); return; }
   next();
 }

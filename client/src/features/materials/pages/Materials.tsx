@@ -1,121 +1,82 @@
-import type { FormEvent } from 'react'
-import { useState } from 'react'
-import { FileText, Plus, Upload } from 'lucide-react'
-import { Empty, Modal, PageTitle } from '../../../components/ui'
+import { useState, type FormEvent } from 'react'
+import { Empty, PageTitle } from '../../../components/ui'
 import { useTeacher } from '../../../contexts/TeacherContext'
-export default function Materials({ classroomId }: { classroomId?: number }) {
-  const { materials, setMaterials, classrooms, notify } = useTeacher()
-  const [adding, setAdding] = useState(false)
-  const filtered = materials.filter((item) => !classroomId || item.classroomId === classroomId)
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+import { authApi } from '../../../services/authApi'
+export default function Materials({ classroomId }: { classroomId?: string | number }) {
+  const { materials, refresh, user } = useTeacher()
+  const [pending, setPending] = useState(false)
+  const [message, setMessage] = useState('')
+  async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    const name = String(data.get('name')).trim()
-    if (!name) return
-    setMaterials([
-      ...materials,
-      {
-        id: Date.now(),
-        name,
-        subject: String(data.get('subject')).trim() || 'Geral',
-        type: String(data.get('type')),
-        classroomId: classroomId ?? Number(data.get('classroom')),
-      },
-    ])
-    setAdding(false)
-    notify('Material fictício adicionado. Nenhum arquivo foi enviado.')
+    const form = event.currentTarget
+    const file = new FormData(form).get('file')
+    if (!(file instanceof File) || !file.size) return
+    if (file.size > 25 * 1024 * 1024) {
+      setMessage('O arquivo deve ter no máximo 25 MiB.')
+      return
+    }
+    setPending(true)
+    setMessage('')
+    try {
+      const contentBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.onerror = () => reject(new Error('Não foi possível ler o arquivo.'))
+        reader.readAsDataURL(file)
+      })
+      const result = await authApi.uploadMaterial({ filename: file.name, contentBase64 })
+      form.reset()
+      setMessage(
+        result.ai.sent
+          ? 'Material salvo e enviado para processamento.'
+          : 'Material salvo. Envio ao serviço de transcrição pendente.',
+      )
+      try {
+        await refresh()
+      } catch {
+        setMessage('Material salvo. Atualize a página para recarregar a lista.')
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Não foi possível enviar.')
+    } finally {
+      setPending(false)
+    }
   }
-
+  const filtered = materials.filter((m) => !classroomId || m.classroomId === classroomId)
   return (
     <>
       <PageTitle
         title="Materiais"
-        description="Recursos para apoiar cada etapa do aprendizado."
-        action={
-          <button className="t-btn" onClick={() => setAdding(true)}>
-            <Plus size={16} />
-            Adicionar material
-          </button>
-        }
+        description="Arquivos cadastrados na sua conta e nas suas aulas."
       />
-      {filtered.length ? (
-        [...new Set(filtered.map((item) => item.subject))].map((subject) => (
-          <section key={subject} className="mb-6">
-            <h3 className="mb-3 text-sm font-bold text-slate-500">{subject}</h3>
-            <section className="grid gap-3 md:grid-cols-2">
-              {filtered
-                .filter((item) => item.subject === subject)
-                .map((item) => (
-                  <button
-                    key={item.id}
-                    className="t-card flex items-center gap-4 p-5 text-left hover:border-primary"
-                    onClick={() =>
-                      notify(
-                        `${item.name}: arquivo fictício (${item.type}). A visualização está representada nesta demonstração.`,
-                      )
-                    }
-                  >
-                    <span className="rounded-xl bg-blue-50 p-3 text-primary">
-                      <FileText size={23} />
-                    </span>
-                    <section>
-                      <h4 className="text-sm font-semibold">{item.name}</h4>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {item.type} ·{' '}
-                        {classrooms.find((room) => room.id === item.classroomId)?.name}
-                      </p>
-                    </section>
-                  </button>
-                ))}
-            </section>
-          </section>
-        ))
-      ) : (
-        <Empty text="Nenhum material adicionado. Compartilhe o primeiro recurso da turma." />
+      {!classroomId && (user?.role === 'PROFESSOR' || user?.role === 'ADMIN') && (
+        <form onSubmit={upload} className="t-card mb-5 space-y-4 p-5">
+          <label className="t-label">
+            Enviar arquivo
+            <input
+              type="file"
+              name="file"
+              required
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+              disabled={pending}
+            />
+          </label>
+          <p className="text-sm">
+            Até 25 MiB. O arquivo será salvo na sua conta, sem vínculo com uma turma.
+          </p>
+          <button className="t-btn" disabled={pending}>
+            {pending ? 'Enviando…' : 'Enviar material'}
+          </button>
+        </form>
       )}
-      {adding && (
-        <Modal title="Adicionar material" onClose={() => setAdding(false)}>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <section className="rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 p-6 text-center">
-              <Upload className="mx-auto mb-2 text-primary" />
-              <p className="text-sm">Prévia visual de envio</p>
-              <p className="mt-2 text-xs text-slate-500">
-                Preencha os dados abaixo para simular um material, sem upload.
-              </p>
-            </section>
-            <label className="t-label">
-              Nome do material
-              <input name="name" className="t-input" required />
-            </label>
-            <label className="t-label">
-              Assunto
-              <input name="subject" className="t-input" required />
-            </label>
-            <label className="t-label">
-              Tipo
-              <select name="type" className="t-input">
-                <option>PDF</option>
-                <option>Apresentação</option>
-                <option>Documento</option>
-                <option>Link</option>
-              </select>
-            </label>
-            {!classroomId && (
-              <label className="t-label">
-                Turma
-                <select name="classroom" className="t-input" required>
-                  {classrooms.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <button className="t-btn">Adicionar à turma</button>
-          </form>
-        </Modal>
-      )}
+      <p role="status">{message}</p>
+      {filtered.map((m) => (
+        <article className="t-card mb-3 p-5" key={m.id}>
+          <h2>{m.name}</h2>
+          <p className="text-sm text-slate-500">{m.type}</p>
+        </article>
+      ))}
+      {!filtered.length && <Empty text="Nenhum material cadastrado." />}
     </>
   )
 }

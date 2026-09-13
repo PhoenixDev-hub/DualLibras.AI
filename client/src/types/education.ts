@@ -1,33 +1,41 @@
 export type Classroom = {
-  id: number
+  id: string | number
   name: string
+  teacherName?: string
   subject: string
   description: string
   code: string
   archived: boolean
   color: string
 }
-export type Student = { id: number; name: string; classroomIds: number[]; joined: string }
+export type Student = {
+  id: string | number
+  name: string
+  classroomIds: (string | number)[]
+  joined: string
+}
 export type Lesson = {
-  id: number
+  id: string | number
+  transcript?: string
+  summary?: string
   title: string
-  classroomId: number
+  classroomId: string | number
   date: string
   duration: string
-  status: 'live' | 'finished'
+  status: 'live' | 'finished' | 'scheduled' | 'cancelled'
 }
 export type Material = {
-  id: number
+  id: string | number
   name: string
   subject: string
   type: string
-  classroomId: number
+  classroomId: string | number
 }
 export type Term = {
-  id: number
+  id: string | number
   term: string
   definition: string
   subject: string
   example: string
 }
-export type Post = { id: number; classroomId: number; text: string; date: string }
+export type Post = { id: string | number; classroomId: string | number; text: string; date: string }

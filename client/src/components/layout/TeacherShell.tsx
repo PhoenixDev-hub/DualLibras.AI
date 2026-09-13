@@ -1,4 +1,3 @@
-import { useState, type ReactNode } from 'react'
 import {
   ArrowLeft,
   Bell,
@@ -8,6 +7,8 @@ import {
   Hand,
   Home,
   LayoutGrid,
+  LoaderCircle,
+  LogOut,
   Menu,
   Search,
   Settings,
@@ -15,8 +16,10 @@ import {
   Video,
   X,
 } from 'lucide-react'
-import LogoTipo from '../../assets/Logotipo.png'
-import { teacher } from '../../data/teacherDemo'
+import { useState, type ReactNode } from 'react'
+import IconLogo from '../../assets/IconLogo.png'
+import { useTeacher } from '../../contexts/TeacherContext'
+import { initials } from '../../utils/initials'
 const navigation = [
   { label: 'Início', icon: Home },
   { label: 'Minhas turmas', icon: LayoutGrid },
@@ -42,8 +45,20 @@ export default function TeacherShell({
   onNotice: (message: string) => void
   children: ReactNode
 }) {
+  const { user: teacher, logout } = useTeacher()
   const [collapsed, setCollapsed] = useState(false)
   const [mobile, setMobile] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+
+  async function handleLogout() {
+    if (signingOut) return
+    setSigningOut(true)
+    try {
+      await logout()
+    } finally {
+      setSigningOut(false)
+    }
+  }
   return (
     <main
       className={`teacher-app min-h-screen bg-[#F5F7FB] font-text text-slate-800 ${collapsed ? 'sidebar-small' : ''}`}
@@ -58,7 +73,7 @@ export default function TeacherShell({
       <aside className={`teacher-sidebar ${mobile ? 'mobile-open' : ''}`}>
         <a href="/dashboard" className="flex h-24 items-center gap-3 px-5 text-white">
           <img
-            src={LogoTipo}
+            src={IconLogo}
             className="h-11 w-11 rounded-xl object-contain"
             alt="LogoTipo DualLibras.AI"
           />
@@ -77,7 +92,7 @@ export default function TeacherShell({
         </button>
         {!collapsed && (
           <p className="px-7 pb-4 pt-5 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">
-            Espaço do professor
+            Minha área
           </p>
         )}
         <nav aria-label="Menu principal" className="space-y-1.5 px-3">
@@ -131,13 +146,13 @@ export default function TeacherShell({
             <Menu />
           </button>
           <form
-            className="flex max-w-lg flex-1 items-center gap-3 text-slate-400"
+            className="t-search max-w-lg flex-1"
             onSubmit={(event) => {
               event.preventDefault()
               onSearch(String(new FormData(event.currentTarget).get('query') || ''))
             }}
           >
-            <Search size={19} />
+            <Search size={19} className="shrink-0" aria-hidden="true" />
             <input
               name="query"
               aria-label="Buscar turmas"
@@ -148,13 +163,11 @@ export default function TeacherShell({
               Buscar
             </button>
           </form>
-          <section className="flex items-center gap-3 sm:gap-5">
+          <section className="flex shrink-0 items-center gap-2 sm:gap-5">
             <button
               className="t-icon relative"
               aria-label="Notificações"
-              onClick={() =>
-                onNotice('Você está em dia! Nenhuma nova notificação nesta demonstração.')
-              }
+              onClick={() => onNotice('As notificações ainda não estão disponíveis.')}
             >
               <Bell size={20} />
               <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
@@ -163,13 +176,28 @@ export default function TeacherShell({
             <button
               className="flex items-center gap-3 text-left"
               onClick={() => onNavigate('Configurações')}
-              aria-label="Abrir perfil do professor"
+              aria-label="Abrir meu perfil"
             >
-              <span className="t-avatar">MO</span>
+              <span className="t-avatar">{initials(teacher?.name ?? '')}</span>
               <span className="hidden sm:block">
-                <strong className="block text-xs">{teacher.name}</strong>
-                <span className="text-[11px] text-slate-400">Professor</span>
+                <strong className="block max-w-36 truncate text-xs">{teacher?.name}</strong>
+                <span className="text-[11px] text-slate-400">{teacher?.access.roleLabel}</span>
               </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              disabled={signingOut}
+              aria-label={signingOut ? 'Saindo da conta' : 'Sair da conta'}
+              title="Sair da conta"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+            >
+              {signingOut ? (
+                <LoaderCircle size={17} className="animate-spin" aria-hidden="true" />
+              ) : (
+                <LogOut size={17} aria-hidden="true" />
+              )}
+              <span className="hidden md:inline">{signingOut ? 'Saindo…' : 'Sair'}</span>
             </button>
           </section>
         </header>
@@ -187,7 +215,7 @@ export default function TeacherShell({
         </section>
         <footer className="px-9 pb-6 text-xs text-slate-400">
           DualLibras.AI · Aprendizagem sem barreiras{' '}
-          <span className="float-right">Demonstração visual</span>
+          <span className="float-right">Conta conectada</span>
         </footer>
       </section>
     </main>

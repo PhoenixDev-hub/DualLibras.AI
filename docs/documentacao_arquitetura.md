@@ -1,5 +1,7 @@
 # Arquitetura — DualLibras.AI
 
+> Atualização de integração: consulte [contas, turmas e dados persistidos](INTEGRACAO_FRONT_BACK.md). O painel agora consulta o banco, a autenticação exige sessão válida e a geração Prisma foi corrigida. As referências abaixo ao painel local, fallback guest e falha de geração registram o estado anterior.
+
 ## Aplicações e pontos de entrada
 
 | Aplicação | Stack observada | Entrada |

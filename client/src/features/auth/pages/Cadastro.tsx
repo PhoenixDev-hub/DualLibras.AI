@@ -91,7 +91,7 @@ export default function Cadastro() {
         discipline: role === 'PROFESSOR' ? discipline : undefined,
         registrationNumber: role === 'ALUNO' ? registrationNumber : undefined,
       })
-      navigate('/app')
+      navigate(role === 'ALUNO' ? '/codigo' : '/dashboard', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível criar a conta.')
     } finally {

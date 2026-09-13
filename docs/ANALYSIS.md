@@ -1,5 +1,7 @@
 # Limitações e análise do estado atual
 
+> Atualização de integração: consulte [contas, turmas e dados persistidos](INTEGRACAO_FRONT_BACK.md). O painel agora consulta o banco, a autenticação exige sessão válida e a geração Prisma foi corrigida. As referências abaixo ao painel local, fallback guest e falha de geração registram o estado anterior.
+
 Revisão de organização e documentação: 12/09/2026. Este documento consolida a análise anterior de 02/08/2026, corrigindo caminhos, padrões e descrições que já não correspondiam ao código. Contratos detalhados foram centralizados em [API.md](API.md), configuração no [guia Python](../server/ai/README.md) e estrutura no [guia de arquitetura](documentacao_arquitetura.md).
 
 ## Implementado e demonstrativo

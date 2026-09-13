@@ -8,6 +8,7 @@ function formatClassroom(classroom: Awaited<ReturnType<typeof classroomService.c
   return {
     id: classroom.id,
     name: classroom.name,
+    description: classroom.description,
     code: classroom.code,
     studentsCount: classroom.members.length,
     lessonsCount: classroom.lessons.length,

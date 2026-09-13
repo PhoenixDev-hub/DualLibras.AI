@@ -1,9 +1,12 @@
+import { Link, useNavigate } from 'react-router-dom'
+import { authApi } from '../services/authApi'
 import { useState } from 'react'
 import logoText from '../assets/LogoDualLibrasText.png'
 import RoomHeader from '../features/classrooms/layout/RoomHeader'
 import RoomCodeForm from '../features/classrooms/components/RoomCodeForm'
 
 export default function RoomCode() {
+  const navigate = useNavigate()
   const [notice, setNotice] = useState('')
 
   return (
@@ -41,7 +44,15 @@ export default function RoomCode() {
           <h1 id="room-title" className="sr-only">
             Entrar na sala
           </h1>
-          <RoomCodeForm />
+          <Link to="/dashboard" className="mb-5 underline">
+            Ver minhas turmas
+          </Link>
+          <RoomCodeForm
+            onJoin={async (code) => {
+              await authApi.joinClassroom(code)
+              navigate('/dashboard')
+            }}
+          />
         </section>
       </main>
     </section>

@@ -1,5 +1,7 @@
 # Frontend — DualLibras.AI
 
+> Atualização de integração: consulte [contas, turmas e dados persistidos](../docs/INTEGRACAO_FRONT_BACK.md). O painel agora consulta o banco, a autenticação exige sessão válida e a geração Prisma foi corrigida. As referências abaixo ao painel local, fallback guest e falha de geração registram o estado anterior.
+
 SPA React 19 + TypeScript, React Router 7, Vite 8, Tailwind CSS 4 e Lucide. Entrada: `index.html` → `src/main.tsx` → `src/App.tsx`. Não utiliza Next.js, SSR em produção ou roteamento por nomes de arquivos.
 
 ## Executar

@@ -1,5 +1,7 @@
 # Execução com Docker e pendências de deploy
 
+> Atualização de integração: consulte [contas, turmas e dados persistidos](INTEGRACAO_FRONT_BACK.md). O painel agora consulta o banco, a autenticação exige sessão válida e a geração Prisma foi corrigida. As referências abaixo ao painel local, fallback guest e falha de geração registram o estado anterior.
+
 A configuração existente contém quatro serviços: `db` (PostgreSQL 15), `auth` (Express), `backend` (FastAPI) e `frontend` (Nginx). Não foi realizado deploy nesta revisão.
 
 ## Preparação

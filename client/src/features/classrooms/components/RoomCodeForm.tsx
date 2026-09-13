@@ -21,8 +21,12 @@ export default function RoomCodeForm({ onJoin }: Props) {
     setPending(true)
     try {
       await onJoin(code.trim())
-    } catch {
-      setMessage('Não foi possível entrar. Confira o código e tente novamente.')
+    } catch (err) {
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : 'Não foi possível entrar. Confira o código e tente novamente.',
+      )
     } finally {
       setPending(false)
     }

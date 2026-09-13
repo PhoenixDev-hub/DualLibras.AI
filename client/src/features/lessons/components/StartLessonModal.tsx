@@ -2,7 +2,7 @@ import type { FormEvent } from 'react'
 import { Modal } from '../../../components/ui'
 import { useTeacher } from '../../../contexts/TeacherContext'
 
-type StartLessonModalProps = { starting: number | 'choose'; onClose: () => void }
+type StartLessonModalProps = { starting: string | number; onClose: () => void }
 export default function StartLessonModal({ starting, onClose }: StartLessonModalProps) {
   const { classrooms, lessons, setLessons, openLesson, notify } = useTeacher()
   function handleSubmit(event: FormEvent<HTMLFormElement>) {

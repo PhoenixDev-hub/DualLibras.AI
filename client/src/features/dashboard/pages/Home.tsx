@@ -4,18 +4,19 @@ import { useTeacher } from '../../../contexts/TeacherContext'
 import ClassroomCard from '../../classrooms/components/ClassroomCard'
 import LessonList from '../../lessons/components/LessonList'
 export default function Home({ onNavigate }: { onNavigate: (page: string) => void }) {
-  const { classrooms, students, lessons, editClassroom, startLesson, openLesson } = useTeacher()
+  const { user, classrooms, students, lessons, editClassroom, startLesson, openLesson } =
+    useTeacher()
   const live = lessons.find((lesson) => lesson.status === 'live')
   return (
     <>
       <PageTitle
         eyebrow="Seu espaço de ensino"
-        title="Olá, Marina "
+        title={`Olá, ${user?.name ?? ''}`}
         description="Que bom ter você aqui. Vamos criar novas conexões hoje?"
         action={
           <span className="flex items-center gap-2 text-xs text-slate-500">
             <CalendarDays size={16} />
-            12 de setembro de 2026
+            {new Date().toLocaleDateString('pt-BR')}
           </span>
         }
       />
