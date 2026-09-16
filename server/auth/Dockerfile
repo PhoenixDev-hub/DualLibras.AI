@@ -7,7 +7,6 @@ RUN npm install
 
 COPY . .
 
-# Valores fictícios apenas para gerar o cliente; não executa consultas ou migrações.
 RUN DATABASE_URL=postgresql://example:example@localhost:5432/example \
     DIRECT_URL=postgresql://example:example@localhost:5432/example \
     npx prisma generate

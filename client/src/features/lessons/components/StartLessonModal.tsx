@@ -1,30 +1,33 @@
 import type { FormEvent } from 'react'
+import type { Lesson } from '../../../types/education'
 import { Modal } from '../../../components/ui'
 import { useTeacher } from '../../../contexts/TeacherContext'
 
-type StartLessonModalProps = { starting: string | number; onClose: () => void }
-export default function StartLessonModal({ starting, onClose }: StartLessonModalProps) {
-  const { classrooms, lessons, setLessons, openLesson, notify } = useTeacher()
+type StartLessonModalProps = {
+  starting: string | number
+  onClose: () => void
+  onStarted: (lesson: Lesson) => void
+}
+export default function StartLessonModal({ starting, onClose, onStarted }: StartLessonModalProps) {
+  const { classrooms, notify } = useTeacher()
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
     const title = String(data.get('title')).trim()
+    const classroomId = String(data.get('classroom') || '')
     if (!title) return
     const id = Date.now()
-    setLessons([
-      {
-        id,
-        title,
-        classroomId: Number(data.get('classroom')),
-        date: new Date().toLocaleDateString('pt-BR'),
-        duration: '0 min',
-        status: 'live',
-      },
-      ...lessons,
-    ])
+    onStarted({
+      id,
+      title,
+      classroomId,
+      date: new Date().toISOString(),
+      duration: '0 min',
+      status: 'live',
+    })
     onClose()
-    openLesson(id)
-    notify('Aula demonstrativa iniciada. Nenhum microfone foi acessado.')
+    notify(`Iniciando aula: ${title}`)
   }
 
   return (
@@ -59,7 +62,7 @@ export default function StartLessonModal({ starting, onClose }: StartLessonModal
               ))}
           </select>
         </label>
-        <button className="t-btn">Iniciar demonstração</button>
+        <button className="t-btn">Iniciar aula</button>
       </form>
     </Modal>
   )

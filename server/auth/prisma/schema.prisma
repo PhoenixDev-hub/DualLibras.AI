@@ -8,9 +8,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// =========================
-// ENUMS
-// =========================
 
 enum Role {
   PROFESSOR
@@ -39,9 +36,6 @@ enum SessionStatus {
   CANCELADA
 }
 
-// =========================
-// USER
-// =========================
 
 model User {
   id           String @id @default(uuid())
@@ -57,22 +51,16 @@ model User {
   studentProfile StudentProfile?
   societyProfile SocietyProfile?
 
-  // Salas criadas pelo professor
   classroomsOwned Classroom[] @relation("TeacherClassrooms")
 
-  // Salas das quais o usuário participa
   memberships ClassroomMember[]
 
-  // Aulas ministradas
   lessonsAsTeacher Lesson[] @relation("TeacherLessons")
 
-  // Materiais enviados
   materials Material[] @relation("UploadedMaterials")
 
-  // Sessões de transcrição
   transcriptionSessions TranscriptionSession[]
 
-  // Glossários criados
   glossaries Glossary[]
 
   createdAt DateTime @default(now())
@@ -82,9 +70,6 @@ model User {
   @@index([schoolId])
 }
 
-// =========================
-// PROFILES
-// =========================
 
 model TeacherProfile {
   id     String @id @default(uuid())
@@ -122,9 +107,6 @@ model SocietyProfile {
   updatedAt DateTime @updatedAt
 }
 
-// =========================
-// SCHOOL
-// =========================
 
 model School {
   id    String @id @default(uuid())
@@ -139,9 +121,6 @@ model School {
   updatedAt DateTime @updatedAt
 }
 
-// =========================
-// CLASSROOM
-// =========================
 
 model Classroom {
   id String @id @default(uuid())
@@ -149,27 +128,20 @@ model Classroom {
   name        String
   description String?
 
-  // Código utilizado pelos alunos
-  // para entrar na sala
   code String @unique
 
-  // Professor dono da sala
   teacherId String
 
-  // Escola é opcional
   schoolId String?
 
   teacher User @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Cascade)
 
   school School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
-  // Alunos/membros
   members ClassroomMember[]
 
-  // Aulas
   lessons Lesson[]
 
-  // Glossários da sala
   glossaries Glossary[]
 
   createdAt DateTime @default(now())
@@ -179,9 +151,6 @@ model Classroom {
   @@index([schoolId])
 }
 
-// =========================
-// CLASSROOM MEMBER
-// =========================
 
 model ClassroomMember {
   classroomId String
@@ -193,16 +162,11 @@ model ClassroomMember {
 
   joinedAt DateTime @default(now())
 
-  // Impede que o mesmo aluno entre
-  // duas vezes na mesma sala
   @@id([classroomId, userId])
 
   @@index([userId])
 }
 
-// =========================
-// LESSON
-// =========================
 
 model Lesson {
   id String @id @default(uuid())
@@ -210,18 +174,14 @@ model Lesson {
   title       String
   description String?
 
-  // Planejamento da aula
   lessonPlan String?
 
   status LessonStatus @default(AGENDADA)
 
-  // Sala da aula
   classroomId String
 
-  // Professor responsável
   teacherId String
 
-  // Glossário específico opcional
   glossaryId String?
 
   classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
@@ -248,9 +208,6 @@ model Lesson {
   @@index([status])
 }
 
-// =========================
-// MATERIAL
-// =========================
 
 model Material {
   id String @id @default(uuid())
@@ -273,29 +230,22 @@ model Material {
   @@index([uploadedById])
 }
 
-// =========================
-// TRANSCRIPTION
-// =========================
 
 model TranscriptionSession {
   id String @id @default(uuid())
 
   status SessionStatus @default(ATIVA)
 
-  // Quem iniciou a transcrição
   userId String
 
-  // Aula relacionada
   lessonId String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  // Transcrição completa
   transcript String?
 
-  // Partes da transcrição
   segments TranscriptSegment[]
 
   startedAt  DateTime @default(now())
@@ -309,9 +259,6 @@ model TranscriptionSession {
   @@index([status])
 }
 
-// =========================
-// TRANSCRIPT SEGMENT
-// =========================
 
 model TranscriptSegment {
   id String @id @default(uuid())
@@ -320,7 +267,6 @@ model TranscriptSegment {
 
   text String
 
-  // Tempo do áudio em segundos
   startTime Float?
   endTime   Float?
 
@@ -331,14 +277,10 @@ model TranscriptSegment {
   @@index([sessionId])
 }
 
-// =========================
-// SUMMARY
-// =========================
 
 model Summary {
   id String @id @default(uuid())
 
-  // Uma aula possui um resumo
   lessonId String @unique
 
   content String
@@ -349,9 +291,6 @@ model Summary {
   updatedAt DateTime @updatedAt
 }
 
-// =========================
-// GLOSSARY
-// =========================
 
 model Glossary {
   id String @id @default(uuid())
@@ -360,10 +299,8 @@ model Glossary {
   description String?
   subject     String
 
-  // Professor que criou
   ownerId String
 
-  // Sala onde o glossário é utilizado
   classroomId String?
 
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -372,7 +309,6 @@ model Glossary {
 
   terms GlossaryTerm[]
 
-  // Aulas que utilizam este glossário
   lessons Lesson[]
 
   createdAt DateTime @default(now())
@@ -383,25 +319,16 @@ model Glossary {
   @@index([subject])
 }
 
-// =========================
-// GLOSSARY TERM
-// =========================
 
 model GlossaryTerm {
   id String @id @default(uuid())
 
-  // Palavra original
   term String
 
-  // Explicação da palavra
   definition String?
 
-  // Forma corrigida para auxiliar
-  // reconhecimento/transcrição
   correction String?
 
-  // Representação utilizada
-  // na tradução para Libras
   librasValue String?
 
   glossaryId String

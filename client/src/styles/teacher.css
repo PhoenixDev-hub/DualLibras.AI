@@ -1,4 +1,5 @@
 @reference './global.css';
+
 .teacher-sidebar {
   @apply fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-background-dark;
   transition:
@@ -113,7 +114,7 @@ select.t-input {
 .t-search input:focus-visible {
   outline: none;
 }
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   .teacher-sidebar,
   .sidebar-small .teacher-sidebar {
     width: 15rem;
@@ -133,5 +134,80 @@ select.t-input {
   .teacher-app *::after {
     transition: none !important;
     animation: none !important;
+  }
+}
+
+
+.lesson-view .lesson-avatar {
+  @apply rounded-2xl border-slate-200/80 bg-white text-slate-800;
+  background-image: linear-gradient(180deg, #fff 0%, #eff6ff 55%, #fff 100%);
+  box-shadow: 0 3px 12px #04133b03;
+}
+.lesson-view .lesson-avatar > .avatar-decoration {
+  opacity: 0.2;
+}
+.lesson-view .lesson-avatar header,
+.lesson-view .lesson-avatar footer {
+  @apply border-slate-200;
+}
+.lesson-view .lesson-avatar :is(.text-slate-100, .text-slate-300),
+.lesson-view .lesson-subtitle-empty .text-slate-300,
+.lesson-view .lesson-subtitle .text-slate-100 {
+  @apply text-slate-800;
+}
+.lesson-view .lesson-avatar .text-slate-400,
+.lesson-view .lesson-subtitle-empty,
+.lesson-view .lesson-subtitle .text-slate-400 {
+  @apply text-slate-600;
+  opacity: 1;
+}
+.lesson-view .lesson-avatar :is(.text-sky-200, .text-sky-300, .text-sky-400) {
+  @apply text-primary;
+}
+.lesson-view .lesson-avatar header > div:first-child > div:first-child,
+.lesson-view .lesson-avatar header > div:last-child,
+.lesson-view .lesson-avatar footer .flex.rounded-lg,
+.lesson-view .lesson-subtitle-empty > div {
+  @apply border-blue-100 bg-blue-50 text-primary shadow-none;
+}
+.lesson-view .lesson-avatar header > div.border-red-500\/50 {
+  @apply border-red-200 bg-red-50 text-red-700;
+}
+.lesson-view .lesson-avatar :is(.text-red-300, .text-red-300\/80, .text-red-400) {
+  @apply text-red-700;
+}
+.lesson-view .lesson-avatar button:hover {
+  @apply bg-blue-100 text-primary;
+}
+.lesson-view .lesson-avatar button.bg-sky-500 {
+  @apply bg-primary text-white shadow-sm;
+}
+.lesson-view .lesson-avatar .absolute.bottom-6 {
+  @apply border-blue-200 bg-white text-primary shadow-sm;
+}
+.lesson-view .lesson-subtitle-empty svg {
+  @apply text-primary;
+}
+.lesson-view .lesson-subtitle > .inline-flex {
+  @apply border-blue-100 bg-blue-50 text-primary shadow-none;
+}
+.lesson-view .lesson-subtitle > .inline-flex svg {
+  @apply text-primary;
+}
+.lesson-view .lesson-subtitle > .inline-flex span.rounded {
+  @apply bg-blue-100 text-primary decoration-blue-300;
+}
+.lesson-view .lesson-subtitle p > span.bg-gradient-to-r {
+  @apply bg-primary text-white ring-blue-200 shadow-sm;
+  background-image: none;
+}
+.lesson-view .lesson-subtitle .text-red-400 {
+  @apply text-red-700;
+}
+
+
+@media (min-width: 768px) {
+  .teacher-app .teacher-mobile-menu {
+    display: none;
   }
 }

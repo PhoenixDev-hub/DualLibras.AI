@@ -1,144 +1,125 @@
-import { useEffect, useState } from 'react'
-import { Clock, Hand, Mic, MicOff, Pause, Play, Square } from 'lucide-react'
-import { Modal, PageTitle } from '../../../components/ui'
-import { useTeacher } from '../../../contexts/TeacherContext'
-import { transcript } from '../../../data/teacherDemo'
+import { useState } from 'react'
+import { Mic, MicOff } from 'lucide-react'
+import { PageTitle } from '../../../components/ui'
 import type { Lesson } from '../../../types/education'
+import VLibras from '../../libras/components/VLibras'
+import VLibrasStage from '../../libras/components/VLibrasStage'
+import HighlightedSubtitle from '../../transcription/components/HighlightedSubtitle'
+import { useAudioCapture } from '../../transcription/hooks/useAudioCapture'
+import simplifyText from '../../libras/utils/simplify'
+
 export default function LiveLesson({ lesson }: { lesson: Lesson }) {
-  const { classrooms, lessons, setLessons, notify } = useTeacher()
-  const [running, setRunning] = useState(true)
-  const [seconds, setSeconds] = useState(() => (Number.parseInt(lesson.duration, 10) || 0) * 60)
-  const [size, setSize] = useState(24)
-  const [contrast, setContrast] = useState(false)
-  const [speed, setSpeed] = useState('1')
-  const [confirm, setConfirm] = useState(false)
-  useEffect(() => {
-    if (!running) return
-    const timer = window.setInterval(() => setSeconds((value) => value + 1), 1000)
-    return () => window.clearInterval(timer)
-  }, [running])
+  const [interpreterVersion, setInterpreterVersion] = useState(0)
+  const [interactive, setInteractive] = useState(false)
+  const [text, setText] = useState('')
+  const [translation, setTranslation] = useState('')
+  const [isFinal, setIsFinal] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'loading' | 'translating' | 'error' | 'ready'>(
+    'loading',
+  )
+  const [activeWord, setActiveWord] = useState<string | null>(null)
+  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md')
+  const { capturing, conectado, audioError, iniciarCaptura, pararCaptura } = useAudioCapture({
+    onTranscript: (message) => {
+      if (message.error) return
+      setText(message.text)
+      setIsFinal(message.isFinal)
+      if (message.isFinal) setTranslation(simplifyText(message.text))
+    },
+  })
+
   return (
     <>
       <PageTitle
-        eyebrow={classrooms.find((item) => item.id === lesson.classroomId)?.name}
         title={lesson.title}
-        description="Ambiente de aula · simulação visual"
-        action={<span className="t-badge">● {running ? 'Aula em andamento' : 'Aula pausada'}</span>}
+        description="Acompanhe a aula com legendas e tradução em Libras."
       />
-      <section className="t-card mb-5 flex flex-wrap items-center justify-between gap-4 p-4">
-        <span className="flex items-center gap-3 font-mono text-xl">
-          <Clock size={20} />
-          {Math.floor(seconds / 60)
-            .toString()
-            .padStart(2, '0')}
-          :{(seconds % 60).toString().padStart(2, '0')}
+      <section
+        className="t-card mb-5 flex flex-wrap items-center justify-between gap-4 p-4"
+        aria-label="Controles da aula"
+      >
+        <span className="text-sm text-slate-500" role="status">
+          {!conectado
+            ? 'Conectando à transcrição…'
+            : capturing
+              ? 'Microfone ativo'
+              : 'Ative o microfone para começar'}
         </span>
-        <span className="flex items-center gap-2 text-sm text-slate-500">
-          {running ? <Mic size={18} className="text-emerald-600" /> : <MicOff size={18} />}Microfone{' '}
-          {running ? 'ativo' : 'pausado'} (simulado)
-        </span>
-        <section className="flex flex-wrap gap-2">
-          <button className="t-btn-secondary" disabled={running} onClick={() => setRunning(true)}>
-            <Play size={16} />
-            Iniciar
-          </button>
-          <button className="t-btn-secondary" disabled={!running} onClick={() => setRunning(false)}>
-            <Pause size={16} />
-            Pausar
-          </button>
-          <button className="t-btn-danger" onClick={() => setConfirm(true)}>
-            <Square size={15} />
-            Finalizar
-          </button>
-        </section>
-      </section>
-      <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <article
-          className={`min-h-96 rounded-2xl border p-6 ${contrast ? 'border-black bg-black text-white' : 'border-slate-200 bg-white'}`}
-        >
-          <header className="mb-8 flex justify-between text-xs font-semibold uppercase tracking-wider">
-            <span>Transcrição da aula</span>
-            <span className="text-primary">Texto fictício</span>
-          </header>
-          <p className="leading-[1.9]" style={{ fontSize: size }}>
-            {transcript}
-          </p>
-          <p className="mt-8 text-xs opacity-50">
-            {running ? 'Demonstração em reprodução' : 'Demonstração pausada'}
-          </p>
-        </article>
-        <article className="t-card flex min-h-96 flex-col items-center justify-center p-8 text-center">
-          <span className="mb-5 rounded-full bg-blue-50 p-9 text-primary">
-            <Hand size={72} strokeWidth={1} />
-          </span>
-          <h2 className="font-ui text-xl font-bold">Avatar de Libras</h2>
-          <p className="mt-3 max-w-64 text-sm leading-relaxed text-slate-500">
-            Espaço reservado para o avatar. Nenhuma tradução ou sinal é exibido nesta demonstração.
-          </p>
-          <span className="t-badge-neutral mt-6">Velocidade visual: {speed}×</span>
-        </article>
-      </section>
-      <section className="t-card mt-5 flex flex-wrap items-center gap-6 p-5">
-        <label className="text-sm">
-          Tamanho do texto{' '}
-          <input
-            className="ml-3 align-middle"
-            type="range"
-            min="18"
-            max="36"
-            value={size}
-            onChange={(event) => setSize(Number(event.target.value))}
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={contrast}
-            onChange={(event) => setContrast(event.target.checked)}
-          />
-          Alto contraste
-        </label>
-        <label className="text-sm">
-          Velocidade do avatar{' '}
-          <select
-            className="t-input ml-2 w-auto"
-            value={speed}
-            onChange={(event) => setSpeed(event.target.value)}
-          >
-            <option value="0.5">0,5×</option>
-            <option value="1">1×</option>
-            <option value="1.5">1,5×</option>
-          </select>
-        </label>
-      </section>
-      {confirm && (
-        <Modal title="Finalizar esta aula?" onClose={() => setConfirm(false)}>
-          <p className="mb-6 text-sm text-slate-500">
-            A aula será marcada como finalizada nesta demonstração. Você poderá consultar a
-            transcrição e o resumo.
-          </p>
-          <section className="flex justify-end gap-3">
-            <button className="t-btn-secondary" onClick={() => setConfirm(false)}>
-              Continuar aula
-            </button>
-            <button
-              className="t-btn-danger"
-              onClick={() => {
-                setLessons(
-                  lessons.map((item) =>
-                    item.id === lesson.id
-                      ? { ...item, status: 'finished', duration: `${Math.floor(seconds / 60)} min` }
-                      : item,
-                  ),
-                )
-                notify('Aula finalizada. Conteúdo disponível para revisão.')
-              }}
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="accent-primary"
+              checked={interactive}
+              onChange={(event) => setInteractive(event.target.checked)}
+            />
+            Interagir com o VLibras
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            Legenda
+            <select
+              className="t-input w-auto"
+              value={fontSize}
+              onChange={(event) => setFontSize(event.target.value as typeof fontSize)}
             >
-              Finalizar aula
-            </button>
-          </section>
-        </Modal>
+              <option value="sm">Pequena</option>
+              <option value="md">Média</option>
+              <option value="lg">Grande</option>
+              <option value="xl">Muito grande</option>
+            </select>
+          </label>
+          <button className="t-btn" onClick={capturing ? pararCaptura : iniciarCaptura}>
+            {capturing ? <MicOff size={16} /> : <Mic size={16} />}
+            {capturing ? 'Silenciar' : 'Ativar microfone'}
+          </button>
+        </div>
+      </section>
+      {audioError && (
+        <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+          {audioError}
+        </p>
       )}
+      <section
+        className="lesson-view grid min-w-0 gap-5 xl:grid-cols-[1.25fr_1fr]"
+        aria-label="Personagem e legenda da aula"
+      >
+        <VLibrasStage
+          lessonTitle={lesson.title}
+          status={status}
+          activeWord={activeWord}
+          className="min-h-[560px] sm:min-h-[640px]"
+          onReload={
+            status === 'error'
+              ? () => {
+                  setStatus('loading')
+                  setInterpreterVersion((version) => version + 1)
+                }
+              : undefined
+          }
+        />
+        <article className="t-card flex min-w-0 flex-col p-6 text-slate-800">
+          <h2 className="mb-5 border-b border-slate-200 pb-4 text-sm font-bold">Legenda da aula</h2>
+          <div className="my-auto max-h-[520px] overflow-y-auto py-4">
+            <HighlightedSubtitle
+              text={text}
+              translatingText={translation}
+              isTranslating={status === 'translating'}
+              isFinal={isFinal}
+              fontSize={fontSize}
+              onActiveWordChange={setActiveWord}
+            />
+          </div>
+          <p className="mt-5 border-t border-slate-200 pt-4 text-xs text-slate-500">
+            O destaque das palavras é um guia de leitura aproximado.
+          </p>
+        </article>
+      </section>
+      <VLibras
+        key={interpreterVersion}
+        interactive={interactive}
+        text={translation}
+        onStatusChange={setStatus}
+      />
     </>
   )
 }

@@ -1,5 +1,3 @@
--- Compatibility patch for existing databases predating classroom descriptions
--- and glossary-to-classroom links. Existing rows retain NULL for new fields.
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 ALTER TABLE public."Classroom" ADD COLUMN IF NOT EXISTS "description" TEXT;

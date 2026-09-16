@@ -1,4 +1,3 @@
-// Configuração da CLI Prisma. Requer as URLs de ambiente mesmo para validar/gerar o cliente.
 import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 

@@ -58,20 +58,25 @@ div {
 body [vw].enabled.vlibras-widget.vlibras-centered,
 body #vlibras-app-root {
   position: fixed !important;
-  top: 50% !important;
+  top: var(--vlibras-top, 50%) !important;
   right: auto !important;
   bottom: auto !important;
-  left: 50% !important;
-  width: 320px !important;
-  height: 440px !important;
-  min-width: 320px !important;
-  min-height: 440px !important;
-  max-width: 92vw !important;
-  transform: translate(-50%, -50%) scale(1.4) !important;
+  left: var(--vlibras-left, 50%) !important;
+  width: var(--vlibras-width, 320px) !important;
+  height: var(--vlibras-height, 440px) !important;
+  min-width: 240px !important;
+  min-height: 480px !important;
+  max-width: 95vw !important;
+  transform: var(--vlibras-transform, translate(-50%, -50%) scale(1.4)) !important;
   transform-origin: center center !important;
   margin-top: 0 !important;
-  z-index: 10 !important;
+  z-index: 25 !important;
   pointer-events: none;
+  transition:
+    top 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    left 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body [vw].enabled.vlibras-widget.vlibras-centered *,
@@ -95,28 +100,27 @@ body [vw].enabled.vlibras-widget.vlibras-centered [vw-access-button] {
 
 body [vw].enabled.vlibras-widget.vlibras-centered [vw-plugin-wrapper],
 body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper {
-  width: 320px !important;
-  height: 440px !important;
-  min-height: 440px !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
   max-width: 100% !important;
-  z-index: 10 !important;
+  z-index: 25 !important;
   pointer-events: none;
 }
 
-.vpw-box,
-.vpw-controls,
-.vpw-subtitles,
-.vpw-playing,
-.vpw-message-box,
-.vp-rate-box-content,
-.vp-rate-box-header,
-.vp-enabled,
-.vp-button-change-avatar,
-.avatar-icaro,
-.vp-selected,
-.vp-button-change-avatar,
-.avatar-icaro,
-.vp-selected {
+html:not(.vlibras-interactive) .vpw-box,
+html:not(.vlibras-interactive) .vpw-controls,
+html:not(.vlibras-interactive) .vpw-playing,
+html:not(.vlibras-interactive) .vpw-message-box,
+html:not(.vlibras-interactive) .vp-rate-box-content,
+html:not(.vlibras-interactive) .vp-rate-box-header,
+html:not(.vlibras-interactive) .vp-enabled,
+html:not(.vlibras-interactive) .vp-button-change-avatar,
+html:not(.vlibras-interactive) .avatar-icaro,
+html:not(.vlibras-interactive) .vp-selected,
+html:not(.vlibras-interactive) .vp-button-change-avatar,
+html:not(.vlibras-interactive) .avatar-icaro,
+html:not(.vlibras-interactive) .vp-selected {
   display: none !important;
   background-color: transparent !important;
 }
@@ -135,9 +139,9 @@ body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper {
   body #vlibras-app-root {
     top: 50% !important;
     width: 260px !important;
-    height: 360px !important;
+    height: 480px !important;
     min-width: 260px !important;
-    min-height: 360px !important;
+    min-height: 480px !important;
     transform: translate(-50%, -50%) scale(1.2) !important;
   }
 
@@ -165,4 +169,305 @@ body [vw].enabled.vlibras-widget.vlibras-centered .vlibras-center-wrapper {
     height: 360px !important;
     min-height: 360px !important;
   }
+}
+
+html.vlibras-native-cursor,
+html.vlibras-native-cursor body,
+html.vlibras-native-cursor body * {
+  cursor: auto !important;
+}
+
+html.vlibras-native-cursor :is(button, a[href], select, [role='button']),
+html.vlibras-native-cursor :is(button, a[href], [role='button']) * {
+  cursor: pointer !important;
+}
+
+html.vlibras-native-cursor :is(input, textarea, [contenteditable='true']) {
+  cursor: text !important;
+}
+
+html.vlibras-native-cursor input:is([type='checkbox'], [type='radio'], [type='range']) {
+  cursor: pointer !important;
+}
+
+html.vlibras-native-cursor :is(button, input, select, textarea):disabled,
+html.vlibras-native-cursor button:disabled * {
+  cursor: not-allowed !important;
+}
+
+
+html.vlibras-interactive body [vw].enabled.vlibras-widget.vlibras-centered,
+html.vlibras-interactive body [vw].enabled.vlibras-widget.vlibras-centered *,
+html.vlibras-interactive body #vlibras-app-root,
+html.vlibras-interactive body #vlibras-app-root * {
+  pointer-events: auto !important;
+}
+
+
+html:not(.vlibras-native-cursor) #vlibras-app-root,
+html:not(.vlibras-native-cursor) #vlibras-access-wrapper {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+
+html.vlibras-stage-fullscreen body #vlibras-app-root,
+html.vlibras-stage-fullscreen body [vw].enabled.vlibras-widget.vlibras-centered {
+  z-index: 70 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  width: var(--vlibras-width, 320px) !important;
+  height: var(--vlibras-height, 440px) !important;
+  top: var(--vlibras-top, 50%) !important;
+  left: var(--vlibras-left, 50%) !important;
+  transform: var(--vlibras-transform) !important;
+}
+
+html.vlibras-stage-fullscreen .lesson-avatar[data-expanded='true'] {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  width: 100%;
+  height: 100dvh;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  transition: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: max(20px, env(safe-area-inset-top)) clamp(16px, 4vw, 64px)
+    max(20px, env(safe-area-inset-bottom));
+  color: #1e293b;
+  background: radial-gradient(ellipse at 50% 48%, #dceafb 0%, #edf4fc 38%, #f5f7fb 72%);
+  border: 0;
+  box-shadow: none;
+}
+html.vlibras-stage-fullscreen .lesson-avatar > .avatar-decoration {
+  display: none;
+}
+html.vlibras-stage-fullscreen .lesson-avatar .avatar-focus-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  border: 0;
+  padding: 0 0 16px;
+  border-bottom: 1px solid #dce5f0;
+}
+.avatar-focus-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+.avatar-focus-logo {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: #2f69b1;
+  color: white;
+  box-shadow: 0 6px 16px #2f69b122;
+}
+html.vlibras-stage-fullscreen .avatar-focus-header .avatar-focus-heading > div {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.avatar-focus-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #526987;
+}
+.avatar-focus-title {
+  margin-top: 4px;
+  font-size: clamp(16px, 2vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #183454;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.avatar-focus-exit {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #d5dfec;
+  border-radius: 12px;
+  background: white;
+  color: #25589b;
+  font-size: 13px;
+  font-weight: 600;
+}
+.avatar-focus-exit kbd {
+  padding: 2px 5px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 10px;
+}
+.avatar-focus-status {
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  gap: 9px;
+  border: 1px solid #dce5f0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: #ffffffcc;
+  color: #526987;
+  font-size: 12px;
+}
+.avatar-focus-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2f69b1;
+}
+.avatar-focus-status[data-status='error'] .avatar-focus-dot {
+  background: #dc2626;
+}
+.avatar-focus-status[data-status='ready'] .avatar-focus-dot {
+  background: #059669;
+}
+.avatar-focus-divider {
+  height: 12px;
+  border-left: 1px solid #d5dfec;
+}
+html.vlibras-stage-fullscreen .lesson-avatar .avatar-viewport {
+  width: min(100%, 1080px);
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  opacity: 1;
+  margin: 0 auto;
+  border-radius: 32px;
+  border: 1px solid #ffffffcc;
+  background: linear-gradient(180deg, #ffffff40, #ffffff90);
+}
+html.vlibras-stage-fullscreen .lesson-avatar .avatar-stage-footer {
+  width: min(100%, 860px);
+  justify-self: center;
+  padding: 16px 24px;
+  border: 1px solid #dce5f0;
+  border-radius: 20px;
+  background: #ffffffed;
+  box-shadow: 0 8px 32px #244d7b0d;
+  gap: 16px;
+}
+.avatar-focus-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.avatar-focus-caption strong {
+  color: #183454;
+  font-size: 18px;
+  max-width: min(40vw, 360px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html.vlibras-stage-fullscreen .avatar-speed-control {
+  gap: 10px;
+}
+html.vlibras-stage-fullscreen .avatar-speed-control button {
+  min-width: 44px;
+  min-height: 40px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+html.vlibras-stage-fullscreen .avatar-speed-control button[aria-pressed='true'] {
+  color: white;
+  background: #2f69b1;
+  box-shadow: 0 2px 5px #2f69b122;
+}
+html.vlibras-stage-fullscreen .lesson-avatar button:focus-visible {
+  outline: 3px solid #2f69b1;
+  outline-offset: 3px;
+}
+@media (max-width: 600px), (max-height: 550px) {
+  html.vlibras-stage-fullscreen .lesson-avatar[data-expanded='true'] {
+    gap: 8px;
+    padding: 12px;
+  }
+  .avatar-focus-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .avatar-focus-exit {
+    padding: 8px 10px;
+  }
+  .avatar-focus-exit kbd {
+    display: none;
+  }
+  .avatar-focus-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+  html.vlibras-stage-fullscreen .lesson-avatar .avatar-stage-footer {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .avatar-focus-caption strong {
+    font-size: 14px;
+  }
+}
+@media (max-height: 550px) {
+  html.vlibras-stage-fullscreen .lesson-avatar[data-expanded='true'] {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .avatar-focus-status {
+    display: none;
+  }
+  html.vlibras-stage-fullscreen .lesson-avatar .avatar-focus-header {
+    padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  html.vlibras-stage-fullscreen .lesson-avatar .avatar-stage-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .avatar-focus-caption {
+    text-align: center;
+  }
+  .avatar-focus-caption strong {
+    max-width: 100%;
+  }
+  html.vlibras-stage-fullscreen .avatar-speed-control {
+    justify-content: center;
+  }
+  .avatar-focus-exit {
+    gap: 6px;
+    font-size: 12px;
+  }
+  .avatar-focus-logo {
+    display: none;
+  }
+}
+
+
+html:not(.vlibras-stage-fullscreen) .vpw-subtitles {
+  display: none !important;
+}
+html.vlibras-stage-fullscreen .vpw-subtitles {
+  display: block !important;
 }

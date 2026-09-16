@@ -7,7 +7,6 @@ const { createApp } = require('../dist/app');
 const { prisma } = require('../dist/config/prisma');
 const { signToken } = require('../dist/utils/jwt');
 
-// Exercise real HTTP routing and JWT middleware with an isolated persistence double.
 test('authenticated education API and classroom permissions', async (t) => {
   const server = createApp().listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));

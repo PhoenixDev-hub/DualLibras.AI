@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi, ApiError, type DashboardUser } from '../../../services/authApi'
 import type { Student, Lesson, Material, Term } from '../../../types/education'
@@ -11,6 +11,8 @@ export function useTeacherDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [page, setPage] = useState('Início')
+  const sessionLessons = useRef<Lesson[]>([])
+  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null)
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
   const [students, setStudents] = useState<Student[]>([])
   const [lessons, setLessons] = useState<Lesson[]>([])
@@ -29,7 +31,7 @@ export function useTeacherDashboard() {
     const data = await authApi.education()
     setClassrooms(data.classrooms)
     setStudents(data.students)
-    setLessons(data.lessons)
+    setLessons([...sessionLessons.current, ...data.lessons])
     setMaterials(data.materials)
     setTerms(data.terms)
   }, [])
@@ -63,22 +65,42 @@ export function useTeacherDashboard() {
     const timer = window.setTimeout(() => setNotice(''), 6000)
     return () => window.clearTimeout(timer)
   }, [notice])
+  function finishActiveLesson() {
+    if (!activeLesson) return
+    const finished: Lesson = {
+      ...activeLesson,
+      status: 'finished',
+      duration: `${Math.max(0, Math.floor((Date.now() - Date.parse(activeLesson.date)) / 60000))} min`,
+    }
+    sessionLessons.current = [finished, ...sessionLessons.current]
+    setLessons((current) => [finished, ...current.filter((item) => item.id !== finished.id)])
+    setActiveLesson(null)
+    setNotice('Aula finalizada ao sair da aba.')
+  }
   function navigate(next: string) {
+    if (next !== 'Assistir aula') finishActiveLesson()
     setPage(next)
     setClassroomId(null)
     setLessonId(null)
     window.scrollTo({ top: 0 })
   }
   function openClassroom(id: string | number) {
+    finishActiveLesson()
     setPage('Minhas turmas')
     setClassroomId(id)
     setLessonId(null)
   }
   function openLesson(id: string | number) {
+    finishActiveLesson()
+    setPage('Minhas aulas')
     setLessonId(id)
   }
-  function startLesson() {
-    setNotice('A criação de aulas ainda não está disponível. A transcrição está em /app.')
+  function startLesson(classroomId?: string | number) {
+    if (activeLesson) {
+      navigate('Assistir aula')
+      return
+    }
+    setStarting(classroomId ?? 'choose')
   }
   async function copy(value: string) {
     try {
@@ -133,8 +155,17 @@ export function useTeacherDashboard() {
   return {
     loading,
     error,
-    retry: load,
+    retry: () => {
+      finishActiveLesson()
+      setPage('Início')
+      return load()
+    },
     contextValue,
+    activeLesson,
+    beginLesson: (lesson: Lesson) => {
+      setActiveLesson(lesson)
+      navigate('Assistir aula')
+    },
     page,
     classroom,
     lesson,

@@ -93,8 +93,6 @@ class ClientSession:
 
         previous_mode = self.mode
 
-        # Prepare the local model before stopping AssemblyAI. If the dependency
-        # or model is unavailable, the current provider keeps receiving audio.
         local_model = None
         if provider == "local":
             try:

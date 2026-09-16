@@ -3,6 +3,7 @@ import {
   Bell,
   BookOpen,
   ChevronLeft,
+  ChevronRight,
   GraduationCap,
   Hand,
   Home,
@@ -32,6 +33,8 @@ const navigation = [
 ]
 export default function TeacherShell({
   page,
+  hasActiveLesson = false,
+  breadcrumbs,
   onNavigate,
   onBack,
   onSearch,
@@ -39,6 +42,8 @@ export default function TeacherShell({
   children,
 }: {
   page: string
+  hasActiveLesson?: boolean
+  breadcrumbs: { label: string; onClick?: () => void }[]
   onNavigate: (page: string) => void
   onBack?: () => void
   onSearch: (query: string) => void
@@ -66,7 +71,7 @@ export default function TeacherShell({
       {mobile && (
         <button
           aria-label="Fechar navegação"
-          className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/50 md:hidden"
           onClick={() => setMobile(false)}
         />
       )}
@@ -84,7 +89,7 @@ export default function TeacherShell({
           )}
         </a>
         <button
-          className="t-icon absolute right-2 top-2 lg:hidden"
+          className="t-icon teacher-mobile-menu absolute right-2 top-2"
           aria-label="Fechar menu"
           onClick={() => setMobile(false)}
         >
@@ -96,7 +101,10 @@ export default function TeacherShell({
           </p>
         )}
         <nav aria-label="Menu principal" className="space-y-1.5 px-3">
-          {navigation.map(({ label, icon: Icon }) => (
+          {[
+            ...navigation,
+            ...(hasActiveLesson ? [{ label: 'Assistir aula', icon: Video }] : []),
+          ].map(({ label, icon: Icon }) => (
             <button
               key={label}
               title={collapsed ? label : undefined}
@@ -124,7 +132,7 @@ export default function TeacherShell({
             </section>
           )}
           <button
-            className="hidden w-full items-center justify-center gap-2 rounded-lg py-3 text-xs text-blue-100/60 hover:bg-white/10 lg:flex"
+            className="hidden w-full items-center justify-center gap-2 rounded-lg py-3 text-xs text-blue-100/60 hover:bg-white/10 md:flex"
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           >
@@ -134,9 +142,9 @@ export default function TeacherShell({
         </footer>
       </aside>
       <section className="teacher-main">
-        <header className="flex h-24 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 sm:px-9">
+        <header className="teacher-topbar flex min-h-24 flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
           <button
-            className="t-icon lg:hidden"
+            className="t-icon teacher-mobile-menu"
             onClick={() => {
               setCollapsed(false)
               setMobile(true)
@@ -145,8 +153,48 @@ export default function TeacherShell({
           >
             <Menu />
           </button>
+          <nav
+            aria-label="Caminho de navegação"
+            className="teacher-breadcrumbs hidden min-w-0 flex-1 md:block"
+          >
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+              {breadcrumbs.map((item, index) => {
+                const current = index === breadcrumbs.length - 1
+                return (
+                  <li key={`${index}-${item.label}`} className="flex min-w-0 items-center gap-2">
+                    {index > 0 && (
+                      <ChevronRight
+                        size={14}
+                        className="shrink-0 text-slate-400"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {current ? (
+                      <span
+                        aria-current="page"
+                        title={item.label}
+                        className="max-w-48 truncate font-semibold text-primary"
+                      >
+                        {item.label}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={item.onClick}
+                        title={item.label}
+                        className="inline-flex min-h-9 max-w-40 items-center gap-1.5 rounded-md text-slate-500 hover:text-primary"
+                      >
+                        {index === 0 && <Home size={15} aria-hidden="true" className="shrink-0" />}
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+          </nav>
           <form
-            className="t-search max-w-lg flex-1"
+            className="teacher-header-search t-search min-w-0 flex-1 md:order-3 md:basis-full xl:order-none xl:max-w-xs xl:basis-auto"
             onSubmit={(event) => {
               event.preventDefault()
               onSearch(String(new FormData(event.currentTarget).get('query') || ''))
@@ -179,7 +227,7 @@ export default function TeacherShell({
               aria-label="Abrir meu perfil"
             >
               <span className="t-avatar">{initials(teacher?.name ?? '')}</span>
-              <span className="hidden sm:block">
+              <span className="hidden xl:block">
                 <strong className="block max-w-36 truncate text-xs">{teacher?.name}</strong>
                 <span className="text-[11px] text-slate-400">{teacher?.access.roleLabel}</span>
               </span>
@@ -205,7 +253,7 @@ export default function TeacherShell({
           {onBack && (
             <button
               onClick={onBack}
-              className="mb-5 flex items-center gap-2 text-sm text-slate-500 hover:text-primary"
+              className="mb-5 flex items-center gap-2 text-sm text-slate-500 hover:text-primary md:hidden"
             >
               <ArrowLeft size={16} />
               Voltar

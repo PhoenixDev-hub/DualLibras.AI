@@ -8,7 +8,6 @@ RUN npm ci
 
 COPY . .
 
-# O Vite incorpora estas URLs públicas no bundle, antes da etapa Nginx.
 ARG VITE_BACKEND_HTTP_URL=http://localhost:5455
 ARG VITE_BACKEND_WS_URL=ws://localhost:5455/ws
 ARG VITE_AUTH_BACKEND_HTTP_URL=http://localhost:4000

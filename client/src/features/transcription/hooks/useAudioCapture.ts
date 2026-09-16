@@ -12,6 +12,7 @@ type UseAudioCaptureOptions = {
 }
 
 export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
+  const captureGeneration = useRef(0)
   const [conectado, setConectado] = useState(false)
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
   const [selectedDevice, setSelectedDevice] = useState<string>('')
@@ -206,6 +207,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
   }
 
   const iniciarCaptura = async () => {
+    const generation = ++captureGeneration.current
     try {
       setAudioError('')
       conectarSocket()
@@ -221,6 +223,10 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
           latency: 0.01,
         } as MediaTrackConstraints,
       })
+      if (generation !== captureGeneration.current) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
+      }
       streamRef.current = stream
 
       const ctx = new AudioContext({ sampleRate: 16000 })
@@ -231,9 +237,12 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
         scriptSrc: '/rnnoise.worklet.js',
         moduleSrc: '/rnnoise.wasm',
       })
+      if (generation !== captureGeneration.current) return
       await RNNoiseNode.register(ctx, assets)
 
+      if (generation !== captureGeneration.current) return
       await ctx.audioWorklet.addModule('/pcm-encoder-worklet.js')
+      if (generation !== captureGeneration.current) return
 
       const source = ctx.createMediaStreamSource(stream)
       const rnnoiseNode = new RNNoiseNode(ctx)
@@ -286,6 +295,10 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
             speakingRef.current = false
           },
         })
+        if (generation !== captureGeneration.current) {
+          await myvad.destroy()
+          return
+        }
         vadRef.current = myvad
         await myvad.start()
       } catch (vadError) {
@@ -294,6 +307,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
         speakingRef.current = true
       }
 
+      if (generation !== captureGeneration.current) return
       const bufferLength = analyser.frequencyBinCount
       const dataArray = new Uint8Array(bufferLength)
       const updateLevel = () => {
@@ -330,19 +344,24 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
   }
 
   const pararCaptura = async () => {
+    captureGeneration.current += 1
     setCapturing(false)
     setSpeaking(false)
     speakingRef.current = false
     setAudioLevel(0)
 
-    if (vadRef.current) {
-      await vadRef.current.destroy()
-      vadRef.current = null
-    }
+    const stream = streamRef.current
+    streamRef.current = null
+    stream?.getTracks().forEach((track) => track.stop())
 
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
+    const vad = vadRef.current
+    vadRef.current = null
+    if (vad) {
+      try {
+        await vad.destroy()
+      } catch (error) {
+        console.warn('Falha ao encerrar detector de voz:', error)
+      }
     }
 
     if (audioContextRef.current) {
@@ -381,7 +400,14 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
   useEffect(() => {
     conectarSocket()
     return () => {
-      pararCaptura()
+      void pararCaptura()
+      if (wsRef.current) {
+        wsRef.current.onclose = null
+        wsRef.current.onmessage = null
+        wsRef.current.onopen = null
+      }
+      rtcDcRef.current?.close()
+      rtcPcRef.current?.close()
       if (reconnectTimerRef.current) {
         window.clearTimeout(reconnectTimerRef.current)
       }

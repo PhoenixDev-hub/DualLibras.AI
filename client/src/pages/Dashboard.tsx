@@ -7,6 +7,7 @@ import Home from '../features/dashboard/pages/Home'
 import ClassroomList from '../features/classrooms/pages/ClassroomList'
 import ClassroomDetails from '../features/classrooms/pages/ClassroomDetails'
 import Lessons from '../features/lessons/pages/Lessons'
+import LiveLesson from '../features/lessons/pages/LiveLesson'
 import LessonDetails from '../features/lessons/pages/LessonDetails'
 import StartLessonModal from '../features/lessons/components/StartLessonModal'
 import ClassroomFormModal from '../features/classrooms/components/ClassroomFormModal'
@@ -22,6 +23,8 @@ export default function Dashboard() {
     error,
     retry,
     contextValue,
+    activeLesson,
+    beginLesson,
     page,
     classroom,
     lesson,
@@ -43,6 +46,26 @@ export default function Dashboard() {
     copy,
   } = useTeacherDashboard()
 
+  const breadcrumbs: { label: string; onClick?: () => void }[] = [
+    { label: 'Início', onClick: () => navigate('Início') },
+  ]
+  if (page === 'Assistir aula' && activeLesson) {
+    breadcrumbs.push({ label: 'Minhas aulas', onClick: () => navigate('Minhas aulas') })
+    breadcrumbs.push({ label: activeLesson.title })
+  } else if (classroom) {
+    breadcrumbs.push({ label: 'Turmas', onClick: () => navigate('Minhas turmas') })
+    breadcrumbs.push({
+      label: classroom.name,
+      onClick: () => contextValue.openClassroom(classroom.id),
+    })
+    if (lesson) breadcrumbs.push({ label: lesson.title })
+  } else if (lesson) {
+    breadcrumbs.push({ label: 'Minhas aulas', onClick: () => navigate('Minhas aulas') })
+    breadcrumbs.push({ label: lesson.title })
+  } else if (page !== 'Início') {
+    breadcrumbs.push({ label: page === 'Minhas turmas' ? 'Turmas' : page })
+  }
+
   if (loading)
     return (
       <main className="p-10" role="status">
@@ -61,6 +84,8 @@ export default function Dashboard() {
     <TeacherContext.Provider value={contextValue}>
       <TeacherShell
         page={page}
+        breadcrumbs={breadcrumbs}
+        hasActiveLesson={!!activeLesson}
         onNavigate={navigate}
         onBack={lesson || classroom || page !== 'Início' ? goBack : undefined}
         onSearch={searchClassrooms}
@@ -74,7 +99,9 @@ export default function Dashboard() {
             Entrar com código
           </a>
         </div>
-        {lesson ? (
+        {page === 'Assistir aula' && activeLesson ? (
+          <LiveLesson key={activeLesson.id} lesson={activeLesson} />
+        ) : lesson ? (
           <LessonDetails key={lesson.id} lesson={lesson} />
         ) : classroom ? (
           <ClassroomDetails
@@ -128,7 +155,11 @@ export default function Dashboard() {
         </Modal>
       )}
       {starting !== null && (
-        <StartLessonModal starting={starting} onClose={() => setStarting(null)} />
+        <StartLessonModal
+          starting={starting}
+          onClose={() => setStarting(null)}
+          onStarted={beginLesson}
+        />
       )}
     </TeacherContext.Provider>
   )

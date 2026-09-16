@@ -4,7 +4,6 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
-# Preserve os ambientes e arquivos locais já configurados.
 for service in client server/auth server/ai; do
     if [[ ! -f "$service/.env" ]]; then
         cp "$service/.env.example" "$service/.env"

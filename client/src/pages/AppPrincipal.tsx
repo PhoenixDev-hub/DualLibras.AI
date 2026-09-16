@@ -1,29 +1,42 @@
 import {
   AlertTriangle,
+  ArrowLeft,
+  Clock,
   Cpu,
   FolderOpen,
+  LayoutGrid,
   Maximize,
   Mic,
   MicOff,
   Minimize,
   RefreshCcw,
+  Sparkles,
+  Type,
   Volume2,
   Wifi,
   WifiOff,
+  Trash2,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import VLibras from '../features/libras/components/VLibras'
+import VLibrasStage from '../features/libras/components/VLibrasStage'
+import HighlightedSubtitle from '../features/transcription/components/HighlightedSubtitle'
 import { useAudioCapture } from '../features/transcription/hooks/useAudioCapture'
 import { HistoryPanel } from '../features/history/components/HistoryPanel'
 import { useTranscriptHistory } from '../features/history/hooks/useTranscriptHistory'
 import simplifyText from '../features/libras/utils/simplify'
-import transcriptSocket, {
-  type TranscriptMessage,
-} from '../features/transcription/services/websocket'
+import type { TranscriptMessage } from '../features/transcription/services/websocket'
 
 const CONTENT_ID = 'conteudo-libras'
 
 export default function AppPrincipal() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  const urlTitle = searchParams.get('title')
+  const urlTurma = searchParams.get('turma')
+
   const [texto, setTexto] = useState('')
   const [textoFinal, setTextoFinal] = useState('')
   const [traducaoFinal, setTraducaoFinal] = useState(false)
@@ -31,13 +44,37 @@ export default function AppPrincipal() {
   const [vlibrasStatus, setVLibrasStatus] = useState<
     'idle' | 'loading' | 'translating' | 'error' | 'ready'
   >('loading')
-  const [historicoTick, setHistoricoTick] = useState(0)
   const [activeSpeaker, setActiveSpeaker] = useState('Professor')
   const [modoProjetor, setModoProjetor] = useState(false)
+  const [layoutMode, setLayoutMode] = useState<'side-by-side' | 'classic'>('side-by-side')
+  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md')
+  const [activeWord, setActiveWord] = useState<string | null>(null)
+  const [recentUtterances, setRecentUtterances] = useState<
+    Array<{ id: number; text: string; speaker: string }>
+  >([])
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setElapsedSeconds((s) => s + 1)
+    }, 1000)
+    return () => window.clearInterval(interval)
+  }, [])
 
   useEffect(() => {
-    console.debug('[App] Histórico atualizado, tick:', historicoTick)
-  }, [historicoTick])
+    if (!modoProjetor) return
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setModoProjetor(false)
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [modoProjetor])
+
+  const formatTimer = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60)
+    const secs = totalSeconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
 
   const handleTranscript = (message: TranscriptMessage) => {
     setTexto(message.text)
@@ -48,16 +85,12 @@ export default function AppPrincipal() {
       setActiveSpeaker(message.speaker)
     }
 
-    if (message.isFinal && !message.error) {
+    if (message.isFinal && !message.error && message.text.trim()) {
       setTextoFinal(message.text)
-      setHistoricoTick((tick) => tick + 1)
-      transcriptSocket.getTranscriptCache().push({
-        type: 'transcript',
-        text: message.text,
-        isFinal: true,
-        error: message.error,
-        speaker: message.speaker,
-      })
+      setRecentUtterances((prev) => [
+        ...prev.slice(-3),
+        { id: Date.now(), text: message.text, speaker: message.speaker || 'Professor' },
+      ])
     }
   }
 
@@ -97,9 +130,17 @@ export default function AppPrincipal() {
     onClearCurrentTranscript: () => {
       setTexto('')
       setTextoFinal('')
-      setHistoricoTick((tick) => tick + 1)
+      setRecentUtterances([])
+      setTemErro(false)
+      setTraducaoFinal(false)
     },
   })
+
+  useEffect(() => {
+    if (urlTitle) {
+      setTitulo(urlTitle)
+    }
+  }, [urlTitle, setTitulo])
 
   const textoBase = useMemo(() => {
     const raw = (texto || textoFinal).trim()
@@ -151,7 +192,7 @@ export default function AppPrincipal() {
         setTextoEnviadoAoVLibras(cleanCurrent)
         setVlibrasBuffer('')
         timerRef.current = null
-      }, 1000) // 1 segundo
+      }, 1000)
     }
 
     return () => {
@@ -159,67 +200,90 @@ export default function AppPrincipal() {
     }
   }, [textoSimplificado, textoEnviadoAoVLibras])
 
-  const textoExibido = textoBase || 'Aguardando fala...'
-
-  const statusLegenda = temErro
-    ? 'Erro na transcrição'
-    : traducaoFinal
-      ? 'Legenda final'
-      : textoBase
-        ? 'Legenda ao vivo'
-        : 'Pronto para ouvir'
-
-  const avatarStatus =
-    vlibrasStatus === 'ready'
-      ? textoEnviadoAoVLibras
-        ? 'Traduzindo...'
-        : 'Aguardando'
-      : vlibrasStatus === 'loading'
-        ? 'Carregando avatar...'
-        : vlibrasStatus === 'error'
-          ? 'Erro no avatar'
-          : 'Iniciando...'
-
-  const captionStatusClass = conectado ? 'text-[#82E3FF]' : 'text-[#53B8FF]'
   const nextProvider = connectionMode === 'assemblyai' ? 'local' : 'assemblyai'
-  const providerButtonLabel = nextProvider === 'local' ? 'Usar Faster-Whisper' : 'Usar AssemblyAI'
+  const providerButtonLabel = nextProvider === 'local' ? 'Faster-Whisper' : 'AssemblyAI'
+
+  const cycleFontSize = () => {
+    setFontSize((prev) => {
+      if (prev === 'sm') return 'md'
+      if (prev === 'md') return 'lg'
+      if (prev === 'lg') return 'xl'
+      return 'sm'
+    })
+  }
+
+  const handleClearCurrent = () => {
+    setTexto('')
+    setTextoFinal('')
+    setRecentUtterances([])
+  }
+
+  const isAluno =
+    activeSpeaker.toLowerCase().includes('aluno') || activeSpeaker.toLowerCase().includes('speaker')
 
   return (
-    <main className="relative min-h-screen w-screen overflow-hidden bg-black text-[#F2F6FF] font-sans">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(83,184,255,0.20),transparent_22rem),radial-gradient(circle_at_82%_28%,rgba(47,123,255,0.16),transparent_24rem),linear-gradient(180deg,#000000_0%,#020B2B_56%,#000000_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(130,227,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(83,184,255,0.035)_1px,transparent_1px)] bg-[length:72px_72px] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.7),transparent_76%)]" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#145DFF]/10 shadow-[0_0_120px_rgba(20,93,255,0.14)]" />
+    <main className="relative min-h-screen w-screen overflow-x-hidden bg-black text-[#F2F6FF] font-sans">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(83,184,255,0.18),transparent_26rem),radial-gradient(circle_at_82%_28%,rgba(47,123,255,0.15),transparent_28rem),linear-gradient(180deg,#000000_0%,#020B2B_56%,#000000_100%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(130,227,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(83,184,255,0.03)_1px,transparent_1px)] bg-[length:72px_72px] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.8),transparent_80%)]" />
 
       <VLibras text={textoEnviadoAoVLibras} onStatusChange={setVLibrasStatus} />
 
       <header
-        className={`absolute left-4 right-4 top-4 z-30 flex-col gap-3 sm:left-8 sm:right-8 sm:top-5 lg:flex-row lg:items-center lg:justify-between transition-opacity duration-500 ${
-          modoProjetor ? 'hidden opacity-0 pointer-events-none' : 'flex opacity-100'
+        className={`relative z-30 flex flex-col gap-3 border-b border-white/10 bg-slate-950/70 px-4 py-3 backdrop-blur-xl transition-all duration-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between ${
+          modoProjetor ? 'hidden opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        aria-label="Status da aplicação"
+        aria-label="Controles da aula"
       >
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-lg border border-[#82E3FF]/60 bg-[linear-gradient(145deg,rgba(20,93,255,0.78),rgba(83,184,255,0.2))] text-sm font-black text-[#F2F6FF] shadow-[0_14px_36px_rgba(47,123,255,0.2)] sm:h-[42px] sm:w-[42px]">
-            DL
-          </span>
-          <div className="min-w-0">
-            <h1 className="m-0 text-base font-black leading-none tracking-normal sm:text-lg">
-              DualLibras.AI
-            </h1>
-            <p className="mt-1.5 text-xs font-bold text-[#B7C8EF]">
-              Transcrição em tempo real para Libras
-            </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-300 transition-all hover:bg-white/15 hover:text-white hover:border-sky-400/40"
+            aria-label="Voltar ao Painel do Professor"
+            title="Voltar ao Painel do Professor"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Painel</span>
+          </button>
+
+          <div className="h-5 w-[1px] bg-white/15" />
+
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5 rounded-md bg-red-500/20 border border-red-500/40 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-red-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-ping" />
+                {capturing ? 'AO VIVO' : 'MICROFONE DESLIGADO'}
+              </span>
+              <h1 className="text-sm font-black tracking-tight text-white sm:text-base">
+                {urlTitle || titulo || 'Aula ao Vivo com Libras'}
+              </h1>
+              {urlTurma && (
+                <span className="rounded-md border border-sky-400/30 bg-sky-500/10 px-2 py-0.5 text-[11px] font-bold text-sky-300">
+                  {urlTurma}
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-400 font-medium">
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3 text-sky-400" />
+                Duração: <strong className="text-slate-200">{formatTimer(elapsedSeconds)}</strong>
+              </span>
+              <span>•</span>
+              <span>Legenda interativa com destaque por palavra</span>
+            </div>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          <div className="flex items-center gap-1.5 rounded-lg border border-[#82E3FF]/20 bg-[#031A5C]/40 px-2.5 py-1 text-xs">
+          <div className="flex items-center gap-1.5 rounded-xl border border-[#82E3FF]/20 bg-[#031A5C]/40 px-2.5 py-1.5 text-xs">
             <Volume2 className="w-3.5 h-3.5 text-[#82E3FF]" />
             <select
+              aria-label="Microfone da aula"
+              disabled={capturing}
               value={selectedDevice}
               onChange={(e) => setSelectedDevice(e.target.value)}
-              className="bg-transparent text-[#F2F6FF] border-none outline-none font-bold cursor-pointer max-w-[120px] sm:max-w-[180px]"
+              className="bg-transparent text-[#F2F6FF] border-none outline-none font-bold cursor-pointer max-w-[120px] sm:max-w-[160px]"
             >
+              {devices.length === 0 && <option value="">Microfone padrão</option>}
               {devices.map((d) => (
                 <option key={d.deviceId} value={d.deviceId} className="bg-black text-[#F2F6FF]">
                   {d.label || `Microfone (${d.deviceId.substring(0, 5)})`}
@@ -230,29 +294,31 @@ export default function AppPrincipal() {
 
           <button
             onClick={capturing ? pararCaptura : iniciarCaptura}
-            className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+            className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
               capturing
-                ? 'bg-red-500/25 border border-red-500/55 text-red-300 hover:bg-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.3)]'
-                : 'bg-green-500/20 border border-green-500/45 text-green-300 hover:bg-green-500/35 shadow-[0_0_12px_rgba(34,197,94,0.25)]'
+                ? 'bg-red-500/25 border border-red-500/55 text-red-300 hover:bg-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.35)]'
+                : 'bg-green-500/20 border border-green-500/45 text-green-300 hover:bg-green-500/35 shadow-[0_0_15px_rgba(34,197,94,0.3)]'
             }`}
           >
             {capturing ? (
               <>
-                <MicOff className="w-3.5 h-3.5 animate-pulse" /> Desativar Microfone
+                <MicOff className="w-3.5 h-3.5 animate-pulse" />
+                <span>Silenciar</span>
               </>
             ) : (
               <>
-                <Mic className="w-3.5 h-3.5" /> Ativar Microfone
+                <Mic className="w-3.5 h-3.5" />
+                <span>Ativar Microfone</span>
               </>
             )}
           </button>
 
           {capturing && (
-            <div className="flex items-center gap-1 rounded-lg border border-[#82E3FF]/10 bg-black/40 px-2 py-2 h-[34px]">
-              <span className="text-[10px] text-[#B7C8EF] font-bold">Nível:</span>
-              <div className="w-16 bg-[#031A5C] h-2 rounded-full overflow-hidden">
+            <div className="flex items-center gap-1.5 rounded-xl border border-[#82E3FF]/15 bg-black/40 px-2.5 py-1.5 h-[34px]">
+              <span className="text-[10px] text-slate-400 font-bold">Áudio:</span>
+              <div className="w-14 bg-[#031A5C] h-2 rounded-full overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-[#82E3FF] to-green-400 h-full transition-all duration-75"
+                  className="bg-gradient-to-r from-sky-400 to-emerald-400 h-full transition-all duration-75"
                   style={{ width: `${Math.min(100, (audioLevel / 120) * 100)}%` }}
                 />
               </div>
@@ -260,31 +326,10 @@ export default function AppPrincipal() {
           )}
 
           <button
-            onClick={() => setUseVadGating(!useVadGating)}
-            className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all duration-300 ${
-              useVadGating
-                ? speaking
-                  ? 'border-[#82E3FF]/60 bg-[#82E3FF]/20 text-[#82E3FF] shadow-[0_0_12px_rgba(130,227,255,0.45)]'
-                  : 'border-white/10 bg-white/5 text-white/40 hover:bg-white/10'
-                : 'border-green-500/40 bg-green-500/20 text-green-300 shadow-[0_0_12px_rgba(34,197,94,0.3)]'
-            }`}
-            title={
-              useVadGating
-                ? 'Filtro de Silêncio Ativo (Clique para desativar e enviar áudio contínuo)'
-                : 'Envio de Áudio Contínuo (Clique para ativar filtro de silêncio)'
-            }
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${useVadGating ? (speaking ? 'bg-[#82E3FF] animate-ping' : 'bg-white/20') : 'bg-green-400'}`}
-            />
-            {useVadGating ? (speaking ? 'Falando' : 'Silêncio') : 'Fluxo Contínuo'}
-          </button>
-
-          <button
             type="button"
             onClick={() => switchTranscriptionProvider(nextProvider)}
             disabled={!conectado}
-            className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
+            className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
               conectado
                 ? 'border-[#82E3FF]/30 bg-[#145DFF]/20 text-[#82E3FF] hover:bg-[#145DFF]/35'
                 : 'cursor-not-allowed border-white/10 bg-white/5 text-white/35'
@@ -296,64 +341,248 @@ export default function AppPrincipal() {
             ) : (
               <RefreshCcw className="w-3.5 h-3.5" />
             )}
-            {providerButtonLabel}
+            <span className="hidden sm:inline">{providerButtonLabel}</span>
           </button>
 
-          {capturing && (
-            <span
-              className={`flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
-                latencyAlert
-                  ? 'border-orange-500/50 bg-orange-500/15 text-orange-300 shadow-[0_0_12px_rgba(249,115,22,0.3)]'
-                  : 'border-green-500/30 bg-green-500/10 text-green-300'
-              }`}
-            >
-              {latencyAlert && <AlertTriangle className="w-3.5 h-3.5" />}
-              {latencyMs > 0 ? `${latencyMs}ms` : '-- ms'}
-            </span>
-          )}
+          <button
+            type="button"
+            onClick={cycleFontSize}
+            className="flex min-h-[34px] cursor-pointer items-center justify-center gap-1 rounded-xl border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-slate-200 transition-all hover:bg-white/15"
+            title={`Tamanho da legenda (Atual: ${fontSize.toUpperCase()})`}
+          >
+            <Type className="w-3.5 h-3.5 text-sky-400" />
+            <span className="uppercase">{fontSize}</span>
+          </button>
 
-          <span className="flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg border border-[#82E3FF]/20 bg-[#031A5C]/60 px-3 py-1.5 text-xs font-bold text-[#F2F6FF]">
-            {connectionMode === 'assemblyai' ? (
-              <>
-                <Wifi className="w-3.5 h-3.5 text-[#82E3FF]" /> AssemblyAI
-              </>
-            ) : connectionMode === 'local' ? (
-              <>
-                <Wifi className="w-3.5 h-3.5 text-yellow-400" /> Local Fallback
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-3.5 h-3.5 text-red-400" /> Desconectado
-              </>
-            )}
-          </span>
+          <button
+            type="button"
+            onClick={() =>
+              setLayoutMode((m) => (m === 'side-by-side' ? 'classic' : 'side-by-side'))
+            }
+            className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
+              layoutMode === 'side-by-side'
+                ? 'border-sky-400/50 bg-sky-500/20 text-sky-200 shadow-[0_0_10px_rgba(56,189,248,0.3)]'
+                : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+            title="Alternar entre visualização Lado a Lado ou Clássica"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">
+              {layoutMode === 'side-by-side' ? 'Lado a Lado' : 'Modo Clássico'}
+            </span>
+          </button>
 
           <button
             onClick={() => setModoProjetor(true)}
-            className="flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#F2F6FF]/30 bg-transparent px-3 py-2 text-xs font-bold text-[#F2F6FF] transition-all hover:bg-white/10 sm:min-h-[34px]"
+            className="flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-white/15"
+            title="Modo Foco / Projetor de Sala de Aula"
           >
-            <Maximize className="w-4 h-4" /> Modo Foco
+            <Maximize className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Modo Foco</span>
           </button>
 
           <button
             onClick={abrirPainel}
-            className="flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#82E3FF]/30 bg-[#145DFF]/20 px-3 py-2 text-xs font-bold text-[#82E3FF] transition-all hover:bg-[#145DFF]/40 sm:min-h-[34px]"
+            className="flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#82E3FF]/30 bg-[#145DFF]/20 px-3 py-1.5 text-xs font-bold text-[#82E3FF] transition-all hover:bg-[#145DFF]/40"
           >
-            <FolderOpen className="w-4 h-4" /> Histórico
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span>Histórico</span>
           </button>
         </div>
       </header>
 
+      {!modoProjetor && (
+        <section
+          className="relative z-10 flex flex-wrap items-center gap-4 border-b border-white/10 bg-slate-950/60 px-4 py-2 text-xs text-slate-300 sm:px-6"
+          aria-label="Estado da transcrição"
+        >
+          <span role="status" className="flex items-center gap-2">
+            {conectado ? (
+              <Wifi size={14} className="text-emerald-400" />
+            ) : (
+              <WifiOff size={14} className="text-amber-400" />
+            )}
+            {conectado ? 'Transcrição conectada' : 'Conectando ao serviço de transcrição...'}
+          </span>
+          <span>
+            {capturing
+              ? speaking
+                ? 'Fala detectada'
+                : 'Aguardando fala'
+              : 'Ative o microfone para começar'}
+          </span>
+          {capturing && latencyMs > 0 && (
+            <span className={latencyAlert ? 'text-amber-300' : ''}>
+              Tempo de resposta: {Math.round(latencyMs)} ms
+            </span>
+          )}
+          <label className="flex cursor-pointer items-center gap-2 sm:ml-auto">
+            <input
+              type="checkbox"
+              checked={useVadGating}
+              onChange={(event) => setUseVadGating(event.target.checked)}
+              className="accent-sky-400"
+            />
+            Detectar pausas na fala
+          </label>
+        </section>
+      )}
+
       {audioError && (
-        <div className="absolute left-1/2 top-24 z-40 -translate-x-1/2 w-[90vw] max-w-[500px] rounded-lg border border-red-500/40 bg-red-950/90 p-4 shadow-xl backdrop-blur-md">
-          <div className="flex gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+        <div className="mx-auto mt-4 w-[90vw] max-w-2xl rounded-2xl border border-red-500/40 bg-red-950/90 p-4 shadow-xl backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
             <div>
-              <h4 className="text-sm font-bold text-red-300">Erro na transcrição</h4>
-              <p className="mt-1 text-xs text-red-200">{audioError}</p>
+              <h4 className="text-xs font-bold text-red-300">Erro na transcrição de áudio</h4>
+              <p className="text-xs text-red-200">{audioError}</p>
             </div>
           </div>
         </div>
+      )}
+
+      {modoProjetor && (
+        <button
+          onClick={() => setModoProjetor(false)}
+          className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-full border border-white/25 bg-slate-950/80 px-4 py-2 text-xs font-bold text-white shadow-2xl backdrop-blur-xl transition-all hover:bg-slate-900 hover:scale-105"
+        >
+          <Minimize className="w-4 h-4 text-sky-400" />
+          <span>Sair do Modo Foco</span>
+        </button>
+      )}
+
+      {layoutMode === 'side-by-side' && !modoProjetor ? (
+        <section
+          className="relative z-10 mx-auto grid w-full max-w-[1700px] grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-12 lg:h-[calc(100vh-80px)] lg:min-h-[620px]"
+          aria-label="Área da aula: Legenda e Avatar em Libras"
+        >
+          <div className="flex flex-col justify-between overflow-hidden rounded-3xl border border-sky-500/25 bg-slate-950/75 p-5 sm:p-7 shadow-[0_20px_60px_rgba(2,11,43,0.7)] backdrop-blur-xl transition-all lg:col-span-7">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-3 w-3 items-center justify-center">
+                  <span
+                    className={`absolute inline-flex h-3 w-3 animate-ping rounded-full opacity-75 ${
+                      isAluno ? 'bg-amber-400' : 'bg-sky-400'
+                    }`}
+                  />
+                  <span
+                    className={`relative inline-flex h-2 w-2 rounded-full ${
+                      isAluno ? 'bg-amber-400' : 'bg-sky-400'
+                    }`}
+                  />
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider text-slate-300">
+                  Legenda da Aula •{' '}
+                  <span className={isAluno ? 'text-amber-400' : 'text-sky-300'}>
+                    {activeSpeaker}
+                  </span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleClearCurrent}
+                  className="flex cursor-pointer items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition-all hover:bg-white/10 hover:text-white"
+                  title="Limpar texto da tela"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span>Limpar</span>
+                </button>
+              </div>
+            </header>
+
+            <div className="my-auto flex flex-col justify-center py-6">
+              {recentUtterances.length > 0 && (
+                <div className="mb-4 space-y-2 border-b border-white/10 pb-4">
+                  {recentUtterances
+                    .filter(
+                      (item, index) =>
+                        !(index === recentUtterances.length - 1 && item.text === textoBase),
+                    )
+                    .slice(-2)
+                    .map((item) => (
+                      <p
+                        key={item.id}
+                        className="text-sm sm:text-base font-semibold text-slate-400/75 leading-relaxed"
+                      >
+                        <span className="mr-2 text-xs font-bold text-sky-400/60 uppercase">
+                          {item.speaker}:
+                        </span>
+                        {item.text}
+                      </p>
+                    ))}
+                </div>
+              )}
+
+              <div id={CONTENT_ID} tabIndex={-1} className="w-full">
+                <HighlightedSubtitle
+                  text={textoBase}
+                  isTranslating={vlibrasStatus === 'translating'}
+                  translatingText={textoEnviadoAoVLibras}
+                  isFinal={traducaoFinal}
+                  error={temErro}
+                  fontSize={fontSize}
+                  onActiveWordChange={setActiveWord}
+                />
+              </div>
+            </div>
+
+            <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 rounded-full bg-sky-400" />
+                <span className="text-[11px] font-medium text-slate-400">
+                  Destaque azul: <strong>guia de leitura aproximado da tradução</strong>.
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                <Sparkles className="h-3.5 w-3.5 text-sky-400" />
+                <span>Acompanhe a tradução em Libras</span>
+              </div>
+            </footer>
+          </div>
+
+          <div className="lg:col-span-5 h-full">
+            <VLibrasStage
+              status={vlibrasStatus}
+              activeWord={activeWord}
+              className="h-full min-h-[460px]"
+            />
+          </div>
+        </section>
+      ) : (
+        <section
+          className={`fixed bottom-6 left-1/2 z-30 flex w-[min(94vw,1100px)] -translate-x-1/2 items-end justify-center transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+            modoProjetor ? 'bottom-[8vh] scale-105' : 'bottom-6'
+          }`}
+          aria-label="Legenda flutuante da transcrição"
+        >
+          <div className="w-full overflow-hidden rounded-3xl border border-sky-500/40 bg-slate-950/90 p-5 sm:p-7 shadow-[0_24px_80px_rgba(2,11,43,0.85)] backdrop-blur-2xl">
+            <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3 text-xs font-black uppercase tracking-wider text-slate-300">
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-sky-400 animate-ping" />
+                {activeSpeaker} • Legenda Ao Vivo
+              </span>
+              <span className="text-sky-300">
+                {vlibrasStatus === 'translating'
+                  ? 'Traduzindo para Libras'
+                  : capturing
+                    ? 'Ouvindo...'
+                    : 'Microfone desligado'}
+              </span>
+            </div>
+
+            <HighlightedSubtitle
+              text={textoBase}
+              isTranslating={vlibrasStatus === 'translating'}
+              translatingText={textoEnviadoAoVLibras}
+              isFinal={traducaoFinal}
+              error={temErro}
+              fontSize={fontSize}
+              onActiveWordChange={setActiveWord}
+            />
+          </div>
+        </section>
       )}
 
       <HistoryPanel
@@ -369,84 +598,6 @@ export default function AppPrincipal() {
         limparTranscricaoAtual={limparTranscricaoAtual}
         gerarDocumentacao={gerarDocumentacao}
       />
-
-      {modoProjetor && (
-        <button
-          onClick={() => setModoProjetor(false)}
-          className="absolute top-4 right-4 z-40 flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-4 py-2 text-xs font-bold text-white shadow-xl backdrop-blur-md transition-all hover:bg-white/20 hover:scale-105"
-        >
-          <Minimize className="w-4 h-4" /> Sair do Modo Foco
-        </button>
-      )}
-
-      {(() => {
-        const isAluno =
-          activeSpeaker.toLowerCase().includes('aluno') ||
-          activeSpeaker.toLowerCase().includes('speaker')
-        const colorBorder = isAluno ? 'border-[#FFB042]/50' : 'border-[#82E3FF]/40'
-        const colorShadow = isAluno
-          ? 'shadow-[0_24px_80px_rgba(43,11,2,0.76),0_0_0_1px_rgba(255,176,66,0.15)]'
-          : 'shadow-[0_24px_80px_rgba(2,11,43,0.76),0_0_0_1px_rgba(83,184,255,0.15)]'
-        const colorText = isAluno ? 'text-[#FFB042]' : 'text-[#82E3FF]'
-        const bgColor = isAluno
-          ? 'bg-[linear-gradient(180deg,rgba(43,11,2,0.80),rgba(2,11,43,0.92))]'
-          : 'bg-[linear-gradient(180deg,rgba(3,26,92,0.80),rgba(2,11,43,0.92))]'
-
-        return (
-          <section
-            className={`absolute bottom-5 left-1/2 z-20 flex w-[min(92vw,960px)] -translate-x-1/2 items-end justify-center transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-              modoProjetor ? 'bottom-[10vh] scale-105' : 'sm:bottom-[clamp(28px,8vh,84px)]'
-            }`}
-            aria-label="Legenda da transcrição"
-          >
-            <div
-              className={`z-10 w-full overflow-hidden rounded-lg border ${colorBorder} ${bgColor} ${colorShadow} backdrop-blur-md transition-all duration-500`}
-            >
-              <div
-                className={`flex flex-col items-center justify-between gap-1 border-b ${isAluno ? 'border-[#FFB042]/20' : 'border-[#82E3FF]/15'} px-4 py-2 text-xs font-extrabold uppercase tracking-normal text-[#B7C8EF] sm:flex-row sm:gap-3 sm:px-[clamp(16px,3vw,28px)]`}
-                aria-hidden="true"
-              >
-                <span className="flex items-center gap-2">
-                  {textoBase && (
-                    <span className="flex h-3 w-3 items-center justify-center">
-                      <span
-                        className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${isAluno ? 'bg-[#FFB042]' : 'bg-[#82E3FF]'}`}
-                      ></span>
-                      <span
-                        className={`relative inline-flex h-2 w-2 rounded-full ${isAluno ? 'bg-[#FFB042]' : 'bg-[#82E3FF]'}`}
-                      ></span>
-                    </span>
-                  )}
-                  {statusLegenda} • <span className={colorText}>{activeSpeaker}</span>
-                </span>
-                <span className={captionStatusClass}>
-                  {conectado ? avatarStatus : 'Sem conexão'}
-                </span>
-              </div>
-
-              <div className="min-h-[100px] w-full px-5 py-4 text-center sm:min-h-[130px] sm:px-[clamp(18px,4vw,40px)] sm:pb-5 sm:pt-[18px]">
-                <p
-                  id={CONTENT_ID}
-                  key={textoExibido}
-                  className={`m-0 line-clamp-4 overflow-hidden text-[clamp(1.25rem,2.8vw,2.3rem)] font-extrabold leading-[1.32] text-balance outline-none animate-text-reveal sm:line-clamp-3 ${
-                    temErro
-                      ? 'text-[#82E3FF]'
-                      : textoBase
-                        ? 'text-[#F2F6FF] drop-shadow-[0_2px_12px_rgba(2,11,43,0.84)]'
-                        : 'text-[#B7C8EF]'
-                  }`}
-                  data-vlibras-text
-                  tabIndex={-1}
-                  lang="pt-BR"
-                  aria-live="polite"
-                >
-                  {textoExibido}
-                </p>
-              </div>
-            </div>
-          </section>
-        )
-      })()}
     </main>
   )
 }
