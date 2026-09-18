@@ -36,13 +36,15 @@ export default function HighlightedSubtitle({
     return text.trim().split(/\s+/)
   }, [text])
 
+  const isCurrentTranslation = isTranslating && text.trim() === translatingText.trim()
+
   useEffect(() => {
     if (timerRef.current) {
       window.clearInterval(timerRef.current)
       timerRef.current = null
     }
 
-    if (!isTranslating || tokens.length === 0) {
+    if (!isCurrentTranslation || tokens.length === 0) {
       setActiveWordIndex(-1)
       if (activeWordRef.current !== null) {
         activeWordRef.current = null
@@ -82,10 +84,10 @@ export default function HighlightedSubtitle({
         timerRef.current = null
       }
     }
-  }, [isTranslating, translatingText, text, tokens, onActiveWordChange])
+  }, [isCurrentTranslation, translatingText, text, tokens, onActiveWordChange])
 
   useEffect(() => {
-    if (!isTranslating) return
+    if (!isCurrentTranslation) return
 
     const checkInternalSubtitle = () => {
       const vlibrasSub = document.querySelector('.vpw-subtitles') as HTMLElement | null
@@ -107,7 +109,7 @@ export default function HighlightedSubtitle({
 
     const interval = window.setInterval(checkInternalSubtitle, 200)
     return () => window.clearInterval(interval)
-  }, [isTranslating, tokens, onActiveWordChange])
+  }, [isCurrentTranslation, tokens, onActiveWordChange])
 
   if (!text || !text.trim()) {
     return (

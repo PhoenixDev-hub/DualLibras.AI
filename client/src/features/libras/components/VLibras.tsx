@@ -1,10 +1,17 @@
 import type { HTMLAttributes } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { playUntilFinished, type PlaybackPlayer } from '../utils/playback'
+import type { LibrasUtterance } from '../hooks/useLibrasTranscripts'
+import { applyPlaybackSpeed } from '../utils/playbackSpeed'
+import { takeNextUtterance } from '../utils/nextUtterance'
 import { preserveControlClick } from '../utils/preserveControlClick'
 
 type VLibrasProps = {
-  text: string
+  utterances: LibrasUtterance[]
+  onQueued: (lastId: number) => void
+  onPlayingTextChange: (text: string) => void
   interactive?: boolean
+  speed?: number
   onStatusChange?: (status: 'idle' | 'loading' | 'translating' | 'error' | 'ready') => void
 }
 
@@ -27,13 +34,20 @@ declare global {
     }
     plugin?: {
       translate?: (text: string) => void | Promise<unknown>
-      player?: {
+      player?: PlaybackPlayer & {
+        stop?: () => void
         setSpeed?: (speed: number) => void
         toggleSubtitles?: (visible: boolean) => void
         showSubtitles?: boolean
       }
       setSpeed?: (speed: number) => void
     }
+    vlibras?: PlaybackPlayer & {
+      translateAndPlay: (text: string) => Promise<unknown>
+      stop: () => void
+      setSpeed: (speed: number) => void
+    }
+    __dualLibrasWelcomed?: boolean
     VLibrasPlayer?: {
       setSpeed?: (speed: number) => void
     }
@@ -47,41 +61,46 @@ declare global {
 
 const SCRIPT_ID = 'vlibras-widget-script'
 const SCRIPT_SRC = 'https://vlibras.gov.br/app/vlibras-plugin.js'
-const TRANSLATE_DELAY_MS = 300
-const READY_RETRY_MS = 200
-const MAX_TRANSLATE_ATTEMPTS = 30
 const CENTER_WIDGET_DELAY_MS = 300
-const MIN_TRANSLATION_MS = 2000
-const MAX_TRANSLATION_MS = 12000
-const MS_PER_CHARACTER = 45
-const DEFAULT_SPEED = 2
 const SPEED_RETRY_MS = 300
 const SPEED_RETRY_COUNT = 15
 const WIDGET_WIDTH = '320px'
 const WIDGET_HEIGHT = '440px'
-const DEFAULT_TRANSLATION = 'Olá! Seja bem-vindo ao DualLibra.AI'
+const DEFAULT_TRANSLATION = 'Olá! Bem-vindo ao DualLibras.AI.'
 
 function setImportant(element: HTMLElement, property: string, value: string) {
   element.style.setProperty(property, value, 'important')
 }
 
-export default function VLibras({ text, onStatusChange, interactive = false }: VLibrasProps) {
+export default function VLibras({
+  utterances,
+  onQueued,
+  onPlayingTextChange,
+  onStatusChange,
+  interactive = false,
+  speed = 1,
+}: VLibrasProps) {
   const mounted = useRef(false)
   useEffect(() => {
     mounted.current = true
     return () => {
       mounted.current = false
       const root = document.getElementById('vlibras-app-root')
-      if (root) root.dataset.active = 'false'
+      if (root) {
+        root.dataset.active = 'false'
+        delete root.dataset.duallibrasLoading
+      }
       document.querySelector('[vw-plugin-wrapper]')?.classList.remove('active')
       queue.current = []
       translating.current = false
       widgetReady.current = false
       initialized.current = false
       opening.current = false
-      lastQueuedText.current = ''
+      lastQueuedId.current = 0
+      playbackAbort.current?.abort()
+      window.vlibras?.stop()
+      if (!window.vlibras) window.plugin?.player?.stop?.()
       if (readyTimer.current) window.clearTimeout(readyTimer.current)
-      if (translateTimer.current) window.clearTimeout(translateTimer.current)
       if (speedTimer.current) window.clearTimeout(speedTimer.current)
     }
   }, [])
@@ -96,6 +115,7 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
   }, [])
 
   const interactiveRef = useRef(interactive)
+  const speedRef = useRef(speed)
   const initialized = useRef(false)
   const opening = useRef(false)
   const widgetReady = useRef(false)
@@ -103,9 +123,18 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
   const speedTimer = useRef<number | null>(null)
   const speedAttempts = useRef(0)
   const translating = useRef(false)
-  const queue = useRef<string[]>([])
-  const lastQueuedText = useRef('')
-  const translateTimer = useRef<number | null>(null)
+  const queue = useRef<LibrasUtterance[]>([])
+  const lastQueuedId = useRef(0)
+  const playbackAbort = useRef<AbortController | null>(null)
+  const failed = useRef(false)
+  const onQueuedRef = useRef(onQueued)
+  useEffect(() => {
+    onQueuedRef.current = onQueued
+  }, [onQueued])
+  const onPlayingTextRef = useRef(onPlayingTextChange)
+  useEffect(() => {
+    onPlayingTextRef.current = onPlayingTextChange
+  }, [onPlayingTextChange])
   const translateNextRef = useRef<() => boolean>(() => true)
   const [status, setStatus] = useState<'idle' | 'loading' | 'translating' | 'error' | 'ready'>(
     'idle',
@@ -114,13 +143,6 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
   useEffect(() => {
     console.debug('[VLibras] Status:', status)
   }, [status])
-
-  const estimateTranslationTime = useCallback((value: string) => {
-    const words = value.split(/\s+/).filter(Boolean).length
-    const textTime = value.length * MS_PER_CHARACTER
-    const wordTime = words * 300
-    return Math.min(MAX_TRANSLATION_MS, Math.max(MIN_TRANSLATION_MS, textTime + wordTime))
-  }, [])
 
   const centerWidget = useCallback(() => {
     if (!mounted.current) return
@@ -301,31 +323,34 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
     return () => document.documentElement.classList.remove('vlibras-interactive')
   }, [interactive, centerWidget])
 
-  const applyDefaultSpeed = useCallback(() => {
+  const applySelectedSpeed = useCallback(() => {
     try {
-      window.VLibrasPlayer?.setSpeed?.(DEFAULT_SPEED)
-      window.plugin?.setSpeed?.(DEFAULT_SPEED)
+      return applyPlaybackSpeed(window, speedRef.current)
     } catch (error) {
       console.warn('[VLibras] Não foi possível ajustar a velocidade:', error)
       return false
     }
-    return true
   }, [])
 
-  const scheduleDefaultSpeed = useCallback(() => {
+  useEffect(() => {
+    speedRef.current = speed
+    applySelectedSpeed()
+  }, [speed, applySelectedSpeed])
+
+  const scheduleSelectedSpeed = useCallback(() => {
     if (speedTimer.current) window.clearTimeout(speedTimer.current)
     speedAttempts.current = 0
 
     const run = () => {
       speedAttempts.current += 1
-      if (applyDefaultSpeed() || speedAttempts.current >= SPEED_RETRY_COUNT) {
+      if (applySelectedSpeed() || speedAttempts.current >= SPEED_RETRY_COUNT) {
         speedTimer.current = null
         return
       }
       speedTimer.current = window.setTimeout(run, SPEED_RETRY_MS)
     }
     run()
-  }, [applyDefaultSpeed])
+  }, [applySelectedSpeed])
 
   const bootWidget = useCallback(() => {
     if (!window.VLibras) return false
@@ -349,9 +374,9 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
       opening.current = true
       window.VLibrasWidget.open()
     }
-    scheduleDefaultSpeed()
+    scheduleSelectedSpeed()
     return true
-  }, [scheduleDefaultSpeed])
+  }, [scheduleSelectedSpeed])
 
   const openWidget = useCallback(() => {
     if (!mounted.current) return false
@@ -376,20 +401,26 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
     }
 
     window.setTimeout(centerWidget, CENTER_WIDGET_DELAY_MS)
-    window.setTimeout(scheduleDefaultSpeed, CENTER_WIDGET_DELAY_MS)
+    window.setTimeout(scheduleSelectedSpeed, CENTER_WIDGET_DELAY_MS)
     return true
-  }, [bootWidget, centerWidget, scheduleDefaultSpeed])
+  }, [bootWidget, centerWidget, scheduleSelectedSpeed])
   const waitForPlugin = useCallback(
     function waitForPlugin(callback: () => void, attempts = 0) {
       if (!mounted.current) return
       if (attempts >= 240) {
+        setStatus('error')
         onStatusChange?.('error')
         return
       }
 
+      // translate is exposed by the current widget after the player loads.
+      // Welcome flags are optional and can remain false after a reload/stop.
+      const root = document.getElementById('vlibras-app-root')
+      if (root) delete root.dataset.duallibrasLoading
       const ready = typeof window.plugin?.translate === 'function'
 
       if (ready) {
+        if (root) delete root.dataset.duallibrasLoading
         widgetReady.current = true
         setStatus('ready')
         onStatusChange?.('ready')
@@ -402,95 +433,58 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
     [onStatusChange, bootWidget],
   )
   const translateNext = useCallback(() => {
-    if (!mounted.current) return false
-    if (translating.current) return true
-
-    const nextText = queue.current.shift()
-    if (!nextText) return true
-
-    const hasOldTranslate = typeof window.plugin?.translate === 'function'
-
-    if (!widgetReady.current || !hasOldTranslate) {
-      queue.current.unshift(nextText)
-      return false
-    }
-
+    if (!mounted.current || failed.current) return false
+    if (translating.current || !widgetReady.current) return true
+    const next = takeNextUtterance(queue.current)
+    if (!next) return true
+    const nextText = next.text
     if (!openWidget()) {
-      queue.current.unshift(nextText)
-      onStatusChange?.('error')
+      queue.current.unshift(next)
       return false
     }
-
+    const controller = new AbortController()
+    playbackAbort.current = controller
     translating.current = true
-    onStatusChange?.('translating')
     setStatus('translating')
-
-    applyDefaultSpeed()
-
-    if (hasOldTranslate) {
-      try {
-        const result = window.plugin?.translate?.(nextText)
-        void Promise.resolve(result).catch((error) => {
-          if (!mounted.current) return
-          console.error('[VLibras] Falha ao traduzir:', error)
-          if (translateTimer.current) window.clearTimeout(translateTimer.current)
-          translating.current = false
-          setStatus('error')
-          onStatusChange?.('error')
-        })
-      } catch (error) {
-        console.error('[VLibras] Falha ao traduzir:', error)
+    onStatusChange?.('translating')
+    onPlayingTextRef.current(nextText)
+    applySelectedSpeed()
+    void playUntilFinished(
+      () => window.plugin!.translate!(nextText),
+      () => window.vlibras ?? window.plugin?.player,
+      controller.signal,
+    )
+      .then(() => {
+        if (controller.signal.aborted || !mounted.current) return
         translating.current = false
+        setStatus('idle')
+        onStatusChange?.('idle')
+        onPlayingTextRef.current('')
+        if (next.id === 0) window.__dualLibrasWelcomed = true
+        else onQueuedRef.current(next.id)
+        translateNextRef.current()
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || !mounted.current) return
+        console.error('[VLibras] Falha na reprodução:', error)
+        failed.current = true
+        translating.current = false
+        queue.current.unshift(next)
         setStatus('error')
         onStatusChange?.('error')
-        return false
-      }
-    }
-    centerWidget()
-
-    if (translateTimer.current) window.clearTimeout(translateTimer.current)
-
-    translateTimer.current = window.setTimeout(() => {
-      translating.current = false
-      translateTimer.current = null
-      onStatusChange?.('idle')
-
-      if (!text.trim()) {
-        queue.current.push(DEFAULT_TRANSLATION)
-      }
-      translateNextRef.current()
-    }, estimateTranslationTime(nextText))
-
+      })
     return true
-  }, [applyDefaultSpeed, centerWidget, estimateTranslationTime, openWidget, onStatusChange, text])
+  }, [applySelectedSpeed, openWidget, onStatusChange])
 
   useEffect(() => {
     translateNextRef.current = translateNext
   }, [translateNext])
 
-  const enqueueTranslation = useCallback(
-    (textoAtual: string) => {
-      if (!textoAtual?.trim()) return false
-
-      if (textoAtual === lastQueuedText.current && widgetReady.current) {
-        return translateNext()
-      }
-
-      lastQueuedText.current = textoAtual
-      queue.current.push(textoAtual.trim())
-      return translateNext()
-    },
-    [translateNext],
-  )
-
-  const triggerTranslation = useCallback(() => {
-    const textoAtual = text.trim() || DEFAULT_TRANSLATION
-    return enqueueTranslation(textoAtual)
-  }, [enqueueTranslation, text])
-
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
+    failed.current = false
+    if (!window.__dualLibrasWelcomed) queue.current.unshift({ id: 0, text: DEFAULT_TRANSLATION })
     setStatus('loading')
     onStatusChange?.('loading')
 
@@ -551,33 +545,17 @@ export default function VLibras({ text, onStatusChange, interactive = false }: V
       script?.removeEventListener('load', handleLoad)
       script?.removeEventListener('error', handleError)
       if (readyTimer.current) window.clearTimeout(readyTimer.current)
-      if (translateTimer.current) window.clearTimeout(translateTimer.current)
       if (speedTimer.current) window.clearTimeout(speedTimer.current)
     }
-  }, [bootWidget, centerWidget, openWidget, scheduleDefaultSpeed, waitForPlugin, onStatusChange])
+  }, [bootWidget, centerWidget, openWidget, scheduleSelectedSpeed, waitForPlugin, onStatusChange])
 
   useEffect(() => {
-    const textoAtual = text.trim() || DEFAULT_TRANSLATION
-
-    if (!widgetReady.current) {
-      enqueueTranslation(textoAtual)
-      return
-    }
-
-    let attempt = 0
-    let timer: number
-
-    const runTranslation = () => {
-      attempt += 1
-      if (triggerTranslation() || attempt >= MAX_TRANSLATE_ATTEMPTS) {
-        return
-      }
-      timer = window.setTimeout(runTranslation, READY_RETRY_MS)
-    }
-
-    timer = window.setTimeout(runTranslation, TRANSLATE_DELAY_MS)
-    return () => window.clearTimeout(timer)
-  }, [text, triggerTranslation, enqueueTranslation])
+    const pending = utterances.filter(({ id }) => id > lastQueuedId.current)
+    if (!pending.length) return
+    queue.current.push(...pending)
+    lastQueuedId.current = pending[pending.length - 1].id
+    translateNextRef.current()
+  }, [utterances, onQueued])
 
   const rootProps: VLibrasElementProps = {
     vw: ' ',

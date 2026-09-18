@@ -6,13 +6,14 @@ import VLibras from '../../libras/components/VLibras'
 import VLibrasStage from '../../libras/components/VLibrasStage'
 import HighlightedSubtitle from '../../transcription/components/HighlightedSubtitle'
 import { useAudioCapture } from '../../transcription/hooks/useAudioCapture'
-import simplifyText from '../../libras/utils/simplify'
+import { useLibrasTranscripts } from '../../libras/hooks/useLibrasTranscripts'
 
 export default function LiveLesson({ lesson }: { lesson: Lesson }) {
   const [interpreterVersion, setInterpreterVersion] = useState(0)
   const [interactive, setInteractive] = useState(false)
   const [text, setText] = useState('')
-  const [translation, setTranslation] = useState('')
+  const libras = useLibrasTranscripts()
+  const translation = libras.playingText
   const [isFinal, setIsFinal] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'translating' | 'error' | 'ready'>(
     'loading',
@@ -21,10 +22,10 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md')
   const { capturing, conectado, audioError, iniciarCaptura, pararCaptura } = useAudioCapture({
     onTranscript: (message) => {
-      if (message.error) return
+      if (message.error || message.type !== 'transcript') return
+      libras.receiveTranscript(message)
       setText(message.text)
       setIsFinal(message.isFinal)
-      if (message.isFinal) setTranslation(simplifyText(message.text))
     },
   })
 
@@ -40,7 +41,7 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
       >
         <span className="text-sm text-slate-500" role="status">
           {!conectado
-            ? 'Conectando à transcrição…'
+            ? 'Ative o microfone para conectar'
             : capturing
               ? 'Microfone ativo'
               : 'Ative o microfone para começar'}
@@ -68,7 +69,7 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
               <option value="xl">Muito grande</option>
             </select>
           </label>
-          <button className="t-btn" onClick={capturing ? pararCaptura : iniciarCaptura}>
+          <button className="t-btn" onClick={capturing ? pararCaptura : () => iniciarCaptura()}>
             {capturing ? <MicOff size={16} /> : <Mic size={16} />}
             {capturing ? 'Silenciar' : 'Ativar microfone'}
           </button>
@@ -84,6 +85,8 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
         aria-label="Personagem e legenda da aula"
       >
         <VLibrasStage
+          currentSpeed={libras.speed}
+          onSpeedChange={libras.setSpeed}
           lessonTitle={lesson.title}
           status={status}
           activeWord={activeWord}
@@ -117,7 +120,10 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
       <VLibras
         key={interpreterVersion}
         interactive={interactive}
-        text={translation}
+        speed={libras.speed}
+        utterances={libras.utterances}
+        onQueued={libras.acknowledge}
+        onPlayingTextChange={libras.setPlayingText}
         onStatusChange={setStatus}
       />
     </>

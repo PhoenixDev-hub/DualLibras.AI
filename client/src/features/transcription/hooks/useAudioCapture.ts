@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MicVAD } from '@ricky0123/vad-web'
-import type { RNNoiseNode } from 'simple-rnnoise-wasm'
 import { WS_URL } from '../../../config/backend'
 import { parseTranscriptMessage, type TranscriptMessage } from '../services/websocket'
 
@@ -12,6 +11,10 @@ type UseAudioCaptureOptions = {
 }
 
 export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
+  const onTranscriptRef = useRef(onTranscript)
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript
+  }, [onTranscript])
   const captureGeneration = useRef(0)
   const [conectado, setConectado] = useState(false)
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
@@ -23,30 +26,22 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
   const [latencyMs, setLatencyMs] = useState<number>(0)
   const [latencyAlert, setLatencyAlert] = useState(false)
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>('offline')
-  const [useVadGating, setUseVadGating] = useState<boolean>(true)
+  const [useVadGating, setUseVadGating] = useState<boolean>(false)
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const rnnoiseNodeRef = useRef<RNNoiseNode | null>(null)
   const encoderNodeRef = useRef<AudioWorkletNode | null>(null)
   const vadRef = useRef<MicVAD | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
-  const rtcPcRef = useRef<RTCPeerConnection | null>(null)
-  const rtcDcRef = useRef<RTCDataChannel | null>(null)
   const speakingRef = useRef<boolean>(false)
   const lastSendTimeRef = useRef<number>(0)
-  const useVadGatingRef = useRef<boolean>(true)
-  const reconnectTimerRef = useRef<number | null>(null)
+  const useVadGatingRef = useRef<boolean>(false)
+  const startingRef = useRef(false)
 
   useEffect(() => {
     useVadGatingRef.current = useVadGating
-    if (!useVadGating) {
-      speakingRef.current = true
-      setSpeaking(true)
-    } else {
-      speakingRef.current = speaking
-    }
+    speakingRef.current = speaking
   }, [useVadGating, speaking])
 
   const handleTranscriptPayload = (payload: unknown) => {
@@ -54,69 +49,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
     const rtt = Date.now() - lastSendTimeRef.current
     setLatencyMs(rtt)
     setLatencyAlert(rtt > 500)
-    onTranscript(message)
-  }
-
-  const negociarWebRTC = async () => {
-    try {
-      const pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-      })
-      rtcPcRef.current = pc
-
-      const dc = pc.createDataChannel('audio', { ordered: false, maxRetransmits: 0 })
-      rtcDcRef.current = dc
-
-      dc.onopen = () => {
-        console.log('[WebRTC] Data Channel aberto com sucesso!')
-      }
-
-      dc.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          if (data.type === 'transcript') {
-            handleTranscriptPayload(data)
-          }
-        } catch (error) {
-          console.error('[WebRTC] Erro no parsing de dados:', error)
-        }
-      }
-
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-
-      await new Promise<void>((resolve) => {
-        if (pc.iceGatheringState === 'complete') {
-          resolve()
-          return
-        }
-
-        const checkState = () => {
-          console.log('[WebRTC] ICE Gathering State:', pc.iceGatheringState)
-          if (pc.iceGatheringState === 'complete') {
-            pc.removeEventListener('icegatheringstatechange', checkState)
-            resolve()
-          }
-        }
-
-        pc.addEventListener('icegatheringstatechange', checkState)
-        window.setTimeout(() => {
-          pc.removeEventListener('icegatheringstatechange', checkState)
-          resolve()
-        }, 5000)
-      })
-
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(
-          JSON.stringify({
-            type: 'webrtc_offer',
-            sdp: pc.localDescription?.sdp || offer.sdp,
-          }),
-        )
-      }
-    } catch (error) {
-      console.error('[WebRTC] Erro na negociação:', error)
-    }
+    onTranscriptRef.current(message)
   }
 
   const conectarSocket = () => {
@@ -130,32 +63,22 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
 
     ws.onopen = () => {
       console.log('[WebSocket] Conectado ao backend')
-      setConectado(true)
-      negociarWebRTC()
+      // Abertura do transporte não confirma disponibilidade da IA.
     }
 
     ws.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data)
 
-        if (data.type === 'webrtc_answer') {
-          console.log('[WebRTC] Answer recebido do servidor')
-          if (rtcPcRef.current) {
-            await rtcPcRef.current.setRemoteDescription(
-              new RTCSessionDescription({
-                type: 'answer',
-                sdp: data.sdp,
-              }),
-            )
-          }
-        } else if (data.type === 'status') {
-          setConnectionMode(data.mode || 'assemblyai')
+        if (data.type === 'status') {
+          setConectado(Boolean(data.connected))
+          setConnectionMode(data.mode || 'offline')
         } else if (data.type === 'error') {
           if (data.mode === 'assemblyai' || data.mode === 'local') {
             setConnectionMode(data.mode)
           }
           setAudioError(data.text || 'O provedor de transcrição não está disponível.')
-          handleTranscriptPayload(data)
+          void pararCaptura()
         } else if (data.type === 'transcript') {
           handleTranscriptPayload(data)
         }
@@ -169,52 +92,37 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
     }
 
     ws.onclose = () => {
-      console.warn('[WebSocket] Conexão fechada. Reconectando em 2s...')
-      setConectado(false)
-      setConnectionMode('offline')
-
-      if (rtcPcRef.current) {
-        rtcPcRef.current.close()
-        rtcPcRef.current = null
-      }
-      rtcDcRef.current = null
-
-      reconnectTimerRef.current = window.setTimeout(conectarSocket, 2000)
+      if (wsRef.current !== ws) return
+      setAudioError('Conexão encerrada. Inicie novamente para tentar outra vez.')
+      void pararCaptura()
     }
   }
 
-  const carregarDispositivos = async () => {
+  const carregarDispositivos = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true })
       const devs = await navigator.mediaDevices.enumerateDevices()
       const audioDevs = devs.filter((device) => device.kind === 'audioinput')
       setDevices(audioDevs)
-      if (audioDevs.length > 0) {
-        setSelectedDevice(audioDevs[0].deviceId)
-      }
+      setSelectedDevice((current) => current || audioDevs[0]?.deviceId || '')
     } catch (error) {
-      console.warn('Erro ao obter permissão inicial ou listar dispositivos:', error)
-      navigator.mediaDevices
-        .enumerateDevices()
-        .then((devs) => {
-          const audioDevs = devs.filter((device) => device.kind === 'audioinput')
-          setDevices(audioDevs)
-        })
-        .catch((enumerateError) => {
-          console.error('Erro geral ao enumerar dispositivos:', enumerateError)
-        })
+      console.warn('Erro ao listar dispositivos de áudio:', error)
     }
-  }
+  }, [])
 
-  const iniciarCaptura = async () => {
+  const iniciarCaptura = async (deviceId = selectedDevice) => {
+    if (startingRef.current || streamRef.current) return
+    startingRef.current = true
     const generation = ++captureGeneration.current
     try {
       setAudioError('')
-      conectarSocket()
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Microfone indisponível. Use HTTPS ou localhost.')
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          deviceId: selectedDevice ? { exact: selectedDevice } : undefined,
+          deviceId: deviceId ? { exact: deviceId } : undefined,
           sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
@@ -228,56 +136,65 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
         return
       }
       streamRef.current = stream
+      stream.getTracks().forEach((track) => {
+        track.onended = () => {
+          if (generation !== captureGeneration.current) return
+          setAudioError('Microfone desconectado ou captura interrompida.')
+          void pararCaptura()
+        }
+      })
 
       const ctx = new AudioContext({ sampleRate: 16000 })
       audioContextRef.current = ctx
 
-      const { RNNoiseNode, rnnoise_loadAssets } = await import('simple-rnnoise-wasm')
-      const assets = await rnnoise_loadAssets({
-        scriptSrc: '/rnnoise.worklet.js',
-        moduleSrc: '/rnnoise.wasm',
-      })
-      if (generation !== captureGeneration.current) return
-      await RNNoiseNode.register(ctx, assets)
-
+      await ctx.resume()
+      if (ctx.sampleRate !== 16000)
+        throw new Error('O navegador não disponibilizou áudio a 16 kHz.')
       if (generation !== captureGeneration.current) return
       await ctx.audioWorklet.addModule('/pcm-encoder-worklet.js')
       if (generation !== captureGeneration.current) return
 
       const source = ctx.createMediaStreamSource(stream)
-      const rnnoiseNode = new RNNoiseNode(ctx)
-      rnnoiseNodeRef.current = rnnoiseNode
 
-      const encoderNode = new AudioWorkletNode(ctx, 'pcm-encoder')
+      const encoderNode = new AudioWorkletNode(ctx, 'pcm-encoder', {
+        channelCount: 1,
+        channelCountMode: 'explicit',
+      })
       encoderNodeRef.current = encoderNode
 
       const analyser = ctx.createAnalyser()
       analyser.fftSize = 256
       analyserRef.current = analyser
 
-      source.connect(rnnoiseNode)
-      rnnoiseNode.connect(encoderNode)
-      rnnoiseNode.connect(analyser)
+      source.connect(encoderNode)
+      source.connect(analyser)
       encoderNode.connect(ctx.destination)
 
       encoderNode.port.onmessage = (event) => {
-        if (event.data.type !== 'audio') return
+        if (generation !== captureGeneration.current || event.data.type !== 'audio') return
 
-        const buffer = event.data.buffer
-        if (!useVadGatingRef.current || speakingRef.current) {
-          lastSendTimeRef.current = Date.now()
+        // Keep the audio clock running: the streaming recognizer needs silence
+        // to detect end_of_turn. Gating removes noise, not time from the stream.
+        const capturedBuffer: ArrayBuffer = event.data.buffer
+        const buffer =
+          useVadGatingRef.current && !speakingRef.current
+            ? new ArrayBuffer(capturedBuffer.byteLength)
+            : capturedBuffer
+        lastSendTimeRef.current = Date.now()
 
-          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.send(buffer)
-          } else if (rtcDcRef.current && rtcDcRef.current.readyState === 'open') {
-            rtcDcRef.current.send(buffer)
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          if (wsRef.current.bufferedAmount > 64000) {
+            setAudioError('Envio de áudio atrasado. Inicie novamente.')
+            void pararCaptura()
+            return
           }
+          wsRef.current.send(buffer)
         }
       }
 
       try {
         const dest = ctx.createMediaStreamDestination()
-        rnnoiseNode.connect(dest)
+        source.connect(dest)
 
         const { MicVAD } = await import('@ricky0123/vad-web')
         const myvad = await MicVAD.new({
@@ -285,12 +202,21 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
           getStream: () => Promise.resolve(dest.stream),
           baseAssetPath: '/',
           onnxWASMBasePath: '/',
+          model: 'v5',
+          startOnLoad: false,
+          onVADMisfire: () => {
+            if (generation !== captureGeneration.current) return
+            setSpeaking(false)
+            speakingRef.current = false
+          },
           positiveSpeechThreshold: 0.35,
           onSpeechStart: () => {
+            if (generation !== captureGeneration.current) return
             setSpeaking(true)
             speakingRef.current = true
           },
           onSpeechEnd: () => {
+            if (generation !== captureGeneration.current) return
             setSpeaking(false)
             speakingRef.current = false
           },
@@ -302,6 +228,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
         vadRef.current = myvad
         await myvad.start()
       } catch (vadError) {
+        if (generation !== captureGeneration.current) return
         console.warn('VAD falhou ao iniciar. Usando envio contínuo como fallback.', vadError)
         setSpeaking(true)
         speakingRef.current = true
@@ -311,7 +238,8 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
       const bufferLength = analyser.frequencyBinCount
       const dataArray = new Uint8Array(bufferLength)
       const updateLevel = () => {
-        if (!analyserRef.current || !streamRef.current) return
+        if (generation !== captureGeneration.current || !analyserRef.current || !streamRef.current)
+          return
         analyserRef.current.getByteFrequencyData(dataArray)
         let sum = 0
         for (let index = 0; index < bufferLength; index += 1) {
@@ -322,8 +250,13 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
       }
       updateLevel()
 
+      conectarSocket()
       setCapturing(true)
+      startingRef.current = false
+      void carregarDispositivos()
     } catch (error: unknown) {
+      if (generation !== captureGeneration.current) return
+      await pararCaptura()
       console.error('Falha ao iniciar captura de áudio:', error)
       const audioException = error instanceof DOMException ? error : null
       const errorName = audioException?.name ?? 'Error'
@@ -345,6 +278,22 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
 
   const pararCaptura = async () => {
     captureGeneration.current += 1
+    startingRef.current = false
+    const ws = wsRef.current
+    wsRef.current = null
+    if (ws) {
+      ws.onclose = null
+      ws.onmessage = null
+      ws.onopen = null
+      ws.close()
+    }
+    setConectado(false)
+    setConnectionMode('offline')
+    const ctx = audioContextRef.current
+    audioContextRef.current = null
+    if (encoderNodeRef.current) encoderNodeRef.current.port.onmessage = null
+    encoderNodeRef.current = null
+    analyserRef.current = null
     setCapturing(false)
     setSpeaking(false)
     speakingRef.current = false
@@ -364,14 +313,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
       }
     }
 
-    if (audioContextRef.current) {
-      await audioContextRef.current.close()
-      audioContextRef.current = null
-    }
-
-    rnnoiseNodeRef.current = null
-    encoderNodeRef.current = null
-    analyserRef.current = null
+    if (ctx && ctx.state !== 'closed') await ctx.close().catch(console.warn)
   }
 
   const switchTranscriptionProvider = (provider?: TranscriptionProvider) => {
@@ -379,7 +321,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
 
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       setAudioError(
-        'Backend de transcrição desconectado. Aguarde a reconexão antes de trocar o motor.',
+        'Backend de transcrição desconectado. Inicie a captura antes de trocar o motor.',
       )
       return
     }
@@ -394,33 +336,19 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
   }
 
   useEffect(() => {
-    carregarDispositivos()
-  }, [])
+    void carregarDispositivos()
+  }, [carregarDispositivos])
 
   useEffect(() => {
-    conectarSocket()
     return () => {
       void pararCaptura()
-      if (wsRef.current) {
-        wsRef.current.onclose = null
-        wsRef.current.onmessage = null
-        wsRef.current.onopen = null
-      }
-      rtcDcRef.current?.close()
-      rtcPcRef.current?.close()
-      if (reconnectTimerRef.current) {
-        window.clearTimeout(reconnectTimerRef.current)
-      }
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
     }
   }, [])
 
   const selectDevice = (deviceId: string) => {
     setSelectedDevice(deviceId)
     if (capturing) {
-      pararCaptura().then(() => iniciarCaptura())
+      pararCaptura().then(() => iniciarCaptura(deviceId))
     }
   }
 

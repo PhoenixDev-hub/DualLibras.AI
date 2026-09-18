@@ -1,7 +1,7 @@
 class PCMEncoderProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.chunkSize = 480;
+    this.chunkSize = 800;
     this.buffer = new Int16Array(this.chunkSize);
     this.bufferPtr = 0;
   }

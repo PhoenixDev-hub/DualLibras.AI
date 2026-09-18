@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import logging
@@ -126,13 +127,25 @@ async def websocket_endpoint(websocket: WebSocket):
 
     logger.info("Novo cliente WebSocket conectado. Criando sessão.")
     session = ClientSession(websocket, transcript_manager=transcript_manager)
-    await session.start()
+    started = False
+    last_audio_at = time.monotonic()
 
     try:
         while True:
-            message = await websocket.receive()
+            message = await asyncio.wait_for(
+                websocket.receive(), timeout=max(0.001, 15 - (time.monotonic() - last_audio_at))
+            )
+            if message.get("type") == "websocket.disconnect":
+                break
 
-            if "bytes" in message:
+            if message.get("bytes"):
+                last_audio_at = time.monotonic()
+                if len(message["bytes"]) % 2 or len(message["bytes"]) > 32000:
+                    await session.send_to_client({"type": "error", "text": "Quadro PCM inválido", "error": True})
+                    break
+                if not started:
+                    started = True
+                    session.provider_task = asyncio.create_task(session.start())
                 session.audio_buffer.push(message["bytes"], time.monotonic())
                 if session.audio_buffer.stats.queued % 100 == 1:
                     logger.info(
@@ -149,7 +162,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     if msg_type == "webrtc_offer":
                         logger.info("Recebeu WebRTC offer do cliente pelo WebSocket")
                         await session.handle_webrtc_offer(data.get("sdp"))
-                    elif msg_type == "set_provider":
+                    elif msg_type == "set_provider" and started:
                         provider = data.get("provider")
                         if provider not in {"assemblyai", "local"}:
                             await session.send_to_client(
@@ -168,12 +181,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 except Exception as exc:
                     logger.error("Erro ao processar mensagem JSON: %s", exc)
 
+    except asyncio.TimeoutError:
+        logger.info("Sessão encerrada por ausência de áudio")
     except WebSocketDisconnect:
         logger.info("Cliente WebSocket desconectado")
     except Exception as exc:
         logger.error("Erro na conexão do WebSocket: %s: %s", type(exc).__name__, exc)
     finally:
         await session.stop()
+        try:
+            await websocket.close()
+        except RuntimeError:
+            pass
 
 
 @app.post("/save-transcript", response_model=TranscriptResponse)

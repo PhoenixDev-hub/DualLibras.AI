@@ -27,7 +27,6 @@ from .audio import (
     AudioBuffer,
     TranscriptSaver,
     classify_speaker,
-    is_internet_available,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,13 +56,20 @@ class ClientSession:
         try:
             payload = json.dumps(message)
             await self.websocket.send_text(payload)
-            if self.dc and self.dc.readyState == "open":
-                self.dc.send(payload)
         except Exception as exc:
             logger.warning("Erro ao enviar mensagem para o cliente: %s", exc)
 
     async def start(self) -> None:
-        await self.switch_provider("assemblyai", allow_fallback=True)
+        if (
+            SETTINGS.sample_rate != 16000
+            or SETTINGS.channels != 1
+            or not 1600 <= SETTINGS.chunk_size <= 32000
+            or SETTINGS.chunk_size % 2
+        ):
+            await self.send_to_client({"type": "error", "text": "Configure PCM16 mono, 16000 Hz e chunks pares de 1600 a 32000 bytes.", "error": True})
+            await self.websocket.close()
+            return
+        await self.switch_provider("assemblyai", allow_fallback=False)
 
     async def request_provider_switch(self, provider: str) -> None:
         if self.provider_task and not self.provider_task.done():
@@ -128,7 +134,8 @@ class ClientSession:
                 return
 
         await self._stop_transcription_tasks()
-        self.audio_buffer.drain_stale()
+        if previous_mode:
+            self.audio_buffer.drain_stale()
 
         if provider == "assemblyai":
             started = await self._start_assemblyai(notify_error=not allow_fallback)
@@ -154,9 +161,7 @@ class ClientSession:
 
     async def _start_assemblyai(self, notify_error: bool = True) -> bool:
         auth_key = SETTINGS.assemblyai_api_key
-        internet = is_internet_available()
-
-        if internet and auth_key:
+        if auth_key:
             try:
                 self.assembly_ws = await assemblyai.connect()
                 self.tasks.append(
@@ -177,6 +182,8 @@ class ClientSession:
                         )
                     )
                 )
+                for task in self.tasks:
+                    task.add_done_callback(self._transcription_done)
                 self.mode = "assemblyai"
 
                 await self.send_to_client(
@@ -190,7 +197,7 @@ class ClientSession:
                 return True
             except Exception as exc:
                 logger.error(
-                    "Falha ao conectar na AssemblyAI: %s. Iniciando fallback local.",
+                    "Falha ao conectar na AssemblyAI: %s.",
                     exc,
                 )
 
@@ -204,7 +211,18 @@ class ClientSession:
                     "is_final": True,
                 }
             )
+        await self.websocket.close()
         return False
+
+    async def _provider_failed(self) -> None:
+        await self.send_to_client({"type": "error", "text": "Transcrição interrompida. Inicie novamente para tentar outra vez.", "error": True})
+        await self.websocket.close()
+
+    def _transcription_done(self, task: asyncio.Task) -> None:
+        if task.cancelled() or not self.active or self.mode != "assemblyai":
+            return
+        if task.exception() is not None:
+            self.provider_task = asyncio.create_task(self._provider_failed())
 
     async def _start_local(self, model: Any = None) -> None:
         self.mode = "local"
@@ -365,7 +383,7 @@ class ClientSession:
 
         if self.assembly_ws:
             try:
-                await self.assembly_ws.close()
+                await assemblyai.terminate(self.assembly_ws)
             except Exception:
                 pass
             self.assembly_ws = None

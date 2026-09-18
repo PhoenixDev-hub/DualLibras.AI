@@ -6,9 +6,12 @@ import logging
 import math
 import sys
 import time
+
 from collections.abc import Awaitable, Callable
 from typing import Any
 from urllib.parse import urlencode
+
+from ..services.assembly_turns import AssemblyTurns
 
 import numpy as np
 import sounddevice as sd
@@ -498,19 +501,16 @@ async def receive_transcripts(
     saver: TranscriptSaver | None = None,
 ) -> None:
     terminal = TerminalTranscript(on_text, stats, saver)
+    turns = AssemblyTurns()
     try:
         while True:
             message = await receive_json(ws)
             message_type = message.get("type")
 
             if message_type == "Turn":
-                text = message.get("transcript", "").strip()
-                if text:
-                    await terminal.handle_turn(
-                        text,
-                        bool(message.get("turn_is_done")),
-                        message.get("speaker"),
-                    )
+                turn = turns.receive(message)
+                if turn:
+                    await terminal.handle_turn(*turn)
                 continue
             if message_type in ("SessionBegins", "Begin"):
                 print("Sessão iniciada.\n")

@@ -17,7 +17,7 @@ import {
   WifiOff,
   Trash2,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import VLibras from '../features/libras/components/VLibras'
 import VLibrasStage from '../features/libras/components/VLibrasStage'
@@ -25,12 +25,14 @@ import HighlightedSubtitle from '../features/transcription/components/Highlighte
 import { useAudioCapture } from '../features/transcription/hooks/useAudioCapture'
 import { HistoryPanel } from '../features/history/components/HistoryPanel'
 import { useTranscriptHistory } from '../features/history/hooks/useTranscriptHistory'
-import simplifyText from '../features/libras/utils/simplify'
+import { useLibrasTranscripts } from '../features/libras/hooks/useLibrasTranscripts'
 import type { TranscriptMessage } from '../features/transcription/services/websocket'
 
 const CONTENT_ID = 'conteudo-libras'
 
 export default function AppPrincipal() {
+  const libras = useLibrasTranscripts()
+  const [interpreterVersion, setInterpreterVersion] = useState(0)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -77,6 +79,8 @@ export default function AppPrincipal() {
   }
 
   const handleTranscript = (message: TranscriptMessage) => {
+    if (message.type === 'status') return
+    libras.receiveTranscript(message)
     setTexto(message.text)
     setTraducaoFinal(message.isFinal)
     setTemErro(message.error)
@@ -147,58 +151,7 @@ export default function AppPrincipal() {
     return temErro ? '' : raw
   }, [texto, textoFinal, temErro])
 
-  const textoSimplificado = useMemo(() => {
-    if (!textoBase) return ''
-    return simplifyText(textoBase)
-  }, [textoBase])
-
-  const [, setVlibrasBuffer] = useState('')
-  const [textoEnviadoAoVLibras, setTextoEnviadoAoVLibras] = useState('')
-  const timerRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    if (!textoSimplificado) {
-      setVlibrasBuffer('')
-      setTextoEnviadoAoVLibras('')
-      return
-    }
-
-    const cleanCurrent = textoSimplificado.trim()
-    const cleanSent = textoEnviadoAoVLibras.trim()
-
-    if (cleanCurrent === cleanSent) return
-
-    const newPart = cleanCurrent.startsWith(cleanSent)
-      ? cleanCurrent.substring(cleanSent.length).trim()
-      : cleanCurrent
-
-    if (!newPart) return
-
-    const endsWithPause = /[.,/#!$%^&*;:{}=_`~()?-]/.test(newPart.slice(-1))
-
-    if (endsWithPause) {
-      setTextoEnviadoAoVLibras(cleanCurrent)
-      setVlibrasBuffer('')
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current)
-        timerRef.current = null
-      }
-    } else {
-      setVlibrasBuffer(cleanCurrent)
-
-      if (timerRef.current) window.clearTimeout(timerRef.current)
-
-      timerRef.current = window.setTimeout(() => {
-        setTextoEnviadoAoVLibras(cleanCurrent)
-        setVlibrasBuffer('')
-        timerRef.current = null
-      }, 1000)
-    }
-
-    return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current)
-    }
-  }, [textoSimplificado, textoEnviadoAoVLibras])
+  const textoEnviadoAoVLibras = libras.playingText
 
   const nextProvider = connectionMode === 'assemblyai' ? 'local' : 'assemblyai'
   const providerButtonLabel = nextProvider === 'local' ? 'Faster-Whisper' : 'AssemblyAI'
@@ -226,7 +179,14 @@ export default function AppPrincipal() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(83,184,255,0.18),transparent_26rem),radial-gradient(circle_at_82%_28%,rgba(47,123,255,0.15),transparent_28rem),linear-gradient(180deg,#000000_0%,#020B2B_56%,#000000_100%)]" />
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(130,227,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(83,184,255,0.03)_1px,transparent_1px)] bg-[length:72px_72px] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.8),transparent_80%)]" />
 
-      <VLibras text={textoEnviadoAoVLibras} onStatusChange={setVLibrasStatus} />
+      <VLibras
+        key={interpreterVersion}
+        speed={libras.speed}
+        utterances={libras.utterances}
+        onQueued={libras.acknowledge}
+        onPlayingTextChange={libras.setPlayingText}
+        onStatusChange={setVLibrasStatus}
+      />
 
       <header
         className={`relative z-30 flex flex-col gap-3 border-b border-white/10 bg-slate-950/70 px-4 py-3 backdrop-blur-xl transition-all duration-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between ${
@@ -293,7 +253,7 @@ export default function AppPrincipal() {
           </div>
 
           <button
-            onClick={capturing ? pararCaptura : iniciarCaptura}
+            onClick={capturing ? pararCaptura : () => iniciarCaptura()}
             className={`flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
               capturing
                 ? 'bg-red-500/25 border border-red-500/55 text-red-300 hover:bg-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.35)]'
@@ -402,7 +362,7 @@ export default function AppPrincipal() {
             ) : (
               <WifiOff size={14} className="text-amber-400" />
             )}
-            {conectado ? 'Transcrição conectada' : 'Conectando ao serviço de transcrição...'}
+            {conectado ? 'Transcrição conectada' : 'Ative o microfone para conectar'}
           </span>
           <span>
             {capturing
@@ -544,6 +504,16 @@ export default function AppPrincipal() {
 
           <div className="lg:col-span-5 h-full">
             <VLibrasStage
+              currentSpeed={libras.speed}
+              onSpeedChange={libras.setSpeed}
+              onReload={
+                vlibrasStatus === 'error'
+                  ? () => {
+                      setVLibrasStatus('loading')
+                      setInterpreterVersion((version) => version + 1)
+                    }
+                  : undefined
+              }
               status={vlibrasStatus}
               activeWord={activeWord}
               className="h-full min-h-[460px]"

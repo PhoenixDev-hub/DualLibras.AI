@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 try:
     from dotenv import load_dotenv
@@ -10,7 +11,7 @@ except ImportError:
 
 
 if load_dotenv:
-    load_dotenv()
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 @dataclass(frozen=True)

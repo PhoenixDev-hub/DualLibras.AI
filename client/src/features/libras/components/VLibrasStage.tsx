@@ -14,7 +14,7 @@ type VLibrasStageProps = {
 export default function VLibrasStage({
   status,
   activeWord,
-  currentSpeed = 2,
+  currentSpeed = 1,
   onSpeedChange,
   onReload,
   lessonTitle = 'Aula com Libras',
@@ -24,7 +24,7 @@ export default function VLibrasStage({
   const stageRef = useRef<HTMLDivElement>(null)
   const [expanded, setExpanded] = useState(false)
   const ownsFullscreen = useRef(false)
-  const [speed, setSpeed] = useState(currentSpeed)
+  const speed = currentSpeed
 
   const toggleFullscreen = async () => {
     if (expanded) {
@@ -148,14 +148,7 @@ export default function VLibrasStage({
   }, [expanded])
 
   const handleSpeedToggle = (newSpeed: number) => {
-    setSpeed(newSpeed)
     onSpeedChange?.(newSpeed)
-    try {
-      window.VLibrasPlayer?.setSpeed?.(newSpeed)
-      window.plugin?.setSpeed?.(newSpeed)
-    } catch (error) {
-      console.warn('Não foi possível ajustar a velocidade do avatar:', error)
-    }
   }
 
   const statusLabel =
@@ -292,7 +285,7 @@ export default function VLibrasStage({
           <Gauge className="h-3.5 w-3.5 text-slate-400" />
           <span className="text-[11px] text-slate-400 font-semibold">Velocidade:</span>
           <div className="flex rounded-lg border border-white/10 bg-slate-950/60 p-0.5">
-            {[1, 1.5, 2].map((val) => (
+            {[1, 1.25, 1.5, 2].map((val) => (
               <button
                 key={val}
                 type="button"
