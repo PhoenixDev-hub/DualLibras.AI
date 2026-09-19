@@ -120,6 +120,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const authApi = {
+  createLesson(title: string, classroomId: string) {
+    return request<Lesson>('/education/lessons', {
+      method: 'POST',
+      body: JSON.stringify({ title, classroomId }),
+    })
+  },
+  publishTranscript(id: string | number, text: string) {
+    return request<void>(`/education/lessons/${encodeURIComponent(id)}/transcript`, {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    })
+  },
+  finishLesson(id: string | number) {
+    return request<void>(`/education/lessons/${encodeURIComponent(id)}/finish`, { method: 'POST' })
+  },
   education() {
     return request<EducationData>('/education')
   },
@@ -190,7 +205,12 @@ export const authApi = {
     return request<{ materials: Material[] }>('/materials')
   },
 
-  uploadMaterial(data: { filename: string; contentBase64: string }) {
+  uploadMaterial(data: {
+    filename: string
+    contentBase64: string
+    lessonId?: string
+    classroomId?: string
+  }) {
     return request<{ material: Material; ai: { sent: boolean; status: 'enviado' | 'pendente' } }>(
       '/materials',
       {

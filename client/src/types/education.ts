@@ -25,6 +25,7 @@ export type Lesson = {
   status: 'live' | 'finished' | 'scheduled' | 'cancelled'
 }
 export type Material = {
+  lessonId?: string | number | null
   id: string | number
   name: string
   subject: string

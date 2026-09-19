@@ -1,3 +1,4 @@
+import Materials from '../../materials/pages/Materials'
 import { PageTitle } from '../../../components/ui'
 import type { Lesson } from '../../../types/education'
 export default function LessonDetails({ lesson }: { lesson: Lesson }) {
@@ -17,6 +18,9 @@ export default function LessonDetails({ lesson }: { lesson: Lesson }) {
         <h2 className="mb-4 font-bold">Resumo</h2>
         <p className="whitespace-pre-wrap">{lesson.summary || 'Nenhum resumo cadastrado.'}</p>
       </article>
+      <section className="mt-7">
+        <Materials classroomId={lesson.classroomId} lessonId={lesson.id} />
+      </section>
     </>
   )
 }

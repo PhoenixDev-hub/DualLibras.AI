@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import type { RegisterInput } from '../schemas/auth.schema';
+import type { RegisterInput } from '../schemas/Auth.schema';
 
 type CreateUserInput = Omit<RegisterInput, 'password'> & {
   passwordHash: string;

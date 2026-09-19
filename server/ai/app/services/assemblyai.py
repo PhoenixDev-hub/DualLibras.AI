@@ -3,6 +3,7 @@ import json
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
+from urllib.parse import urlencode
 
 import websockets
 
@@ -14,10 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 def build_streaming_url() -> str:
-    return (
-        "wss://streaming.assemblyai.com/v3/ws"
-        f"?sample_rate={SETTINGS.sample_rate}&speech_model={SETTINGS.speech_model}"
-    )
+    params = {
+        "sample_rate": SETTINGS.sample_rate,
+        "speech_model": SETTINGS.speech_model,
+    }
+    # Long classroom turns need intermediate text even without a speech pause.
+    # Other model families retain their own supported connection parameters.
+    if SETTINGS.speech_model in {"u3-rt-pro", "universal-3-5-pro"}:
+        params["continuous_partials"] = "true"
+    return "wss://streaming.assemblyai.com/v3/ws?" + urlencode(params)
 
 
 async def connect() -> Any:

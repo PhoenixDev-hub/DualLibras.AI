@@ -18,9 +18,8 @@ export default function Login() {
     setIsSubmitting(true)
 
     try {
-      const { user } = await authApi.login(email, password)
-      const destination = user.role === 'ALUNO' ? '/codigo' : '/dashboard'
-      navigate(destination, { replace: true })
+      await authApi.login(email, password)
+      navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível entrar.')
     } finally {

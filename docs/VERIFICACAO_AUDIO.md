@@ -72,3 +72,9 @@ Havia alterações locais anteriores, inclusive nesses arquivos e em componentes
 4. Confirme que o indicador de microfone apagou, /ws fechou e o backend encerrou a sessão. Confira a duração registrada no painel do provedor; tempo de sessão pode superar a duração do áudio.
 
 Parar encerra imediatamente o transporte: um último resultado ainda em processamento pode não chegar à interface. No teste curto, observe o final antes de parar se ele chegar dentro do limite; caso contrário, registre a ausência e encerre mesmo assim. O fluxo CLI separado não foi executado nem validado com hardware/IA.
+
+## Ajuste após relato de atraso na fala
+
+O usuário confirmou funcionamento, mas relatou que não acompanha a fala do professor. A interface já encaminha parciais imediatamente; a conexão não solicitava explicitamente `continuous_partials`. Foi adicionado `continuous_partials=true` para o modelo u3-rt-pro e para universal-3-5-pro, sem alterar o modelo configurado. O parâmetro aparece no exemplo público da AssemblyAI: https://www.assemblyai.com/?speechify_reviews=surgeon . Não foram alterados limiares de silêncio, nem imposto fechamento artificial de frases.
+
+Dois testes adicionais verificam a URL preservando o modelo e a entrega de várias parciais antes do resultado final. Total: 12 testes Python aprovados. Nenhuma chamada real adicional e 0 segundos de áudio enviados. A melhora de latência real ainda não foi medida. A confirmação de qual elemento atrasa (legenda ou personagem) foi solicitada; a fila de reprodução de Libras não foi alterada neste ajuste.

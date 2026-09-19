@@ -1,26 +1,50 @@
 [
   {
-    "timestamp": "00:01:00",
-    "seconds": 60.81,
-    "speaker": "Aluno",
-    "text": "Eu nem converso muito. Não sei que semana abriu a janela, mas nada não, é que é verdade. Não, é Mariana que tira para trás para você conversar, para conversar comigo. Então deu um pouco certo, né? Ah, bom, mal deu um pouco certo. Teve um dia que ela se virou, tava conversando com Denise, tava aqui, e você não abriu comigo, não abriu com todo mundo. Só esse grupinho aí todo, minha índice, eu que tá conversando. Que ele atrás tentava mudar, né? Porque as meninas voltavam, né? Mas assim, não é para mudar o mar, é porque era para impedir elas de ir para lá."
-  },
-  {
-    "timestamp": "00:01:39",
-    "seconds": 99.3,
+    "timestamp": "00:00:02",
+    "seconds": 2.5,
     "speaker": "Professor",
-    "text": "Que brigou comigo, ela não diminuiu. Não vai ser mesmo, não tem nem para conversar, era só bolada. Tem que conversar com eu. Muita gosta que as meninas vão lá para lá."
+    "text": "Da funktionieren."
   },
   {
-    "timestamp": "00:02:39",
-    "seconds": 159.41,
+    "timestamp": "00:00:08",
+    "seconds": 8.7,
     "speaker": "Professor",
-    "text": "É, agora bota para esse daí, Mariana. Agora não vai dar não, porque aí Você já não presta atenção não."
+    "text": "Oh my God."
   },
   {
-    "timestamp": "00:03:41",
-    "seconds": 221.46,
+    "timestamp": "00:00:14",
+    "seconds": 14.32,
+    "speaker": "Professor",
+    "text": "Mörder's Kit."
+  },
+  {
+    "timestamp": "00:00:17",
+    "seconds": 17.52,
+    "speaker": "Professor",
+    "text": "Lado a lado, modo clássico."
+  },
+  {
+    "timestamp": "00:00:25",
+    "seconds": 25.7,
+    "speaker": "Professor",
+    "text": "Modo clássico."
+  },
+  {
+    "timestamp": "00:00:42",
+    "seconds": 42.07,
     "speaker": "Aluno",
-    "text": "É verdade, é verdade. É sério? Finalmente, não vai não, vai ficar mais."
+    "text": "Oxi, eu acho que o— eu acho que o Festi não."
+  },
+  {
+    "timestamp": "00:01:14",
+    "seconds": 75.0,
+    "speaker": "Professor",
+    "text": "Mas está durando muito isso."
+  },
+  {
+    "timestamp": "00:01:35",
+    "seconds": 95.86,
+    "speaker": "Professor",
+    "text": "Está durando muito isso."
   }
 ]

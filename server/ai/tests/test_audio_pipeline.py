@@ -7,6 +7,7 @@ import time
 import unittest
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
+from urllib.parse import parse_qs, urlparse
 
 # Keep importing the API from writing into project storage.
 _storage = tempfile.TemporaryDirectory()
@@ -72,6 +73,33 @@ class AudioPipelineTest(unittest.IsolatedAsyncioTestCase):
         self.connect = self.enterContext(patch.object(assemblyai.websockets, 'connect', new_callable=AsyncMock))
         # Fail closed if a test accidentally uses any network outside the mock.
         self.enterContext(patch('socket.socket.connect', side_effect=AssertionError('Network forbidden in offline tests')))
+
+    async def test_continuous_partials_enabled_without_changing_model(self):
+        params = parse_qs(urlparse(assemblyai.build_streaming_url()).query)
+        self.assertEqual(params['speech_model'], [assemblyai.SETTINGS.speech_model])
+        self.assertEqual(params['continuous_partials'], ['true'])
+        other = replace(assemblyai.SETTINGS, speech_model='universal-streaming-multilingual')
+        with patch.object(assemblyai, 'SETTINGS', other):
+            self.assertNotIn('continuous_partials', parse_qs(urlparse(assemblyai.build_streaming_url()).query))
+        self.connect.assert_not_called()
+
+    async def test_long_speech_partials_are_delivered_before_final(self):
+        provider = Provider()
+        provider.incoming.get_nowait()  # Begin is handled by connect, not this receiver.
+        delivered = []
+        async def on_turn(text, final, speaker):
+            delivered.append((text, final))
+        receiver = asyncio.create_task(assemblyai.receive_transcripts(lambda: provider, lambda: True, on_turn))
+        try:
+            for text in ['Hoje', 'Hoje vamos estudar', 'Hoje vamos estudar matemática']:
+                provider.incoming.put_nowait(json.dumps({'type': 'Turn', 'turn_order': 0, 'transcript': text, 'end_of_turn': False}))
+                await asyncio.sleep(0)
+                self.assertEqual(delivered[-1], (text, False))
+            self.assertEqual(len(delivered), 3)
+        finally:
+            receiver.cancel()
+            await receiver
+        self.connect.assert_not_called()
 
     async def test_idle_frontend_never_opens_provider(self):
         front = Frontend([{'type': 'websocket.disconnect'}])

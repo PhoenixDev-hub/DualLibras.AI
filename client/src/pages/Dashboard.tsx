@@ -1,3 +1,4 @@
+import StudentDashboard from '../features/student/StudentDashboard'
 import { Copy, X } from 'lucide-react'
 import TeacherShell from '../components/layout/TeacherShell'
 import { Modal } from '../components/ui'
@@ -80,6 +81,22 @@ export default function Dashboard() {
         <a href="/entrar"> Voltar ao login</a>
       </main>
     )
+  if (contextValue.user?.role === 'ALUNO') {
+    return (
+      <>
+        {notice && (
+          <p role="status" className="teacher-toast">
+            {notice}
+          </p>
+        )}
+        <StudentDashboard
+          user={contextValue.user}
+          initialData={contextValue}
+          logout={contextValue.logout}
+        />
+      </>
+    )
+  }
   return (
     <TeacherContext.Provider value={contextValue}>
       <TeacherShell

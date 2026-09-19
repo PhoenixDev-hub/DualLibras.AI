@@ -31,7 +31,7 @@ export function useTeacherDashboard() {
     const data = await authApi.education()
     setClassrooms(data.classrooms)
     setStudents(data.students)
-    setLessons([...sessionLessons.current, ...data.lessons])
+    setLessons(data.lessons)
     setMaterials(data.materials)
     setTerms(data.terms)
   }, [])
@@ -67,6 +67,9 @@ export function useTeacherDashboard() {
   }, [notice])
   function finishActiveLesson() {
     if (!activeLesson) return
+    void authApi
+      .finishLesson(activeLesson.id)
+      .catch(() => setNotice('Não foi possível marcar a aula como finalizada no servidor.'))
     const finished: Lesson = {
       ...activeLesson,
       status: 'finished',
@@ -133,7 +136,9 @@ export function useTeacherDashboard() {
     logout,
     classrooms,
     students,
-    lessons,
+    lessons: activeLesson
+      ? [activeLesson, ...lessons.filter((item) => item.id !== activeLesson.id)]
+      : lessons,
     materials,
     terms,
     setClassrooms: unavailable,

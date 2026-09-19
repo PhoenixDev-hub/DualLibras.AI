@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma';
 import { AppError } from '../middlewares/error.middleware';
-import type { CreateClassroomInput } from '../schemas/classroom.schema';
+import type { CreateClassroomInput } from '../schemas/Classroom.schema';
 
 function normalizeCodePart(value: string) {
   return value

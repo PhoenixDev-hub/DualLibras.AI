@@ -1,8 +1,8 @@
 import { AppError } from '../middlewares/error.middleware';
-import { userService } from './user.service';
-import { hashPassword, comparePassword } from '../utils/hash';
+import type { LoginInput, RegisterInput } from '../schemas/Auth.schema';
+import { comparePassword, hashPassword } from '../utils/hash';
 import { signToken } from '../utils/jwt';
-import type { RegisterInput, LoginInput } from '../schemas/auth.schema';
+import { userService } from './user.service';
 
 export const authService = {
   async register(data: RegisterInput) {

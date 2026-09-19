@@ -1,7 +1,7 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { AppError } from '../middlewares/error.middleware';
-import { uploadMaterialSchema } from '../schemas/material.schema';
-import { materialService, formatMaterial } from '../services/material.service';
+import { uploadMaterialSchema } from '../schemas/Material.schema';
+import { formatMaterial, materialService } from '../services/material.service';
 import { userService } from '../services/user.service';
 
 export const materialController = {

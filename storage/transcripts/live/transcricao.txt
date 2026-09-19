@@ -1371,3 +1371,139 @@
 [00:01:39] Professor: Que brigou comigo, ela não diminuiu. Não vai ser mesmo, não tem nem para conversar, era só bolada. Tem que conversar com eu. Muita gosta que as meninas vão lá para lá.
 [00:02:39] Professor: É, agora bota para esse daí, Mariana. Agora não vai dar não, porque aí Você já não presta atenção não.
 [00:03:41] Aluno: É verdade, é verdade. É sério? Finalmente, não vai não, vai ficar mais.
+[00:00:06] Aluno: Só que o que eu tô achando que não tá com a mesma precisão.
+[00:00:09] Professor: Não, tá assim.
+[00:00:13] Professor: Pronto.
+[00:00:22] Professor: Sim, deixa eu falar. O glossário. Lembra que são áudios que dava pra usar uma IA pra analisar um...
+[00:00:24] Aluno: um PDF? Eu achei uma IA.
+[00:00:31] Professor: Que foi a do Gemini API.
+[00:00:36] Professor: Ela dá 1 milhão de créditos.
+[00:00:45] Professor: E gasta em torno de, por análise, gasta em torno de 65 mil.
+[00:00:57] Aluno: Acho que dá.
+[00:01:03] Professor: Para transcrever umas 15.
+[00:01:07] Aluno: Que isso, cara?
+[00:01:09] Professor: 15.
+[00:01:15] Professor: Tô indo fazer 15 arquivos.
+[00:01:18] Professor: Essencial, nós podemos dizer, esse ponto.
+[00:01:25] Professor: E sem contar que o professor pode reaproveitar alguns glossários.
+[00:01:31] Aluno: O que que tu acha? Eu faço, eu faço o glossário agora.
+[00:01:40] Aluno: Ou tu preferia que eu faço do aluno e o painel do aluno e o painel do administrador e eu deixo o glossário depois?
+[00:01:45] Professor: Deixa eu ver.
+[00:01:46] Professor: Tá.
+[00:01:52] Aluno: Então vou para o painel do aluno.
+[00:02:04] Aluno: Vamos embora, que são os dois principais. Assim que o painel do aluno tiver pronto, só o Adali mais tradutor vai ser mais só gráfico, gráfico, informação.
+[00:02:08] Professor: E permissões, tipo assim, tirar essas coisas.
+[00:02:27] Professor: Pega água, pega água aqui já.
+[00:03:16] Professor: E a primeira fase é a esponja.
+[00:04:17] Professor: Calma aí.
+[00:04:20] Professor: Aí, amanhã, tá certo.
+[00:04:21] Professor: Dá nome.
+[00:04:41] Aluno: vídeo até 1 minuto, até quando tiver 1:43.
+[00:04:45] Professor: Pegar os últimos 15 segundos.
+[00:04:50] Professor: Tá.
+[00:05:02] Professor: Mas que pô, aí tá igual àquela do direito.
+[00:05:07] Professor: Naquele dia, tá na moda, adiós.
+[00:05:12] Aluno: Quanto era da TV?
+[00:05:24] Aluno: Cadê o vídeo?
+[00:05:26] Professor: Tem que abrir novo YouTube.
+[00:05:33] Professor: Não, eu acho não.
+[00:05:51] Aluno: Cara, eu tô achando que eu vou ter que mudar o banco de dados de novo.
+[00:06:05] Professor: Vou ajeitar os gráficos.
+[00:06:17] Aluno: Já fez os relatórios?
+[00:06:38] Professor: É dentro da profissão. Eu me chamo Marcelo de Castro Torres de Oliveira.
+[00:07:10] Professor: Nosso projeto é uma plataforma voltada para acessibilidade, a comunicação entre professores ouvintes e alunos surdos usuários de Libras. Essa comunicação é para participação dos estudantes em aula. Porém, muitos alunos surdos acabam tendo dificuldade para compreender as explicações dos professores. Então, pensamos numa solução solução tecnológica capaz de apoiar a comunicação em sala de aula. Assim desenvolvido,
+[00:07:20] Professor: o Dual Libras AI, que utiliza reconhecimento de voz e inteligência artificial para traduzir a fala do professor em Libras.
+[00:07:38] Aluno: Do ponto de vista técnico, o Dual Libras foi desenvolvido como um protótipo de acessibilidade em tempo real. No back-end utilizamos Python com a Python Minds para fazer a captura do áudio do sistema. de controle maior de ruídos e um áudio de melhor qualidade.
+[00:07:49] Aluno: Então encerra a primeira parte, encerra no fluxograma, né?
+[00:07:51] Professor: Fluxo.
+[00:07:54] Professor: E os últimos 15 minutos.
+[00:08:00] Aluno: Adesso quanta è?
+[00:08:18] Professor: Nosso projeto atende a uma necessidade real de Oxirim, ausência de condições de qualidade para os alunos surdos e deficientes. Apesar de ensinar para a maioria dos professores, confiam no potencial Che bello!
+[00:08:24] Professor: Fala, eu vou pedir para Benjamin entrar aqui no Discord também.
+[00:08:30] Professor: Mandando um grupo para ele.
+[00:08:54] Aluno: É, eu acho que eu vou ter que mudar o banco de dados.
+[00:09:07] Aluno: Porque olha só, tu acha que vai ser necessário um sumário?
+[00:09:15] Professor: Das 3 pessoas aqui é, esse aqui é material, matéria é.
+[00:09:18] Aluno: Ah, mas o que é?
+[00:09:21] Professor: Deixa eu ver aqui.
+[00:09:44] Aluno: Ó, eu tenho, temos de tabela, temos sala, membros das salas, um glossário, glossário técnico, leitura, o material, a escola. Esse sócio, esse sócio perfil, acho que eu vou tirar.
+[00:09:48] Aluno: É, daqui eu acho que eu vou tirar o sócio perfil.
+[00:09:53] Professor: E talvez o leixo.
+[00:09:58] Professor: Ou acho, vou ver.
+[00:10:02] Professor: Explica, eu vou pedir, eu vou fazer uma validação.
+[00:10:51] Aluno: Quem diabo é?
+[00:10:56] Professor: É, agora que eu me lembrei, porque tem que ser um bonecão sincronizado.
+[00:11:10] Professor: Ainda tem essa parte.
+[00:11:53] Professor: Não sei.
+[00:12:02] Aluno: Ah, sim, os gráficos tu muda acho que só as cores e o tamanho da fonte.
+[00:12:24] Aluno: Foi o que mais reclamaram.
+[00:14:29] Professor: Classes que eu mexo.
+[00:14:38] Aluno: Quer fazer o classe? Fazer o classe, fazer o classe, o material.
+[00:16:07] Aluno: Sim, e daí nós tem que daqui a pouco começar a ver o artigo, viu?
+[00:17:58] Aluno: Espero que isso é modo da dinâmica das provas.
+[00:18:21] Aluno: Vamos ver o que vai acontecer, né?
+[00:19:04] Professor: Todo mundo lascou.
+[00:19:10] Professor: Tudo isso.
+[00:19:12] Aluno: Tu deixou mais vivo, não foi?
+[00:19:26] Professor: Pera aí, pera aí, não, não.
+[00:19:31] Professor: Não vai conseguir saber se ficou legal.
+[00:19:34] Aluno: A não ser quando imprimir.
+[00:19:47] Aluno: É, ficou mal, né?
+[00:19:51] Professor: Só na última, última ainda fica difícil de enxergar.
+[00:21:06] Professor: Aí, ó, tá muito bem.
+[00:21:36] Aluno: Depois aqui eu acho que vai quebrar alguma coisa aqui.
+[00:22:11] Professor: Eu vou ultimar ele.
+[00:22:29] Professor: email que vai receber a mensagem.
+[00:22:36] Professor: Aí eu quebrei a cabeça tentando entender e eu já achei que até consegui me ajudar. Eu botei esse dinheiro aí, deu certo.
+[00:22:38] Professor: Deu certo agora, eu acho.
+[00:22:49] Professor: Não sei.
+[00:22:50] Professor: Catedrático.
+[00:22:59] Professor: Aí, vou ter que
+[00:24:48] Professor: Vai ter o resumo da aula.
+[00:24:56] Professor: Tipo.
+[00:25:17] Aluno: Eu acho que sim. Eu vou fazer o seguinte, eu vou pedir para ele dar um resumo da aula.
+[00:25:26] Professor: Ele tá fazendo o seguinte: um resumo da aula e um vídeo gerado só do Felipras sinalizando.
+[00:25:28] Professor: Bastante.
+[00:25:30] Aluno: Você acha que dá?
+[00:25:42] Aluno: Mas que isso?
+[00:25:58] Aluno: O Velibras consegue traduzir, transcrever um PDF?
+[00:26:52] Aluno: E se eu colocar o Velibras num canto, adicionar só o botãozinho para ele transcrever? Pronto, já sei, dá para fazer. Eu deixo o Velibras no cantinho, aí coloco só um botão para inicializar, aí eu lanço como padrão O Velibras traduzir o resumo que foi gerado pela IA. Aí vamos supor, eu não vou colocar para dizer bem-vindo ao Velibras, eu só mando, só de todo o texto, tipo assim, por padrão, bem-vindo ao Duolibras, por um prompt que esteja armazenado todo o resumo da aula.
+[00:26:55] Aluno: Acho que dá certo.
+[00:26:56] Professor: Vamos testar.
+[00:27:28] Aluno: O que que meu aluno vai ter acesso? Vai ter acesso
+[00:27:38] Professor: Ele vai poder assistir a aula, ver o material que o professor anexou, ver o resumo da aula, ver o Velibri sinalizando. Que mais?
+[00:27:47] Aluno: O que mais?
+[00:27:53] Aluno: O quê? Não entendi.
+[00:27:59] Professor: Sim.
+[00:28:16] Professor: Sim, deixa eu já baixar aqui.
+[00:28:18] Professor: O zip.
+[00:28:22] Professor: E é super livre também, só vai no online.
+[00:28:25] Professor: E aí, ok.
+[00:28:27] Professor: Você abre o modelo.
+[00:28:30] Professor: Olha o trem também.
+[00:28:35] Aluno: Esse zip que tu me mandou, ele é o quê?
+[00:28:42] Professor: É todos os vídeos.
+[00:28:46] Professor: Então, inserte.
+[00:28:49] Aluno: O guarda do CC dele, né?
+[00:28:57] Professor: Lá vai eu rodar um comando no terminal para extrair o vídeo.
+[00:29:04] Professor: Ah, meu Deus.
+[00:29:25] Aluno: Cadê, homem?
+[00:29:31] Professor: Brother, essa porra é demais.
+[00:29:41] Professor: Não, nem precisa extrair o vídeo.
+[00:29:54] Professor: Não precisa, ele não tá com zip, graças a Deus.
+[00:29:59] Professor: Não entendeu por quê, mas vamos reclamar.
+[00:30:01] Professor: Super.
+[00:30:13] Aluno: Sim, deixa eu até ver como é que é esse painel lá de administrador, né?
+[00:30:19] Professor: Bom.
+[00:30:28] Professor: Sim, nós vamos, vai querer só hospedar.
+[00:30:37] Professor: Vai querer, tu vai querer só hospedar um.
+[00:30:44] Professor: O projeto, nós não coloca ele no Google Search para aparecer no Google.
+[00:30:56] Aluno: E tipo assim, lá nós mostra nosso próprio celular só fazendo login. O que tu acha?
+[00:00:02] Professor: Da funktionieren.
+[00:00:08] Professor: Oh my God.
+[00:00:14] Professor: Mörder's Kit.
+[00:00:17] Professor: Lado a lado, modo clássico.
+[00:00:25] Professor: Modo clássico.
+[00:00:42] Aluno: Oxi, eu acho que o— eu acho que o Festi não.
+[00:01:14] Professor: Mas está durando muito isso.
+[00:01:35] Professor: Está durando muito isso.

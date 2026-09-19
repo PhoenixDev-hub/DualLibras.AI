@@ -1,6 +1,6 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { AppError } from '../middlewares/error.middleware';
-import { createClassroomSchema } from '../schemas/classroom.schema';
+import { createClassroomSchema } from '../schemas/Classroom.schema';
 import { classroomService } from '../services/classroom.service';
 import { userService } from '../services/user.service';
 

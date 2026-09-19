@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, writeFile, unlink } from 'fs/promises';
 import path from 'path';
-import { prisma } from '../config/prisma';
 import { env } from '../config/env';
+import { prisma } from '../config/prisma';
 import { AppError } from '../middlewares/error.middleware';
-import type { UploadMaterialInput } from '../schemas/material.schema';
+import type { UploadMaterialInput } from '../schemas/Material.schema';
 
 type MaterialKind = {
   prismaType: 'PDF' | 'DOCX' | 'PPTX' | 'OUTRO';
@@ -60,6 +60,7 @@ async function sendToAi(input: {
   try {
     const response = await fetch(`${env.aiBackendUrl}/materials/ingest`, {
       method: 'POST',
+      signal: AbortSignal.timeout(8000),
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         material_id: input.materialId,
@@ -116,6 +117,23 @@ export const materialService = {
   async upload(userId: string, role: string, data: UploadMaterialInput) {
     ensureCanUploadMaterial(role);
 
+    let classroomId = data.classroomId;
+    if (data.lessonId) {
+      const lesson = await prisma.lesson.findFirst({ where: {
+        id: data.lessonId,
+        ...(role.toUpperCase() === 'ADMIN' ? {} : { teacherId: userId }),
+      } });
+      if (!lesson) throw new AppError('Sem permissão para publicar nesta aula', 403);
+      if (classroomId && classroomId !== lesson.classroomId) throw new AppError('A aula não pertence à turma selecionada', 400);
+      classroomId = lesson.classroomId;
+    }
+    if (!data.lessonId && classroomId) {
+      const room = await prisma.classroom.findFirst({ where: {
+        id: classroomId,
+        ...(role.toUpperCase() === 'ADMIN' ? {} : { teacherId: userId }),
+      } });
+      if (!room) throw new AppError('Sem permissão para publicar nesta turma', 403);
+    }
     const kind = getMaterialKind(data.filename);
     const fileBuffer = decodeBase64(data.contentBase64);
 
@@ -136,11 +154,16 @@ export const materialService = {
 
     const material = await prisma.material.create({
       data: {
+        lessonId: data.lessonId,
+        classroomId,
         name: data.filename,
         url: filePath,
         type: kind.prismaType,
         uploadedById: userId,
       },
+    }).catch(async error => {
+      await unlink(filePath).catch(() => {});
+      throw error;
     });
 
     const sentToAi = await sendToAi({

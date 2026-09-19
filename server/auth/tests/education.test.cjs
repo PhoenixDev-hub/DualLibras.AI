@@ -55,7 +55,35 @@ test('authenticated education API and classroom permissions', async (t) => {
   assert.equal((await request('/education/join', 'POST', { code: 'missing' })).status, 404);
   user.role = 'ALUNO';
   assert.equal((await request('/classrooms', 'POST', { name: 'Turma' })).status, 403);
+  prisma.lesson.findUnique = async () => ({ id: 'lesson-a', classroomId: 'room-a' });
+  prisma.classroom.findUnique = async () => ({ id: 'room-a', teacherId: 'other-teacher' });
+  assert.equal((await request('/education/lessons/lesson-a/transcript', 'POST', { text: 'Texto' })).status, 403);
+  assert.equal((await request('/education/lessons/lesson-a/finish', 'POST')).status, 403);
+  let materialFilter;
+  prisma.material.findFirst = async args => { materialFilter = args.where; return null; };
+  assert.equal((await request('/education/materials/private/download')).status, 404);
+  assert.equal(materialFilter.OR[1].lesson.classroom.OR[1].members.some.userId, user.id);
+  prisma.material.findFirst = async () => ({ name: 'private.txt', url: '/etc/passwd' });
+  assert.equal((await request('/education/materials/private/download')).status, 404);
   user.role = 'PROFESSOR';
+  prisma.classroom.findUnique = async () => null;
+  const classroomId = 'a9f4f8e1-7b27-4f4d-b547-f3e5cc612bb7';
+  prisma.classroom.findUnique = async () => ({ id: classroomId, teacherId: user.id });
+  prisma.lesson.create = async args => ({ id: 'lesson-new', ...args.data, createdAt: new Date() });
+  const started = await request('/education/lessons', 'POST', { title: 'Aula compartilhada', classroomId });
+  assert.equal(started.status, 201);
+  assert.equal((await started.json()).status, 'live');
+  assert.equal((await request('/education/lessons', 'POST', { title: '' })).status, 400);
+  let transcript;
+  prisma.transcriptionSession.create = async args => { transcript = args.data; return {}; };
+  assert.equal((await request('/education/lessons/lesson-a/transcript', 'POST', { text: 'Olá, alunos' })).status, 204);
+  assert.equal(transcript.transcript, 'Olá, alunos');
+  assert.equal(transcript.lessonId, 'lesson-a');
+  let finished;
+  prisma.lesson.update = async args => { finished = args.data; return {}; };
+  assert.equal((await request('/education/lessons/lesson-a/finish', 'POST')).status, 204);
+  assert.equal(finished.status, 'FINALIZADA');
+  prisma.classroom.findUnique = async () => null;
   let saved;
   prisma.classroom.create = async args => { saved = args.data; return { id: 'room-new', ...args.data, members: [], lessons: [], createdAt: new Date() }; };
   const created = await request('/classrooms', 'POST', { name: 'Nova turma', description: 'Descrição persistida' });
@@ -63,4 +91,50 @@ test('authenticated education API and classroom permissions', async (t) => {
   assert.equal(saved.teacherId, user.id);
   assert.equal(saved.description, 'Descrição persistida');
   assert.ok((await created.json()).classroom.code);
+  const { materialService } = require('../dist/services/material.service');
+  const { env } = require('../dist/config/env');
+  const { mkdtemp, readFile, rm } = require('node:fs/promises');
+  const path = require('node:path');
+  const directory = await mkdtemp(path.join(require('node:os').tmpdir(), 'student-material-'));
+  const oldDirectory = env.materialUploadDir;
+  env.materialUploadDir = directory;
+  t.after(async () => { env.materialUploadDir = oldDirectory; await rm(directory, { recursive: true, force: true }); });
+  const attachment = { filename: 'aula.txt', contentBase64: Buffer.from('Material da aula').toString('base64'), lessonId: 'lesson-a' };
+  await assert.rejects(() => materialService.upload(user.id, 'ALUNO', attachment), error => error.statusCode === 403);
+  prisma.lesson.findFirst = async () => null;
+  await assert.rejects(() => materialService.upload(user.id, 'PROFESSOR', attachment), error => error.statusCode === 403);
+  prisma.lesson.findFirst = async () => ({ id: 'lesson-a', classroomId: 'room-a' });
+  let attached;
+  prisma.material.create = async args => { attached = { id: 'material-a', ...args.data }; return attached; };
+  const originalFetch = global.fetch;
+  try {
+    global.fetch = async () => ({ ok: true });
+    await materialService.upload(user.id, 'PROFESSOR', attachment);
+  } finally { global.fetch = originalFetch; }
+  assert.equal(attached.classroomId, 'room-a');
+  assert.equal(attached.lessonId, 'lesson-a');
+  assert.equal(await readFile(attached.url, 'utf8'), 'Material da aula');
+  user.role = 'ALUNO';
+  prisma.material.findFirst = async args => { materialFilter = args.where; return attached; };
+  const download = await request('/education/materials/material-a/download');
+  assert.equal(download.status, 200);
+  assert.equal(await download.text(), 'Material da aula');
+
+  const roomAttachment = { filename: 'turma.txt', contentBase64: 'data:text/plain;base64,' + Buffer.from('Material da turma').toString('base64'), classroomId: 'room-a' };
+  prisma.classroom.findFirst = async () => null;
+  await assert.rejects(() => materialService.upload(user.id, 'PROFESSOR', roomAttachment), error => error.statusCode === 403);
+  await assert.rejects(() => materialService.upload(user.id, 'PROFESSOR', { ...roomAttachment, classroomId: 'room-b', lessonId: 'lesson-a' }), error => error.statusCode === 400);
+  prisma.classroom.findFirst = async () => ({ id: 'room-a' });
+  try {
+    global.fetch = async () => { throw new Error('IA indisponível'); };
+    const result = await materialService.upload(user.id, 'PROFESSOR', roomAttachment);
+    assert.equal(result.sentToAi, false);
+  } finally { global.fetch = originalFetch; }
+  assert.equal(attached.classroomId, 'room-a');
+  assert.equal(attached.lessonId, undefined);
+  assert.equal(await readFile(attached.url, 'utf8'), 'Material da turma');
+  const roomDownload = await request('/education/materials/material-a/download');
+  assert.equal(roomDownload.status, 200);
+  assert.equal(materialFilter.OR[2].classroom.OR[1].members.some.userId, user.id);
+
 });

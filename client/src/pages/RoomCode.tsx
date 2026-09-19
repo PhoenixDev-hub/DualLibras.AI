@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authApi } from '../services/authApi'
 import { useState } from 'react'
 import logoText from '../assets/LogoDualLibrasText.png'
@@ -7,6 +7,8 @@ import RoomCodeForm from '../features/classrooms/components/RoomCodeForm'
 
 export default function RoomCode() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const needsClassroom = location.state?.needsClassroom === true
   const [notice, setNotice] = useState('')
 
   return (
@@ -41,16 +43,23 @@ export default function RoomCode() {
             alt="DualLibras"
             className="mb-10 max-h-64 w-72 max-w-full object-contain"
           />
-          <h1 id="room-title" className="sr-only">
+          <h1 id="room-title" className="mb-3 text-2xl font-bold">
             Entrar na sala
           </h1>
-          <Link to="/dashboard" className="mb-5 underline">
-            Ver minhas turmas
-          </Link>
+          {needsClassroom ? (
+            <p className="mb-5 text-sm leading-relaxed text-gray-mid">
+              Você ainda não está em uma turma. Digite o código fornecido pelo professor para
+              acessar seu painel de aulas.
+            </p>
+          ) : (
+            <Link to="/dashboard" className="mb-5 underline">
+              Ver minhas turmas
+            </Link>
+          )}
           <RoomCodeForm
             onJoin={async (code) => {
               await authApi.joinClassroom(code)
-              navigate('/dashboard')
+              navigate('/dashboard', { replace: true })
             }}
           />
         </section>

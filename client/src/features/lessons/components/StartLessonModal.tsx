@@ -1,3 +1,5 @@
+import { authApi } from '../../../services/authApi'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Lesson } from '../../../types/education'
 import { Modal } from '../../../components/ui'
@@ -11,23 +13,24 @@ type StartLessonModalProps = {
 export default function StartLessonModal({ starting, onClose, onStarted }: StartLessonModalProps) {
   const { classrooms, notify } = useTeacher()
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [pending, setPending] = useState(false)
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
     const title = String(data.get('title')).trim()
     const classroomId = String(data.get('classroom') || '')
     if (!title) return
-    const id = Date.now()
-    onStarted({
-      id,
-      title,
-      classroomId,
-      date: new Date().toISOString(),
-      duration: '0 min',
-      status: 'live',
-    })
-    onClose()
-    notify(`Iniciando aula: ${title}`)
+    setPending(true)
+    try {
+      const lesson = await authApi.createLesson(title, classroomId)
+      onStarted(lesson)
+      onClose()
+      notify(`Iniciando aula: ${title}`)
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Não foi possível iniciar a aula.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -62,7 +65,9 @@ export default function StartLessonModal({ starting, onClose, onStarted }: Start
               ))}
           </select>
         </label>
-        <button className="t-btn">Iniciar aula</button>
+        <button className="t-btn" disabled={pending}>
+          {pending ? 'Iniciando…' : 'Iniciar aula'}
+        </button>
       </form>
     </Modal>
   )

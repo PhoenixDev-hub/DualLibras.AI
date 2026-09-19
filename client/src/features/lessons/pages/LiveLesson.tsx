@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import Materials from '../../materials/pages/Materials'
+import { authApi } from '../../../services/authApi'
+import { useRef, useState } from 'react'
 import { Mic, MicOff } from 'lucide-react'
 import { PageTitle } from '../../../components/ui'
 import type { Lesson } from '../../../types/education'
@@ -9,6 +11,8 @@ import { useAudioCapture } from '../../transcription/hooks/useAudioCapture'
 import { useLibrasTranscripts } from '../../libras/hooks/useLibrasTranscripts'
 
 export default function LiveLesson({ lesson }: { lesson: Lesson }) {
+  const publication = useRef(Promise.resolve())
+  const [publicationError, setPublicationError] = useState('')
   const [interpreterVersion, setInterpreterVersion] = useState(0)
   const [interactive, setInteractive] = useState(false)
   const [text, setText] = useState('')
@@ -24,6 +28,14 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
     onTranscript: (message) => {
       if (message.error || message.type !== 'transcript') return
       libras.receiveTranscript(message)
+      if (message.isFinal && message.text.trim()) {
+        publication.current = publication.current
+          .then(() => authApi.publishTranscript(lesson.id, message.text))
+          .then(() => setPublicationError(''))
+          .catch(() =>
+            setPublicationError('Não foi possível compartilhar a transcrição com os alunos.'),
+          )
+      }
       setText(message.text)
       setIsFinal(message.isFinal)
     },
@@ -75,6 +87,7 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
           </button>
         </div>
       </section>
+      {publicationError && <p role="alert">{publicationError}</p>}
       {audioError && (
         <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">
           {audioError}
@@ -126,6 +139,9 @@ export default function LiveLesson({ lesson }: { lesson: Lesson }) {
         onPlayingTextChange={libras.setPlayingText}
         onStatusChange={setStatus}
       />
+      <section className="mt-7">
+        <Materials classroomId={lesson.classroomId} lessonId={lesson.id} />
+      </section>
     </>
   )
 }
