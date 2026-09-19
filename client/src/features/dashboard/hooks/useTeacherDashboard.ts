@@ -39,16 +39,20 @@ export function useTeacherDashboard() {
     setLoading(true)
     setError('')
     try {
-      const account = await authApi.me()
+      const [account, data] = await Promise.all([authApi.me(), authApi.education()])
       setUser(account)
-      await refresh()
+      setClassrooms(data.classrooms)
+      setStudents(data.students)
+      setLessons(data.lessons)
+      setMaterials(data.materials)
+      setTerms(data.terms)
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) route('/entrar', { replace: true })
       else setError(err instanceof Error ? err.message : 'Não foi possível carregar seus dados.')
     } finally {
       setLoading(false)
     }
-  }, [refresh, route])
+  }, [route])
   useEffect(() => {
     void load()
   }, [load])

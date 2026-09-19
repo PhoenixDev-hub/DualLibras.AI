@@ -1,11 +1,22 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, Users, FileText, GraduationCap, Hand, ArrowLeft, RefreshCw } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  FileText,
+  GraduationCap,
+  Hand,
+  RefreshCw,
+  Users,
+  Video,
+} from 'lucide-react'
 import { authApi, type DashboardUser, type EducationData } from '../../services/authApi'
 import { AUTH_API_BASE } from '../../config/backend'
 import { Navigate } from 'react-router-dom'
 import DashboardShell from '../../components/layout/DashboardShell'
 import { PageTitle } from '../../components/ui'
 import LibrasPractice from '../libras/components/LibrasPractice'
+import LessonList from '../lessons/components/LessonList'
 import StudentLessonAvatar from './StudentLessonAvatar'
 import SignPlayer from './SignPlayer'
 

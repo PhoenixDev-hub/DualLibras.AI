@@ -1,35 +1,41 @@
+import fs from "node:fs";
 import path from "node:path";
 import { env } from "../config/env";
-import { Router } from "express";
+import { Router, Request } from "express";
 import { z } from "zod";
 import { prisma } from "../config/prisma";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { AppError } from "../middlewares/error.middleware";
 import { createClassroomSchema } from "../schemas/Classroom.schema";
 
+interface AuthRequest extends Request {
+  currentUser?: NonNullable<Awaited<ReturnType<typeof prisma.user.findUnique>>>;
+}
+
 export const educationRoutes = Router();
 educationRoutes.use(authMiddleware);
-educationRoutes.use(async (req, _res, next) => {
+educationRoutes.use(async (req: AuthRequest, _res, next) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user!.sub } });
     if (!user) throw new AppError("Usuário não encontrado", 401);
+    req.currentUser = user;
     next();
   } catch (error) {
     next(error);
   }
 });
-async function owned(userId: string, id: string) {
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+async function owned(userId: string, id: string, role?: string) {
   const room = await prisma.classroom.findUnique({ where: { id } });
   if (!room) throw new AppError("Sala não encontrada", 404);
-  if (user.role !== "ADMIN" && room.teacherId !== userId)
+  const userRole = role ?? (await prisma.user.findUniqueOrThrow({ where: { id: userId } })).role;
+  if (userRole !== "ADMIN" && room.teacherId !== userId)
     throw new AppError("Sem permissão para alterar esta sala", 403);
   return room;
 }
-educationRoutes.get("/", async (req, res, next) => {
+educationRoutes.get("/", async (req: AuthRequest, res, next) => {
   try {
     const userId = req.user!.sub;
-    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const user = req.currentUser ?? (await prisma.user.findUniqueOrThrow({ where: { id: userId } }));
     const rooms = await prisma.classroom.findMany({
       where:
         user.role === "ADMIN"
@@ -57,31 +63,41 @@ educationRoutes.get("/", async (req, res, next) => {
       },
       orderBy: { createdAt: "desc" },
     });
-    const materials = await prisma.material.findMany({
-      where:
-        user.role === "ADMIN"
-          ? {}
-          : {
-              OR: [
-                { uploadedById: userId },
-                { lesson: { classroomId: { in: rooms.map((r) => r.id) } } },
-                { classroomId: { in: rooms.map((r) => r.id) } },
-              ],
-            },
-      include: { lesson: { select: { classroomId: true } } },
-    });
-    const glossaries = await prisma.glossary.findMany({
-      where:
-        user.role === "ADMIN"
-          ? {}
-          : {
-              OR: [
-                { ownerId: userId },
-                { classroomId: { in: rooms.map((r) => r.id) } },
-              ],
-            },
-      include: { terms: true },
-    });
+    const roomIds = rooms.map((r) => r.id);
+    const [materials, glossaries] = await Promise.all([
+      prisma.material.findMany({
+        where:
+          user.role === "ADMIN"
+            ? {}
+            : {
+                OR: [
+                  { uploadedById: userId },
+                  { lesson: { classroomId: { in: roomIds } } },
+                  { classroomId: { in: roomIds } },
+                ],
+              },
+        select: {
+          id: true,
+          name: true,
+          lessonId: true,
+          type: true,
+          classroomId: true,
+          lesson: { select: { classroomId: true } },
+        },
+      }),
+      prisma.glossary.findMany({
+        where:
+          user.role === "ADMIN"
+            ? {}
+            : {
+                OR: [
+                  { ownerId: userId },
+                  { classroomId: { in: roomIds } },
+                ],
+              },
+        include: { terms: true },
+      }),
+    ]);
     const students = new Map<
       string,
       { id: string; name: string; classroomIds: string[]; joined: string }
@@ -157,10 +173,10 @@ educationRoutes.get("/", async (req, res, next) => {
     next(error);
   }
 });
-educationRoutes.patch("/classrooms/:id", async (req, res, next) => {
+educationRoutes.patch("/classrooms/:id", async (req: AuthRequest, res, next) => {
   try {
     const id = String(req.params.id);
-    await owned(req.user!.sub, id);
+    await owned(req.user!.sub, id, req.currentUser?.role);
     const parsed = createClassroomSchema.safeParse(req.body);
     if (!parsed.success) throw new AppError("Nome ou descrição inválidos", 400);
     await prisma.classroom.update({ where: { id }, data: parsed.data });
@@ -200,10 +216,10 @@ educationRoutes.post("/join", async (req, res, next) => {
 });
 educationRoutes.delete(
   "/classrooms/:id/members/:userId",
-  async (req, res, next) => {
+  async (req: AuthRequest, res, next) => {
     try {
       const classroomId = String(req.params.id);
-      await owned(req.user!.sub, classroomId);
+      await owned(req.user!.sub, classroomId, req.currentUser?.role);
       await prisma.classroomMember.deleteMany({
         where: { classroomId, userId: String(req.params.userId) },
       });
@@ -215,10 +231,10 @@ educationRoutes.delete(
 );
 
 // Os arquivos só são entregues a quem tem acesso à aula.
-educationRoutes.get("/materials/:id/download", async (req, res, next) => {
+educationRoutes.get("/materials/:id/download", async (req: AuthRequest, res, next) => {
   try {
     const userId = req.user!.sub;
-    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const user = req.currentUser ?? (await prisma.user.findUniqueOrThrow({ where: { id: userId } }));
     const material = await prisma.material.findFirst({
       where: {
         id: String(req.params.id),
@@ -237,39 +253,44 @@ educationRoutes.get("/materials/:id/download", async (req, res, next) => {
     const relative = path.relative(root, file);
     if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
       throw new AppError("Arquivo indisponível", 404);
+    try {
+      await fs.promises.access(file, fs.constants.R_OK);
+    } catch {
+      throw new AppError("Arquivo indisponível", 404);
+    }
     res.download(file, material.name, error => { if (error) next(error); });
   } catch (error) { next(error); }
 });
 
-educationRoutes.post("/lessons", async (req, res, next) => {
+educationRoutes.post("/lessons", async (req: AuthRequest, res, next) => {
   try {
     const parsed = z.object({ title: z.string().trim().min(1).max(200), classroomId: z.string().uuid() }).safeParse(req.body);
     if (!parsed.success) throw new AppError("Título ou turma inválidos", 400);
     const data = parsed.data;
-    const room = await owned(req.user!.sub, data.classroomId);
+    const room = await owned(req.user!.sub, data.classroomId, req.currentUser?.role);
     const lesson = await prisma.lesson.create({ data: { ...data, teacherId: room.teacherId, status: "EM_ANDAMENTO", startedAt: new Date() } });
     res.status(201).json({ id: lesson.id, title: lesson.title, classroomId: lesson.classroomId, date: lesson.createdAt.toISOString(), duration: "0 min", status: "live", transcript: "", summary: "" });
   } catch (error) { next(error); }
 });
-async function ownedLesson(userId: string, id: string) {
+async function ownedLesson(userId: string, id: string, role?: string) {
   const lesson = await prisma.lesson.findUnique({ where: { id } });
   if (!lesson) throw new AppError("Aula não encontrada", 404);
-  await owned(userId, lesson.classroomId);
+  await owned(userId, lesson.classroomId, role);
   return lesson;
 }
-educationRoutes.post("/lessons/:id/transcript", async (req, res, next) => {
+educationRoutes.post("/lessons/:id/transcript", async (req: AuthRequest, res, next) => {
   try {
     const parsed = z.object({ text: z.string().trim().min(1).max(20000) }).safeParse(req.body);
     if (!parsed.success) throw new AppError("Transcrição inválida", 400);
     const data = parsed.data;
-    const lesson = await ownedLesson(req.user!.sub, String(req.params.id));
+    const lesson = await ownedLesson(req.user!.sub, String(req.params.id), req.currentUser?.role);
     await prisma.transcriptionSession.create({ data: { lessonId: lesson.id, userId: req.user!.sub, transcript: data.text, status: "FINALIZADA", finishedAt: new Date() } });
     res.sendStatus(204);
   } catch (error) { next(error); }
 });
-educationRoutes.post("/lessons/:id/finish", async (req, res, next) => {
+educationRoutes.post("/lessons/:id/finish", async (req: AuthRequest, res, next) => {
   try {
-    const lesson = await ownedLesson(req.user!.sub, String(req.params.id));
+    const lesson = await ownedLesson(req.user!.sub, String(req.params.id), req.currentUser?.role);
     await prisma.lesson.update({ where: { id: lesson.id }, data: { status: "FINALIZADA", finishedAt: new Date() } });
     res.sendStatus(204);
   } catch (error) { next(error); }

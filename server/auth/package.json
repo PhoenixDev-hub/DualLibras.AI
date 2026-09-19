@@ -5,8 +5,11 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "npm run build && node --test tests/*.test.cjs",
+    "predev": "prisma generate",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "prebuild": "prisma generate",
     "build": "tsc",
+    "postinstall": "prisma generate",
     "start": "node dist/server.js",
     "seed:test-users": "npm run build && node dist/scripts/seed-test-users.js",
     "prisma:generate": "prisma generate",
