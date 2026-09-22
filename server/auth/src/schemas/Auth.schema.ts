@@ -1,15 +1,16 @@
 import { z } from 'zod';
+import { accountNameSchema, accountEmailSchema, accountPasswordSchema, loginPasswordSchema, profileTextSchema } from './Account.schema';
 
-export const roleSchema = z.enum(['PROFESSOR', 'ALUNO', 'SOCIEDADE']);
+export const roleSchema = z.enum(['PROFESSOR', 'ALUNO']);
 
 export const registerSchema = z.object({
-  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  email: z.string().email('E-mail inválido'),
-  password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
+  name: accountNameSchema,
+  email: accountEmailSchema,
+  password: accountPasswordSchema,
   role: roleSchema,
-  institution: z.string().trim().optional(),
-  discipline: z.string().trim().optional(),
-  registrationNumber: z.string().trim().optional(),
+  institution: profileTextSchema('Instituição', 150),
+  discipline: profileTextSchema('Disciplina', 100),
+  registrationNumber: profileTextSchema('Matrícula', 50),
 }).superRefine((data, ctx) => {
   if (data.role === 'PROFESSOR' && !data.discipline) {
     ctx.addIssue({
@@ -29,8 +30,8 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('E-mail inválido'),
-  password: z.string().min(1, 'Senha é obrigatória'),
+  email: accountEmailSchema,
+  password: loginPasswordSchema,
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

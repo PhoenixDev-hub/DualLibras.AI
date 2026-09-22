@@ -1,3 +1,4 @@
+import { useAutoRefresh } from '../../../hooks/useAutoRefresh'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi, ApiError, type DashboardUser } from '../../../services/authApi'
@@ -39,7 +40,11 @@ export function useTeacherDashboard() {
     setLoading(true)
     setError('')
     try {
-      const [account, data] = await Promise.all([authApi.me(), authApi.education()])
+      const account = await authApi.me()
+      const data =
+        account.role === 'ADMIN'
+          ? { classrooms: [], students: [], lessons: [], materials: [], terms: [] }
+          : await authApi.education()
       setUser(account)
       setClassrooms(data.classrooms)
       setStudents(data.students)
@@ -56,6 +61,36 @@ export function useTeacherDashboard() {
   useEffect(() => {
     void load()
   }, [load])
+  useAutoRefresh(
+    async (isCurrent) => {
+      const account = await authApi.me()
+      if (!isCurrent()) return
+      setUser((current) =>
+        JSON.stringify(current) === JSON.stringify(account) ? current : account,
+      )
+      if (account.role === 'PROFESSOR') {
+        const data = await authApi.education()
+        if (!isCurrent()) return
+        setClassrooms((current) =>
+          JSON.stringify(current) === JSON.stringify(data.classrooms) ? current : data.classrooms,
+        )
+        setStudents((current) =>
+          JSON.stringify(current) === JSON.stringify(data.students) ? current : data.students,
+        )
+        setLessons((current) =>
+          JSON.stringify(current) === JSON.stringify(data.lessons) ? current : data.lessons,
+        )
+        setMaterials((current) =>
+          JSON.stringify(current) === JSON.stringify(data.materials) ? current : data.materials,
+        )
+        setTerms((current) =>
+          JSON.stringify(current) === JSON.stringify(data.terms) ? current : data.terms,
+        )
+      }
+    },
+    { enabled: !!user && !loading },
+  )
+
   async function logout() {
     try {
       await authApi.logout()

@@ -4,7 +4,7 @@ Esta implementação substitui o painel demonstrativo por consultas autenticadas
 
 ## Fluxos disponíveis
 
-- Cadastro e login usam cookie HTTP-only. Professor, administrador e sociedade seguem para `/dashboard`; aluno segue para `/codigo`, com acesso às turmas existentes. Logout limpa a sessão.
+- Cadastro e login usam cookie HTTP-only. Professor e administrador seguem para `/dashboard`; aluno segue para `/codigo`, com acesso às turmas existentes. Logout limpa a sessão.
 - `/dashboard` consulta `/users/me` e `/education`, mostra carregamento, erro com nova tentativa e redireciona sessões inválidas ao login. Não preenche listas vazias com exemplos.
 - Professor/admin cria sala com nome e descrição. Código e UUID vêm do backend. Edição persiste nome/descrição; a disciplina exibida vem do perfil do professor.
 - Entrada por código cria participação com upsert, sem duplicação. Professor responsável/admin pode remover participantes.

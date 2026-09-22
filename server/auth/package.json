@@ -14,6 +14,7 @@
     "seed:test-users": "npm run build && node dist/scripts/seed-test-users.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "database:admin-accounts": "npm run build && node dist/scripts/update-admin-accounts.js",
     "database:material-classroom": "npm run build && node dist/scripts/update-material-classroom.js",
     "check:database": "npm run build && node dist/scripts/check-database.js"
   },

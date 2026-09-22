@@ -56,3 +56,19 @@ Após iniciar com sucesso, conferir `/health` nas portas 4000 e 5455 e `/health.
 ## Pendências antes de produção
 
 Autenticação completa, isolamento de saídas, limites de payload/conexão, proteção do serviço Python, HTTPS, política de migrações e validação real de áudio precisam de trabalho próprio. A existência dos Dockerfiles não comprova prontidão de produção. Detalhes em [ANALYSIS.md](ANALYSIS.md).
+
+## Perfis para sala de aula
+
+O cadastro público aceita somente `PROFESSOR` e `ALUNO`; `ADMIN` continua reservado à administração. O modelo Prisma não contém mais `SocietyProfile` nem o valor `SOCIEDADE` do enum `Role`.
+
+A API bloqueia login e sessões de contas com perfis retirados, sem converter nem excluir seus dados. Esta alteração de código não modifica o banco existente. Antes de sincronizar um banco antigo com o novo schema, defina o destino dessas contas e faça backup: a remoção do valor do enum pode ser impedida por registros existentes, e a exclusão da tabela de perfil pode causar perda de dados. Não use `db push --accept-data-loss` para contornar essa decisão. Bancos novos já usam somente os perfis atuais.
+
+## Campos de administração
+
+Antes de iniciar a API atualizada em um banco existente, execute em `server/auth`:
+
+```sh
+npm run database:admin-accounts
+```
+
+O comando aplica somente `prisma/patches/admin-accounts.sql`, que adiciona `User.isActive` (padrão true) e `User.sessionVersion` (padrão 0) de forma idempotente. Não executa `db push`, não remove perfis antigos nem apaga dados. As contas existentes continuam ativas e seus tokens anteriores são tratados como versão 0. Contas de perfis retirados continuam bloqueadas pela lista de perfis permitidos. A migração deve preceder a implantação do novo código.

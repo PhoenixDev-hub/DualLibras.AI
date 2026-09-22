@@ -7,7 +7,7 @@ export function validate(schema: ZodSchema) {
 
         if (!result.success) {
             return res.status(400).json({
-                error: 'dados invalidos',
+                error: 'Dados inválidos',
                 details: result.error.flatten().fieldErrors,
             });
         }

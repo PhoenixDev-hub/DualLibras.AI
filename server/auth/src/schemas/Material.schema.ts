@@ -27,9 +27,13 @@ export const MaterialUpdateSchema = MaterialCreateSchema.omit({
 export type MaterialUpdateInput = z.infer<typeof MaterialUpdateSchema>;
 
 export const uploadMaterialSchema = z.object({
-  filename: z.string().trim().min(1),
+  filename: z.string().trim().min(1).max(200, "Nome do arquivo deve ter no máximo 200 caracteres")
+    .refine(value => !/[\p{Cc}\p{Cf}\/\\]/u.test(value), "Nome do arquivo inválido"),
   contentBase64: z.string().min(1),
   classroomId: uuid.optional(),
   lessonId: uuid.optional(),
+}).refine(data => Boolean(data.classroomId || data.lessonId), {
+  message: "Selecione uma sala ou aula para anexar o arquivo",
+  path: ["classroomId"],
 });
 export type UploadMaterialInput = z.infer<typeof uploadMaterialSchema>;

@@ -1,7 +1,6 @@
 alter table public."User" enable row level security;
 alter table public."TeacherProfile" enable row level security;
 alter table public."StudentProfile" enable row level security;
-alter table public."SocietyProfile" enable row level security;
 alter table public."School" enable row level security;
 alter table public."Classroom" enable row level security;
 alter table public."ClassroomMember" enable row level security;

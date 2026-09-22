@@ -22,7 +22,7 @@ export const authService = {
       registrationNumber: data.registrationNumber,
     });
 
-    const token = signToken({ sub: user.id, email: user.email });
+    const token = signToken({ sub: user.id, email: user.email, version: user.sessionVersion });
     return {
       token,
       user: {
@@ -37,8 +37,8 @@ export const authService = {
   },
 
   async login(data: LoginInput) {
-    const user = await userService.findByEmail(data.email);
-    if (!user || !user.passwordHash) {
+    const user = await userService.findByEmail(data.email, true);
+    if (!user || !user.passwordHash || !user.isActive) {
       throw new AppError('E-mail ou senha inválidos', 401);
     }
 
@@ -47,7 +47,7 @@ export const authService = {
       throw new AppError('E-mail ou senha inválidos', 401);
     }
 
-    const token = signToken({ sub: user.id, email: user.email });
+    const token = signToken({ sub: user.id, email: user.email, version: user.sessionVersion });
     return {
       token,
       user: {

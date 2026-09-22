@@ -1,6 +1,7 @@
 export type Classroom = {
   id: string | number
   name: string
+  canAttachMaterials?: boolean
   teacherName?: string
   subject: string
   description: string

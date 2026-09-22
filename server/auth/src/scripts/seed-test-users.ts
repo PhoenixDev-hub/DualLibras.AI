@@ -23,11 +23,6 @@ const users = [
     },
   },
   {
-    name: 'Visitante Sociedade',
-    email: 'sociedade.teste@duallibras.local',
-    role: 'SOCIEDADE' as const,
-  },
-  {
     name: 'Administrador Teste',
     email: 'admin.teste@duallibras.local',
     role: 'ADMIN' as const,
@@ -75,15 +70,7 @@ async function seed() {
       });
     }
 
-    if (user.role === 'SOCIEDADE') {
-      await prisma.societyProfile.upsert({
-        where: { userId: created.id },
-        update: {},
-        create: {
-          userId: created.id,
-        },
-      });
-    }
+
   }
 
   console.table(users.map((user) => ({

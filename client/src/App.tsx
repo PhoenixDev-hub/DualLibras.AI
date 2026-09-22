@@ -13,6 +13,7 @@ function App() {
         <Route path="/app" element={<AppPrincipal />} />
         <Route path="/aula" element={<AppPrincipal />} />
         <Route path="/codigo" element={<RoomCode />} />
+        <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/entrar" element={<Auth mode="login" />} />
         <Route path="/cadastrar" element={<Auth mode="cadastro" />} />

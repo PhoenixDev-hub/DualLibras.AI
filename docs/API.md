@@ -26,10 +26,12 @@ As rotas de usuários, dashboard, turmas e materiais passam por middleware que a
 | `GET /dashboard` | Cookie/Bearer ou fallback | 200 dados de dashboard; combinação de consultas e exemplos estáticos |
 | `GET /classrooms` | Cookie/Bearer ou fallback | 200 `{ classrooms: [...] }` |
 | `POST /classrooms` | `{ "name": "Turma de exemplo" }`, nome aparado mín. 2 | 201 `{ classroom }`; somente PROFESSOR/ADMIN, demais 403 |
-| `GET /materials` | Cookie/Bearer ou fallback | 200 `{ materials: [...] }` |
-| `POST /materials` | `filename`, `contentBase64`, `classroomId?` UUID | 201 `{ material, ai: { sent, status } }`; somente PROFESSOR/ADMIN |
+| `GET /materials` | Sessão válida e participação na sala | 200 `{ materials: [...] }` |
+| `GET /materials/options` | Sessão válida | 200 `{ extensions, maxBytes }` |
+| `GET /education/materials/:id/download` | Professor responsável, participante atual ou ADMIN | Download privado; 404 sem acesso |
+| `POST /materials` | `filename`, `contentBase64`, `classroomId?`, `lessonId?` UUID; sala ou aula obrigatória | 201 `{ material, ai: { sent, status } }`; PROFESSOR responsável pela sala ou ADMIN |
 
-`role` no cadastro aceita `PROFESSOR`, `ALUNO` e `SOCIEDADE`, não `ADMIN`. Professor exige `discipline`; aluno exige `registrationNumber`; `institution` é opcional. Os campos de perfil são criados de acordo com o papel.
+`role` no cadastro aceita `PROFESSOR` e `ALUNO`, não `ADMIN`. Professor exige `discipline`; aluno exige `registrationNumber`; `institution` é opcional. Os campos de perfil são criados de acordo com o papel.
 
 Exemplo de cadastro:
 
@@ -50,7 +52,9 @@ Dashboard retorna `access`, `menuItems`, `stats`, `quickActions`, `upcomingClass
 
 Turma serializada: `id`, `name`, `code`, `studentsCount`, `lessonsCount`, `createdAt`. Professor lista suas turmas; ADMIN lista todas; outros papéis listam turmas nas quais são membros. Criação gera código a partir do nome e sufixo aleatório, verificando colisões. **Não há rota de entrar por código, editar, arquivar ou remover turma.**
 
-Material serializado: `id`, `name`, `url`, `type`, `displayType`, `createdAt`. ADMIN lista todos; demais listam os que enviaram. Tipos aceitos: PDF, DOC, DOCX, PPT, PPTX e TXT. O conteúdo aceita Base64 simples ou data URL; limite padrão de arquivo decodificado: 25 MiB. `url` é um caminho de disco, não uma URL pública de download. O serviço não utiliza `classroomId`, embora o schema valide esse campo.
+Material serializado: `id`, `name`, `url`, `type`, `displayType`, `createdAt`, `classroomId`, `lessonId`. A URL aponta para o download autenticado, sem revelar caminhos do disco. Listagem e download permitem o professor responsável e participantes atuais da sala; ADMIN tem acesso global; antigos participantes não mantêm acesso por terem enviado arquivos. O acesso é revogado assim que a participação é removida.
+
+Tipos aceitos: PDF, DOC, DOCX, PPT, PPTX e TXT. O conteúdo aceita Base64 canônico simples ou data URL; limite padrão decodificado: 25 MiB, configurável por `MATERIAL_MAX_BYTES` e informado à interface por `/materials/options`. Arquivos vazios, nomes inválidos, extensões não permitidas e Base64 inválido são rejeitados. Validação de formato é por extensão; não há varredura antivírus. Um anexo precisa de sala ou aula. Para anexar à aula, ela precisa pertencer à sala do professor; caso os dois IDs sejam enviados, devem corresponder. A resposta de `/education` inclui `canAttachMaterials` em cada sala para controlar o formulário de envio. Materiais gerais da sala também aparecem nas aulas.
 
 O upload grava no disco e no Prisma, depois tenta enviar a `/materials/ingest` da IA. Falha nesse envio mantém o upload e retorna `ai.sent=false`, `status="pendente"`; não há worker de reenvio configurado. Sucesso retorna `status="enviado"`.
 
@@ -140,3 +144,24 @@ Respostas possíveis: `status` com `mode`/`connected`/`text`, `transcript`, `web
 ```
 
 A propriedade na rede é `is_final`; o cliente a normaliza para `isFinal`. Identificação de falante pode usar heurística textual e não comprova reconhecimento biométrico. Cada conexão possui uma sessão, encerrada ao fechar o WebSocket. Vários clientes podem disputar os mesmos arquivos contínuos; veja [limitações](ANALYSIS.md).
+
+## Administração
+
+A conta com perfil `ADMIN` abre o painel administrativo em `/dashboard` (`/admin` redireciona para esse endereço). Todas as rotas `/admin/*` exigem sessão válida, conta ativa e perfil ADMIN verificado no banco. Senhas e hashes nunca são retornados pelas listagens.
+
+- `GET /admin/overview`: totais de escolas, contas, contas ativas/bloqueadas, professores, alunos, administradores, salas, aulas, aulas em andamento e materiais.
+- `GET /admin/options`: escolas, salas e professores ativos para os formulários.
+- `GET /admin/{users,schools,classrooms,lessons,materials}`: páginas de 25 registros; filtros `page`, `q`, `schoolId`; usuários também aceitam `role` e `active`.
+- `POST /admin/{users,schools,classrooms,lessons}` e `PATCH /admin/{users,schools,classrooms}/:id`: criação e edição. Usuários exigem nome, e-mail, perfil, escola opcional, senha na criação e disciplina/matrícula conforme perfil. Salas exigem professor ativo.
+- `PATCH /admin/users/:id/status`: `{ isActive }`; bloqueia/reativa e invalida as sessões anteriores.
+- `PATCH /admin/users/:id/password`: `{ password }`; aplica a política de senhas e encerra sessões existentes.
+- `GET|POST /admin/classrooms/:id/members`: consulta participantes ou adiciona `{ userId }` de aluno ativo.
+- `DELETE /admin/classrooms/:id/members/:userId`: remove a participação e o acesso correspondente.
+- `GET /admin/lessons/:id`: detalhes da aula, resumo e transcrição.
+- `POST /admin/lessons`: cria `{ title, status, classroomId }` com o professor responsável pela sala.
+- `PATCH /admin/lessons/:id`: edita `{ title, status }`.
+- `DELETE /admin/{users,schools,classrooms,lessons,materials}/:id`: exclusão administrativa com confirmação na interface. Escolas e salas vinculadas, usuários com conteúdo e aulas com materiais retornam 409 até que os vínculos sejam tratados. Excluir aula remove suas transcrições e resumo; excluir um material remove sua disponibilidade no sistema e preserva o arquivo privado em disco para recuperação.
+
+Alterar professor da sala também transfere suas aulas. Alterar perfil/e-mail, bloquear/reativar ou redefinir senha incrementa `sessionVersion`; cookies antigos deixam de autorizar requisições. Contas inativas não podem fazer login. O administrador não pode excluir, bloquear ou remover o próprio perfil administrativo; transações serializáveis protegem as alterações concorrentes e a permanência de um administrador ativo. Não há trilha de auditoria persistente nesta versão.
+
+A administração tem acesso global a materiais e pode anexar arquivos pela mesma API de upload. Professor e aluno continuam sujeitos às permissões de suas salas. O administrador inicial deve ser provisionado por um operador autorizado: o cadastro público nunca aceita `ADMIN`.

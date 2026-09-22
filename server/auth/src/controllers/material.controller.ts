@@ -5,6 +5,9 @@ import { formatMaterial, materialService } from '../services/material.service';
 import { userService } from '../services/user.service';
 
 export const materialController = {
+  options(_req: Request, res: Response) {
+    res.json(materialService.getUploadOptions());
+  },
   async list(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub;

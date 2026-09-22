@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { materialAccessWhere } from "../services/material-access";
 import path from "node:path";
 import { env } from "../config/env";
 import { Router, Request } from "express";
@@ -66,16 +67,7 @@ educationRoutes.get("/", async (req: AuthRequest, res, next) => {
     const roomIds = rooms.map((r) => r.id);
     const [materials, glossaries] = await Promise.all([
       prisma.material.findMany({
-        where:
-          user.role === "ADMIN"
-            ? {}
-            : {
-                OR: [
-                  { uploadedById: userId },
-                  { lesson: { classroomId: { in: roomIds } } },
-                  { classroomId: { in: roomIds } },
-                ],
-              },
+        where: materialAccessWhere(userId, user.role),
         select: {
           id: true,
           name: true,
@@ -121,6 +113,7 @@ educationRoutes.get("/", async (req: AuthRequest, res, next) => {
         description: r.description ?? "",
         subject: r.teacher.teacherProfile?.discipline ?? "",
         teacherName: r.teacher.name,
+        canAttachMaterials: user.role === "ADMIN" || (user.role === "PROFESSOR" && r.teacherId === userId),
         code: r.code,
         color: "blue",
         archived: false,
@@ -234,30 +227,23 @@ educationRoutes.delete(
 educationRoutes.get("/materials/:id/download", async (req: AuthRequest, res, next) => {
   try {
     const userId = req.user!.sub;
-    const user = req.currentUser ?? (await prisma.user.findUniqueOrThrow({ where: { id: userId } }));
     const material = await prisma.material.findFirst({
-      where: {
-        id: String(req.params.id),
-        ...(user.role === "ADMIN" ? {} : { OR: [
-          { uploadedById: userId },
-          { lesson: { classroom: { OR: [
-            { teacherId: userId }, { members: { some: { userId } } },
-          ] } } },
-          { classroom: { OR: [{ teacherId: userId }, { members: { some: { userId } } }] } },
-        ] }),
-      },
+      where: { id: String(req.params.id), ...materialAccessWhere(userId, req.currentUser?.role) },
     });
     if (!material) throw new AppError("Material não encontrado", 404);
-    const root = path.resolve(env.materialUploadDir);
-    const file = path.resolve(material.url);
-    const relative = path.relative(root, file);
-    if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
-      throw new AppError("Arquivo indisponível", 404);
+    let file: string;
     try {
+      const root = await fs.promises.realpath(path.resolve(env.materialUploadDir));
+      file = await fs.promises.realpath(path.resolve(material.url));
+      const relative = path.relative(root, file);
+      if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
+        throw new Error("Invalid file path");
       await fs.promises.access(file, fs.constants.R_OK);
     } catch {
       throw new AppError("Arquivo indisponível", 404);
     }
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
     res.download(file, material.name, error => { if (error) next(error); });
   } catch (error) { next(error); }
 });

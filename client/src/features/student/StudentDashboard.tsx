@@ -1,22 +1,12 @@
-import { useEffect, useState } from 'react'
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  FileText,
-  GraduationCap,
-  Hand,
-  RefreshCw,
-  Users,
-  Video,
-} from 'lucide-react'
+import { useState } from 'react'
+import { useAutoRefresh } from '../../hooks/useAutoRefresh'
+import { ArrowLeft, BookOpen, FileText, GraduationCap, Hand, RefreshCw, Users } from 'lucide-react'
 import { authApi, type DashboardUser, type EducationData } from '../../services/authApi'
 import { AUTH_API_BASE } from '../../config/backend'
 import { Navigate } from 'react-router-dom'
 import DashboardShell from '../../components/layout/DashboardShell'
 import { PageTitle } from '../../components/ui'
 import LibrasPractice from '../libras/components/LibrasPractice'
-import LessonList from '../lessons/components/LessonList'
 import StudentLessonAvatar from './StudentLessonAvatar'
 import SignPlayer from './SignPlayer'
 
@@ -71,27 +61,15 @@ export default function StudentDashboard({
       setRefreshing(false)
     }
   }
-  useEffect(() => {
-    if (lesson?.status !== 'live') return
-    let active = true
-    const timer = window.setInterval(() => {
-      void authApi
-        .education()
-        .then((next) => {
-          if (active) {
-            setData(next)
-            setError('')
-          }
-        })
-        .catch(() => {
-          if (active) setError('Não foi possível atualizar a aula. Tente novamente.')
-        })
-    }, 5000)
-    return () => {
-      active = false
-      window.clearInterval(timer)
-    }
-  }, [lesson?.id, lesson?.status])
+  useAutoRefresh(
+    async (isCurrent) => {
+      const next = await authApi.education()
+      if (!isCurrent()) return
+      setData((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next))
+      setError('')
+    },
+    { interval: lesson?.status === 'live' ? 5000 : 15000 },
+  )
   function navigate(next: string) {
     setPage(next)
     setLessonId(null)

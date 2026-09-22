@@ -1,3 +1,4 @@
+import { RoleSchema } from '../schemas/Enums.schema';
 import { prisma } from '../config/prisma';
 import type { RegisterInput } from '../schemas/Auth.schema';
 
@@ -6,13 +7,12 @@ type CreateUserInput = Omit<RegisterInput, 'password'> & {
 };
 
 export const userService = {
-  findByEmail(email: string) {
-    return prisma.user.findUnique({
-      where: { email },
+  findByEmail(email: string, activeOnly = false) {
+    return prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' }, ...(activeOnly ? { role: { in: RoleSchema.options } } : {}) },
       include: {
         teacherProfile: true,
         studentProfile: true,
-        societyProfile: true,
       },
     });
   },
@@ -23,7 +23,6 @@ export const userService = {
       include: {
         teacherProfile: true,
         studentProfile: true,
-        societyProfile: true,
       },
     });
   },
@@ -49,11 +48,6 @@ export const userService = {
                 registrationNumber: data.registrationNumber,
                 institution: data.institution,
               },
-            }
-          : undefined,
-        societyProfile: data.role === 'SOCIEDADE'
-          ? {
-              create: {},
             }
           : undefined,
       },

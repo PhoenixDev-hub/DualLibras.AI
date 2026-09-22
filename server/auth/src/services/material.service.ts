@@ -4,6 +4,7 @@ import path from 'path';
 import { env } from '../config/env';
 import { prisma } from '../config/prisma';
 import { AppError } from '../middlewares/error.middleware';
+import { materialAccessWhere } from './material-access';
 import type { UploadMaterialInput } from '../schemas/Material.schema';
 
 type MaterialKind = {
@@ -24,7 +25,7 @@ const acceptedExtensions: Record<string, MaterialKind> = {
 
 function getMaterialKind(filename: string) {
   const extension = filename.split('.').pop()?.toLowerCase() ?? '';
-  const kind = acceptedExtensions[extension];
+  const kind = Object.hasOwn(acceptedExtensions, extension) ? acceptedExtensions[extension] : undefined;
 
   if (!kind) {
     throw new AppError('Formato inválido. Envie PDF, Word, PowerPoint ou Texto.', 400);
@@ -46,8 +47,17 @@ function sanitizeFilename(filename: string) {
 }
 
 function decodeBase64(contentBase64: string) {
-  const [, payload = contentBase64] = contentBase64.match(/^data:[^;]+;base64,(.*)$/) ?? [];
-  return Buffer.from(payload, 'base64');
+  const match = contentBase64.match(/^data:[^;,]+;base64,([\s\S]*)$/);
+  const payload = match ? match[1] : contentBase64;
+  if (payload.length > 4 * Math.ceil(env.materialMaxBytes / 3)) {
+    throw new AppError('Arquivo excede o limite permitido', 400);
+  }
+  if (!payload || payload.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
+    throw new AppError('Conteúdo do arquivo inválido', 400);
+  }
+  const buffer = Buffer.from(payload, 'base64');
+  if (buffer.toString('base64') !== payload) throw new AppError('Conteúdo do arquivo inválido', 400);
+  return buffer;
 }
 
 async function sendToAi(input: {
@@ -78,8 +88,7 @@ async function sendToAi(input: {
 }
 
 function ensureCanUploadMaterial(role: string) {
-  const normalizedRole = role.toUpperCase();
-  if (normalizedRole !== 'PROFESSOR' && normalizedRole !== 'ADMIN') {
+  if (role !== 'PROFESSOR' && role !== 'ADMIN') {
     throw new AppError('Somente professores podem enviar materiais', 403);
   }
 }
@@ -90,14 +99,18 @@ export function formatMaterial(material: {
   url: string;
   type: string;
   createdAt: Date;
+  classroomId?: string | null;
+  lessonId?: string | null;
 }) {
   const extension = material.name.split('.').pop()?.toLowerCase() ?? '';
-  const kind = acceptedExtensions[extension];
+  const kind = Object.hasOwn(acceptedExtensions, extension) ? acceptedExtensions[extension] : undefined;
 
   return {
     id: material.id,
     name: material.name,
-    url: material.url,
+    url: `/education/materials/${encodeURIComponent(material.id)}/download`,
+    classroomId: material.classroomId,
+    lessonId: material.lessonId,
     type: material.type,
     displayType: kind?.displayType ?? 'Arquivo',
     createdAt: material.createdAt,
@@ -105,11 +118,13 @@ export function formatMaterial(material: {
 }
 
 export const materialService = {
-  async listForUser(userId: string, role: string) {
-    const normalizedRole = role.toUpperCase();
+  getUploadOptions() {
+    return { extensions: Object.keys(acceptedExtensions).map(value => `.${value}`), maxBytes: env.materialMaxBytes };
+  },
 
+  async listForUser(userId: string, role: string) {
     return prisma.material.findMany({
-      where: normalizedRole === 'ADMIN' ? undefined : { uploadedById: userId },
+      where: materialAccessWhere(userId, role),
       orderBy: { createdAt: 'desc' },
     });
   },
@@ -117,11 +132,12 @@ export const materialService = {
   async upload(userId: string, role: string, data: UploadMaterialInput) {
     ensureCanUploadMaterial(role);
 
+    if (!data.classroomId && !data.lessonId) throw new AppError('Selecione uma sala ou aula para anexar o arquivo', 400);
     let classroomId = data.classroomId;
     if (data.lessonId) {
       const lesson = await prisma.lesson.findFirst({ where: {
         id: data.lessonId,
-        ...(role.toUpperCase() === 'ADMIN' ? {} : { teacherId: userId }),
+        ...(role === 'ADMIN' ? {} : { classroom: { teacherId: userId } }),
       } });
       if (!lesson) throw new AppError('Sem permissão para publicar nesta aula', 403);
       if (classroomId && classroomId !== lesson.classroomId) throw new AppError('A aula não pertence à turma selecionada', 400);
@@ -130,7 +146,7 @@ export const materialService = {
     if (!data.lessonId && classroomId) {
       const room = await prisma.classroom.findFirst({ where: {
         id: classroomId,
-        ...(role.toUpperCase() === 'ADMIN' ? {} : { teacherId: userId }),
+        ...(role === 'ADMIN' ? {} : { teacherId: userId }),
       } });
       if (!room) throw new AppError('Sem permissão para publicar nesta turma', 403);
     }

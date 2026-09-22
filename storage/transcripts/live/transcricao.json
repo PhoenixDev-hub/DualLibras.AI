@@ -1,50 +1,254 @@
 [
   {
-    "timestamp": "00:00:02",
-    "seconds": 2.5,
+    "timestamp": "00:00:04",
+    "seconds": 4.59,
     "speaker": "Professor",
-    "text": "Da funktionieren."
+    "text": "Não tá capturando."
   },
   {
-    "timestamp": "00:00:08",
-    "seconds": 8.7,
-    "speaker": "Professor",
-    "text": "Oh my God."
-  },
-  {
-    "timestamp": "00:00:14",
-    "seconds": 14.32,
-    "speaker": "Professor",
-    "text": "Mörder's Kit."
-  },
-  {
-    "timestamp": "00:00:17",
-    "seconds": 17.52,
-    "speaker": "Professor",
-    "text": "Lado a lado, modo clássico."
-  },
-  {
-    "timestamp": "00:00:25",
-    "seconds": 25.7,
-    "speaker": "Professor",
-    "text": "Modo clássico."
-  },
-  {
-    "timestamp": "00:00:42",
-    "seconds": 42.07,
+    "timestamp": "00:01:03",
+    "seconds": 63.08,
     "speaker": "Aluno",
-    "text": "Oxi, eu acho que o— eu acho que o Festi não."
+    "text": "Vamos ver se está conectado. Não fiz esse teste antes. Vai pesquisar como é que tu faz para tu não ficar carregando a página toda. Você tem que carregar só o que tá sendo atualizado, que senão vai gerar— imagina aí, sei lá, Que como se você vai crescer muito e tem um milhão de pessoas usando, como é que você vai carregar isso? Eu não me lembro do componente exato. O React tem essa função. Eu também não sei, mas o React ele já Script já é para fazer nativo. Você tem que estruturar o projeto para ele funcionar desse jeito."
   },
   {
-    "timestamp": "00:01:14",
-    "seconds": 75.0,
-    "speaker": "Professor",
-    "text": "Mas está durando muito isso."
+    "timestamp": "00:01:18",
+    "seconds": 78.55,
+    "speaker": "Aluno",
+    "text": "Eu acho que é os states."
   },
   {
-    "timestamp": "00:01:35",
-    "seconds": 95.86,
+    "timestamp": "00:01:25",
+    "seconds": 85.34,
     "speaker": "Professor",
-    "text": "Está durando muito isso."
+    "text": "Normalmente os states."
+  },
+  {
+    "timestamp": "00:02:27",
+    "seconds": 147.94,
+    "speaker": "Aluno",
+    "text": "Usa, tá, tipo, é muito bem, você pode usar o estado com efeito próprio de polícia. Depois tu vai pesquisar porque você vai ter que talvez reestruturar o projeto todo, porque tudo vai ser um componente. Ai, não sei como é que tá aí. Deixa eu ver lá como é que tá. Já tá acabando. Já, eita puta!"
+  },
+  {
+    "timestamp": "00:02:33",
+    "seconds": 153.54,
+    "speaker": "Professor",
+    "text": "Eita, pô, muita luz."
+  },
+  {
+    "timestamp": "00:02:39",
+    "seconds": 159.33,
+    "speaker": "Professor",
+    "text": "Só que aí fica um pouco levinho."
+  },
+  {
+    "timestamp": "00:02:45",
+    "seconds": 165.73,
+    "speaker": "Aluno",
+    "text": "Que cada pessoa tem uma velocidade de interpretação. E o verso?"
+  },
+  {
+    "timestamp": "00:03:22",
+    "seconds": 202.89,
+    "speaker": "Aluno",
+    "text": "Eu acho que eu vou ter que tirar esse daqui, porque senão vai ficar confuso. Ou eu tento deixar. Tem que dar um jeito de colocar só o que tá sendo falado no momento. Era saída da caixinha, eu percebi agora que ela tá— Por que que não tá mais capturando? Ok, tá legal aqui."
+  },
+  {
+    "timestamp": "00:03:27",
+    "seconds": 207.73,
+    "speaker": "Professor",
+    "text": "Cate, voltou lá."
+  },
+  {
+    "timestamp": "00:03:31",
+    "seconds": 211.15,
+    "speaker": "Professor",
+    "text": "Bravo, cuidado."
+  },
+  {
+    "timestamp": "00:04:23",
+    "seconds": 263.77,
+    "speaker": "Aluno",
+    "text": "Ele volta tudo. Pronto, o que é que eu acho que tu tem que fazer? Tentar, né? É fazer com que Tá pegando e não tá atualizando direito. Ele colocar as frases, somente a frase, depois ele apaga o resto. Só que ele guarda isso para botar numa transcrição da aula depois. Aí você vai fazer o seguinte: sincroniza o que tá sendo falado. Pode ser, você pode até talvez gravar a a voz, o áudio da pessoa também, para ficar com registro lá. Imagina que você tem uma pessoa cega, você pode usar também, tá entendendo? Então aqui acaba sendo agora uma plataforma não só para livros, né?"
+  },
+  {
+    "timestamp": "00:04:43",
+    "seconds": 283.89,
+    "speaker": "Aluno",
+    "text": "Mas ela também traz outras ferramentas de acessibilidade. O nosso foco pode ser livros, mas como é uma plataforma que visa acessibilidade, a gente traz ele para as outras deficiências. Por exemplo, baixa visão, aí você vai colocar uma forma de aumentar o texto, fica muito grande."
+  },
+  {
+    "timestamp": "00:04:55",
+    "seconds": 295.13,
+    "speaker": "Professor",
+    "text": "Baixa visão, pessoas autônomas."
+  },
+  {
+    "timestamp": "00:05:55",
+    "seconds": 355.67,
+    "speaker": "Aluno",
+    "text": "Muito grande. Bom, já tem alguma coisa aí da acessibilidade, tá bom? Se você quiser mudar alguma coisa no relíquio, você pode vir aqui, aí para mudar, colocar no céu. Aí o que é que é interessante é que o avatar ele seja em tempo real, com o que tá sendo falado. Obviamente vai ter que ter um delay, né, de alguns segundos até processar tudo isso. Aí aqui, ó, porque você vai colocar isso como trabalho futuro, né? O trabalho tá muito bom para uma feira de ciências, só que para, sei lá, Ceará Tech, né? Você vai estar lá competindo, competindo, não sei se vocês competem, não, só Só apresenta, né? A não ser que você tivesse inscrito como um startup, que poderia ser ano que vem, mas ano que vem você já não pode. Não tem certeza?"
+  },
+  {
+    "timestamp": "00:06:15",
+    "seconds": 376.0,
+    "speaker": "Professor",
+    "text": "Se tiver chance, né, de vender. Tem dois projetos que faz isso aí. Aí aqui, ó, a parte da transcrição."
+  },
+  {
+    "timestamp": "00:06:58",
+    "seconds": 418.16,
+    "speaker": "Aluno",
+    "text": "Tudo tá sendo salvo aqui. É uma para cada aula e vai atualizando? Tu vai salvar? Não, aqui é sessões, tá dividido em sessões. Que é o que é enviado para o relíquio, para não ficar tão pesado e ele começar a conseguir acompanhar, como se fosse as frases. Mas tu vai armazenar por frase? Como é que tu sabe qual é a aula? A hora que tá sendo gravado. Porque se você fizesse, por exemplo, você gravasse o áudio, era mais fácil talvez saber, porque você sincroniza o que tá sendo falado com a legenda."
+  },
+  {
+    "timestamp": "00:07:01",
+    "seconds": 421.61,
+    "speaker": "Aluno",
+    "text": "Talvez é melhor do que gravar o texto."
+  },
+  {
+    "timestamp": "00:07:11",
+    "seconds": 431.62,
+    "speaker": "Professor",
+    "text": "Porque o próprio YouTube às vezes pega, sei lá, alguém não bota legenda, ele chega a tomar com a legenda enquanto a pessoa vai falando."
+  },
+  {
+    "timestamp": "00:07:37",
+    "seconds": 457.36,
+    "speaker": "Aluno",
+    "text": "Então talvez fosse interessante para tu ter essa reestruturação nesse ponto de, em vez da gente trabalhar com o texto puro, que é o que tu tá Agora que tu usa, a gente tá fazendo o quê? A gente pega a voz, captura a voz, transcreve o que tá sendo falado, depois resume."
+  },
+  {
+    "timestamp": "00:07:40",
+    "seconds": 460.43,
+    "speaker": "Professor",
+    "text": "Depois manda para o Overlibris."
+  },
+  {
+    "timestamp": "00:08:40",
+    "seconds": 520.1,
+    "speaker": "Professor",
+    "text": "O que a gente poderia fazer agora? Pega somente o áudio, que é muito mais confiável a gravação do áudio, se tiver legível. Se tiver alguma palavra que é inaudível, vai ficar na legenda. Inaudível. Aí a pessoa que tiver falando aí, se puder falar perto do microfone ou falar, não, você vai assim, ah, mas a gente não tá vai estar longe, o professor roda na sala de aula, vai ter microfone aqui, né, talvez. Então você pega do próprio áudio e extrai, extrai as informações do áudio, que eu acho que Tem tecnologias que são mais eficientes do que a gente fazer esse processo todo. A gente usa uma app para converter de voz para texto, aí depois outra para resumir. Tem todo um delay. Acho que essa é a regra do azar. Eu acho que ela faz. Sim, então agora eu vou— Tu testa, né? É só uma ideia."
+  },
+  {
+    "timestamp": "00:08:44",
+    "seconds": 524.33,
+    "speaker": "Professor",
+    "text": "Então por agora deixa assim, ó."
+  },
+  {
+    "timestamp": "00:08:51",
+    "seconds": 531.96,
+    "speaker": "Professor",
+    "text": "Eu vou em casa pegar. Então por agora deixa assim, eu vou ter que fazer as alterações."
+  },
+  {
+    "timestamp": "00:09:12",
+    "seconds": 552.36,
+    "speaker": "Aluno",
+    "text": "Ah, mas você vai ser mais suficiente para as apresentações. Agora, se você conseguir fazer, então vou finalizar o que eu preciso usar, porque depois Aqui tu vai poder usar o áudio, por exemplo, imagina que tem uma pessoa cega, ela pode ouvir o áudio, pode ficar sem gravar."
+  },
+  {
+    "timestamp": "00:09:29",
+    "seconds": 569.26,
+    "speaker": "Aluno",
+    "text": "Aí você pega essas informações do áudio e vai extraindo em tempo real. Agora vai ser um problema porque você vai estar gravando, né? Que é, como é que você vai fazer para ele extrair do áudio e deixar uma faixa só."
+  },
+  {
+    "timestamp": "00:09:38",
+    "seconds": 578.76,
+    "speaker": "Aluno",
+    "text": "Então eu vou fazer, eu imagino que vai ser mais eficiente e vai ficar mais rápido aqui essa tradução."
+  },
+  {
+    "timestamp": "00:09:53",
+    "seconds": 593.67,
+    "speaker": "Professor",
+    "text": "Eu vou tentar finalizar, tirar a cara de empresarial e mais a parte inicial."
+  },
+  {
+    "timestamp": "00:10:03",
+    "seconds": 603.07,
+    "speaker": "Professor",
+    "text": "E o resto tá bom aqui, eu acho. Aqui tem a opção para dark mode também."
+  },
+  {
+    "timestamp": "00:10:09",
+    "seconds": 609.52,
+    "speaker": "Professor",
+    "text": "É bom, tá aí. Por exemplo, eu não gosto, por exemplo, já meu olho dói."
+  },
+  {
+    "timestamp": "00:10:51",
+    "seconds": 651.81,
+    "speaker": "Aluno",
+    "text": "Vou finalizar, vou tirar a parte, a cara de industrial e empresa, tentar sincronizar e vou esperar para nós testar se o QR code consegue acessar. Se conseguir, pronto, ok. Aí tu só anota essas sugestões que eu tô dando, porque se tu não fazer até o dia da feira ou até o Ceratec, né? Vocês vão continuar tentando, porque você vai testando o que que funciona funciona melhor até você ter uma plataforma que funcione tempo real."
+  },
+  {
+    "timestamp": "00:11:08",
+    "seconds": 668.37,
+    "speaker": "Professor",
+    "text": "Pelo Ceratec, dia 7."
+  },
+  {
+    "timestamp": "00:11:25",
+    "seconds": 685.79,
+    "speaker": "Professor",
+    "text": "Eu vou falar com Duda, eu vou falar com Duda para ver se ela termina, se eu consigo pegar, se eu consigo mais."
+  },
+  {
+    "timestamp": "00:11:38",
+    "seconds": 698.28,
+    "speaker": "Professor",
+    "text": "No bedroom, please."
+  },
+  {
+    "timestamp": "00:11:40",
+    "seconds": 700.98,
+    "speaker": "Professor",
+    "text": "No bedroom."
+  },
+  {
+    "timestamp": "00:11:46",
+    "seconds": 706.57,
+    "speaker": "Professor",
+    "text": "No bedroom."
+  },
+  {
+    "timestamp": "00:11:54",
+    "seconds": 714.29,
+    "speaker": "Professor",
+    "text": "Cosbel DLDI, Gold Libras."
+  },
+  {
+    "timestamp": "00:11:54",
+    "seconds": 714.97,
+    "speaker": "Professor",
+    "text": "There you go."
+  },
+  {
+    "timestamp": "00:12:04",
+    "seconds": 724.48,
+    "speaker": "Aluno",
+    "text": "E depois, logo depois, nós lembramos que nós temos que fazer como avatar, senão passa, senão passa, nós temos que fazer um avatar depois."
+  },
+  {
+    "timestamp": "00:12:09",
+    "seconds": 729.36,
+    "speaker": "Aluno",
+    "text": "O que não seja o Cosbel."
+  },
+  {
+    "timestamp": "00:12:12",
+    "seconds": 732.07,
+    "speaker": "Aluno",
+    "text": "Não, o que realmente seja o Cosbel."
+  },
+  {
+    "timestamp": "00:12:17",
+    "seconds": 737.77,
+    "speaker": "Aluno",
+    "text": "Então você tá dizendo que não é o Cosbel de verdadeiro? Não."
   }
 ]

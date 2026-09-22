@@ -1507,3 +1507,51 @@
 [00:00:42] Aluno: Oxi, eu acho que o— eu acho que o Festi não.
 [00:01:14] Professor: Mas está durando muito isso.
 [00:01:35] Professor: Está durando muito isso.
+[00:00:26] Aluno: De político desse Senado também, porque depois deles eles não é nem ligar para nós, porque o Senador estão lá em Brasília, não tem como tirar, conquista o voto, o vereador e prefeito O cara até se humilhar assim, se for realmente necessário. Se o cara não precisar, eu também não vou atrás não, não é piada isso, a não ser que eu esteja precisando mesmo. E agora, Zé Gordinho, tá se acabando.
+[00:00:31] Professor: Sim, Salve Anel, que quer vir para Alepo.
+[00:00:53] Aluno: É só tu, ele simplesmente, se eu não me engano, é o segundo, ou é o, eu acho que ele é o segundo prefeito mais rico do Ceará. Mas para ele nem precisa tanto, macho. Filho, é o segundo prefeito, já é rico, só falta o prefeito de Fortaleza.
+[00:01:08] Aluno: Esse nível, por que que ele não comprou agora? É porque não é sapo.
+[00:01:11] Professor: É, a captura do áudio tá bom, hein.
+[00:01:19] Professor: Pegou a conversa toda.
+[00:00:04] Professor: Não tá capturando.
+[00:01:03] Aluno: Vamos ver se está conectado. Não fiz esse teste antes. Vai pesquisar como é que tu faz para tu não ficar carregando a página toda. Você tem que carregar só o que tá sendo atualizado, que senão vai gerar— imagina aí, sei lá, Que como se você vai crescer muito e tem um milhão de pessoas usando, como é que você vai carregar isso? Eu não me lembro do componente exato. O React tem essa função. Eu também não sei, mas o React ele já Script já é para fazer nativo. Você tem que estruturar o projeto para ele funcionar desse jeito.
+[00:01:18] Aluno: Eu acho que é os states.
+[00:01:25] Professor: Normalmente os states.
+[00:02:27] Aluno: Usa, tá, tipo, é muito bem, você pode usar o estado com efeito próprio de polícia. Depois tu vai pesquisar porque você vai ter que talvez reestruturar o projeto todo, porque tudo vai ser um componente. Ai, não sei como é que tá aí. Deixa eu ver lá como é que tá. Já tá acabando. Já, eita puta!
+[00:02:33] Professor: Eita, pô, muita luz.
+[00:02:39] Professor: Só que aí fica um pouco levinho.
+[00:02:45] Aluno: Que cada pessoa tem uma velocidade de interpretação. E o verso?
+[00:03:22] Aluno: Eu acho que eu vou ter que tirar esse daqui, porque senão vai ficar confuso. Ou eu tento deixar. Tem que dar um jeito de colocar só o que tá sendo falado no momento. Era saída da caixinha, eu percebi agora que ela tá— Por que que não tá mais capturando? Ok, tá legal aqui.
+[00:03:27] Professor: Cate, voltou lá.
+[00:03:31] Professor: Bravo, cuidado.
+[00:04:23] Aluno: Ele volta tudo. Pronto, o que é que eu acho que tu tem que fazer? Tentar, né? É fazer com que Tá pegando e não tá atualizando direito. Ele colocar as frases, somente a frase, depois ele apaga o resto. Só que ele guarda isso para botar numa transcrição da aula depois. Aí você vai fazer o seguinte: sincroniza o que tá sendo falado. Pode ser, você pode até talvez gravar a a voz, o áudio da pessoa também, para ficar com registro lá. Imagina que você tem uma pessoa cega, você pode usar também, tá entendendo? Então aqui acaba sendo agora uma plataforma não só para livros, né?
+[00:04:43] Aluno: Mas ela também traz outras ferramentas de acessibilidade. O nosso foco pode ser livros, mas como é uma plataforma que visa acessibilidade, a gente traz ele para as outras deficiências. Por exemplo, baixa visão, aí você vai colocar uma forma de aumentar o texto, fica muito grande.
+[00:04:55] Professor: Baixa visão, pessoas autônomas.
+[00:05:55] Aluno: Muito grande. Bom, já tem alguma coisa aí da acessibilidade, tá bom? Se você quiser mudar alguma coisa no relíquio, você pode vir aqui, aí para mudar, colocar no céu. Aí o que é que é interessante é que o avatar ele seja em tempo real, com o que tá sendo falado. Obviamente vai ter que ter um delay, né, de alguns segundos até processar tudo isso. Aí aqui, ó, porque você vai colocar isso como trabalho futuro, né? O trabalho tá muito bom para uma feira de ciências, só que para, sei lá, Ceará Tech, né? Você vai estar lá competindo, competindo, não sei se vocês competem, não, só Só apresenta, né? A não ser que você tivesse inscrito como um startup, que poderia ser ano que vem, mas ano que vem você já não pode. Não tem certeza?
+[00:06:15] Professor: Se tiver chance, né, de vender. Tem dois projetos que faz isso aí. Aí aqui, ó, a parte da transcrição.
+[00:06:58] Aluno: Tudo tá sendo salvo aqui. É uma para cada aula e vai atualizando? Tu vai salvar? Não, aqui é sessões, tá dividido em sessões. Que é o que é enviado para o relíquio, para não ficar tão pesado e ele começar a conseguir acompanhar, como se fosse as frases. Mas tu vai armazenar por frase? Como é que tu sabe qual é a aula? A hora que tá sendo gravado. Porque se você fizesse, por exemplo, você gravasse o áudio, era mais fácil talvez saber, porque você sincroniza o que tá sendo falado com a legenda.
+[00:07:01] Aluno: Talvez é melhor do que gravar o texto.
+[00:07:11] Professor: Porque o próprio YouTube às vezes pega, sei lá, alguém não bota legenda, ele chega a tomar com a legenda enquanto a pessoa vai falando.
+[00:07:37] Aluno: Então talvez fosse interessante para tu ter essa reestruturação nesse ponto de, em vez da gente trabalhar com o texto puro, que é o que tu tá Agora que tu usa, a gente tá fazendo o quê? A gente pega a voz, captura a voz, transcreve o que tá sendo falado, depois resume.
+[00:07:40] Professor: Depois manda para o Overlibris.
+[00:08:40] Professor: O que a gente poderia fazer agora? Pega somente o áudio, que é muito mais confiável a gravação do áudio, se tiver legível. Se tiver alguma palavra que é inaudível, vai ficar na legenda. Inaudível. Aí a pessoa que tiver falando aí, se puder falar perto do microfone ou falar, não, você vai assim, ah, mas a gente não tá vai estar longe, o professor roda na sala de aula, vai ter microfone aqui, né, talvez. Então você pega do próprio áudio e extrai, extrai as informações do áudio, que eu acho que Tem tecnologias que são mais eficientes do que a gente fazer esse processo todo. A gente usa uma app para converter de voz para texto, aí depois outra para resumir. Tem todo um delay. Acho que essa é a regra do azar. Eu acho que ela faz. Sim, então agora eu vou— Tu testa, né? É só uma ideia.
+[00:08:44] Professor: Então por agora deixa assim, ó.
+[00:08:51] Professor: Eu vou em casa pegar. Então por agora deixa assim, eu vou ter que fazer as alterações.
+[00:09:12] Aluno: Ah, mas você vai ser mais suficiente para as apresentações. Agora, se você conseguir fazer, então vou finalizar o que eu preciso usar, porque depois Aqui tu vai poder usar o áudio, por exemplo, imagina que tem uma pessoa cega, ela pode ouvir o áudio, pode ficar sem gravar.
+[00:09:29] Aluno: Aí você pega essas informações do áudio e vai extraindo em tempo real. Agora vai ser um problema porque você vai estar gravando, né? Que é, como é que você vai fazer para ele extrair do áudio e deixar uma faixa só.
+[00:09:38] Aluno: Então eu vou fazer, eu imagino que vai ser mais eficiente e vai ficar mais rápido aqui essa tradução.
+[00:09:53] Professor: Eu vou tentar finalizar, tirar a cara de empresarial e mais a parte inicial.
+[00:10:03] Professor: E o resto tá bom aqui, eu acho. Aqui tem a opção para dark mode também.
+[00:10:09] Professor: É bom, tá aí. Por exemplo, eu não gosto, por exemplo, já meu olho dói.
+[00:10:51] Aluno: Vou finalizar, vou tirar a parte, a cara de industrial e empresa, tentar sincronizar e vou esperar para nós testar se o QR code consegue acessar. Se conseguir, pronto, ok. Aí tu só anota essas sugestões que eu tô dando, porque se tu não fazer até o dia da feira ou até o Ceratec, né? Vocês vão continuar tentando, porque você vai testando o que que funciona funciona melhor até você ter uma plataforma que funcione tempo real.
+[00:11:08] Professor: Pelo Ceratec, dia 7.
+[00:11:25] Professor: Eu vou falar com Duda, eu vou falar com Duda para ver se ela termina, se eu consigo pegar, se eu consigo mais.
+[00:11:38] Professor: No bedroom, please.
+[00:11:40] Professor: No bedroom.
+[00:11:46] Professor: No bedroom.
+[00:11:54] Professor: Cosbel DLDI, Gold Libras.
+[00:11:54] Professor: There you go.
+[00:12:04] Aluno: E depois, logo depois, nós lembramos que nós temos que fazer como avatar, senão passa, senão passa, nós temos que fazer um avatar depois.
+[00:12:09] Aluno: O que não seja o Cosbel.
+[00:12:12] Aluno: Não, o que realmente seja o Cosbel.
+[00:12:17] Aluno: Então você tá dizendo que não é o Cosbel de verdadeiro? Não.

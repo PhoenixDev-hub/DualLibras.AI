@@ -16,6 +16,7 @@ test('authenticated education API and classroom permissions', async (t) => {
   const user = { id: 'teacher-a', role: 'PROFESSOR' };
   let where;
   prisma.user.findUnique = async () => user;
+  prisma.user.findFirst = async ({ where }) => where.id === user.id && where.role.in.includes(user.role) ? user : null;
   prisma.user.findUniqueOrThrow = async () => user;
   prisma.classroom.findMany = async (args) => { where = args.where; return []; };
   prisma.material.findMany = async () => [];
@@ -135,6 +136,6 @@ test('authenticated education API and classroom permissions', async (t) => {
   assert.equal(await readFile(attached.url, 'utf8'), 'Material da turma');
   const roomDownload = await request('/education/materials/material-a/download');
   assert.equal(roomDownload.status, 200);
-  assert.equal(materialFilter.OR[2].classroom.OR[1].members.some.userId, user.id);
+  assert.equal(materialFilter.OR[0].classroom.OR[1].members.some.userId, user.id);
 
 });

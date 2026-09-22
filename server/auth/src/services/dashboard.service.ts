@@ -1,7 +1,9 @@
+import { AppError } from '../middlewares/error.middleware';
+import { RoleSchema } from '../schemas/Enums.schema';
 import { classroomService } from './classroom.service';
 import { formatMaterial, materialService } from './material.service';
 
-type UserRole = 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE' | 'ADMIN';
+type UserRole = 'PROFESSOR' | 'ALUNO' | 'ADMIN';
 
 export type DashboardSection =
   | 'Dashboard'
@@ -15,7 +17,6 @@ export type DashboardSection =
 export const roleLabels: Record<UserRole, string> = {
   PROFESSOR: 'Professor',
   ALUNO: 'Aluno',
-  SOCIEDADE: 'Sociedade',
   ADMIN: 'Administrador',
 };
 
@@ -33,7 +34,6 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
   PROFESSOR: allSections,
   ADMIN: allSections,
   ALUNO: ['Dashboard', 'Minhas Turmas', 'Aulas', 'Materiais', 'Glossários', 'Histórico', 'Configurações'],
-  SOCIEDADE: ['Dashboard', 'Materiais', 'Histórico', 'Configurações'],
 };
 
 export const roleCapabilities: Record<UserRole, Record<string, boolean>> = {
@@ -72,18 +72,6 @@ export const roleCapabilities: Record<UserRole, Record<string, boolean>> = {
     createGlossary: false,
     editGlossary: false,
     exportHistory: true,
-  },
-  SOCIEDADE: {
-    createClass: false,
-    editClass: false,
-    joinClass: false,
-    createLesson: false,
-    startTranscription: false,
-    uploadMaterial: false,
-    linkMaterial: false,
-    createGlossary: false,
-    editGlossary: false,
-    exportHistory: false,
   },
 };
 
@@ -213,8 +201,9 @@ const dashboardData = {
 
 export const dashboardService = {
   getAccess(role: string) {
-    const normalizedRole = role.toUpperCase() as UserRole;
-    const safeRole = roleCapabilities[normalizedRole] ? normalizedRole : 'ALUNO';
+    const parsedRole = RoleSchema.safeParse(role);
+    if (!parsedRole.success) throw new AppError('Perfil de acesso inválido', 403);
+    const safeRole = parsedRole.data;
 
     return {
       roleLabel: roleLabels[safeRole],

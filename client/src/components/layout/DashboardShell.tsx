@@ -29,6 +29,7 @@ export default function DashboardShell({
   onNavigate,
   onBack,
   onSearch,
+  searchPlaceholder = 'Buscar suas turmas...',
   onNotice,
   children,
 }: {
@@ -42,6 +43,7 @@ export default function DashboardShell({
   breadcrumbs: { label: string; onClick?: () => void }[]
   onNavigate: (page: string) => void
   onBack?: () => void
+  searchPlaceholder?: string
   onSearch: (query: string) => void
   onNotice: (message: string) => void
   children: ReactNode
@@ -201,8 +203,8 @@ export default function DashboardShell({
               <Search size={19} className="shrink-0" aria-hidden="true" />
               <input
                 name="query"
-                aria-label="Buscar turmas"
-                placeholder="Buscar suas turmas..."
+                aria-label={searchPlaceholder}
+                placeholder={searchPlaceholder}
                 className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none"
               />
               <button className="hidden rounded border border-slate-200 px-2 py-1 text-[10px] sm:block">

@@ -1,3 +1,4 @@
+import { PASSWORD_HINT } from '../../../validation/account'
 import {
   ArrowRight,
   BookOpen,
@@ -15,12 +16,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import heroBg from '../../../assets/hero-bg.png'
 import { authApi } from '../../../services/authApi'
 
-type Role = 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE'
+type Role = 'PROFESSOR' | 'ALUNO'
 
 const roleOptions: Array<{ value: Role; label: string }> = [
   { value: 'ALUNO', label: 'Aluno' },
   { value: 'PROFESSOR', label: 'Professor' },
-  { value: 'SOCIEDADE', label: 'Sociedade' },
 ]
 
 export default function Cadastro() {
@@ -67,6 +67,7 @@ export default function Cadastro() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (isSubmitting) return
     setError('')
 
     if (password !== confirmPassword) {
@@ -87,7 +88,7 @@ export default function Cadastro() {
         email,
         password,
         role,
-        institution: role === 'SOCIEDADE' ? undefined : institution || undefined,
+        institution: institution || undefined,
         discipline: role === 'PROFESSOR' ? discipline : undefined,
         registrationNumber: role === 'ALUNO' ? registrationNumber : undefined,
       })
@@ -147,7 +148,7 @@ export default function Cadastro() {
             </Link>
           </p>
 
-          <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-4" onSubmit={handleSubmit} noValidate>
             <div>
               <label
                 htmlFor="name"
@@ -171,6 +172,7 @@ export default function Cadastro() {
                   onChange={(event) => setName(event.target.value)}
                   required
                   minLength={2}
+                  maxLength={150}
                   className="w-full pl-11 pr-4 py-3 rounded-lg border border-primary/20 bg-secondary/10 text-text-light placeholder:text-gray-mid/60 font-text text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/30 transition-colors"
                 />
               </div>
@@ -192,6 +194,9 @@ export default function Cadastro() {
                 />
                 <input
                   id="email"
+                  maxLength={254}
+                  autoCapitalize="none"
+                  spellCheck={false}
                   type="email"
                   autoComplete="email"
                   placeholder="voce@escola.com"
@@ -232,33 +237,32 @@ export default function Cadastro() {
               </div>
             </div>
 
-            {role !== 'SOCIEDADE' && (
-              <div>
-                <label
-                  htmlFor="institution"
-                  className="block text-sm font-ui font-medium text-text-light mb-2"
-                >
-                  Instituição
-                </label>
-                <div className="relative">
-                  <Building2
-                    size={18}
-                    strokeWidth={1.75}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-mid"
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="institution"
-                    type="text"
-                    autoComplete="organization"
-                    placeholder="Nome da escola ou instituição"
-                    value={institution}
-                    onChange={(event) => setInstitution(event.target.value)}
-                    className="w-full pl-11 pr-4 py-3 rounded-lg border border-primary/20 bg-secondary/10 text-text-light placeholder:text-gray-mid/60 font-text text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/30 transition-colors"
-                  />
-                </div>
+            <div>
+              <label
+                htmlFor="institution"
+                className="block text-sm font-ui font-medium text-text-light mb-2"
+              >
+                Instituição
+              </label>
+              <div className="relative">
+                <Building2
+                  size={18}
+                  strokeWidth={1.75}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-mid"
+                  aria-hidden="true"
+                />
+                <input
+                  id="institution"
+                  maxLength={150}
+                  type="text"
+                  autoComplete="organization"
+                  placeholder="Nome da escola ou instituição"
+                  value={institution}
+                  onChange={(event) => setInstitution(event.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-lg border border-primary/20 bg-secondary/10 text-text-light placeholder:text-gray-mid/60 font-text text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/30 transition-colors"
+                />
               </div>
-            )}
+            </div>
 
             {roleSpecificField && (
               <div>
@@ -277,6 +281,7 @@ export default function Cadastro() {
                   />
                   <input
                     id={roleSpecificField.id}
+                    maxLength={role === 'ALUNO' ? 50 : 100}
                     type="text"
                     placeholder={roleSpecificField.placeholder}
                     value={roleSpecificField.value}
@@ -307,11 +312,13 @@ export default function Cadastro() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="new-password"
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder="Mínimo 15 caracteres"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
-                    minLength={8}
+                    minLength={15}
+                    maxLength={72}
+                    aria-describedby="password-hint"
                     className="w-full pl-11 pr-11 py-3 rounded-lg border border-primary/20 bg-secondary/10 text-text-light placeholder:text-gray-mid/60 font-text text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/30 transition-colors"
                   />
                   <button
@@ -351,7 +358,9 @@ export default function Cadastro() {
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     required
-                    minLength={8}
+                    minLength={15}
+                    maxLength={72}
+                    aria-describedby="password-hint"
                     className="w-full pl-11 pr-11 py-3 rounded-lg border border-primary/20 bg-secondary/10 text-text-light placeholder:text-gray-mid/60 font-text text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/30 transition-colors"
                   />
                   <button
@@ -369,6 +378,10 @@ export default function Cadastro() {
                 </div>
               </div>
             </div>
+
+            <p id="password-hint" className="text-xs text-gray-mid">
+              {PASSWORD_HINT}
+            </p>
 
             <label className="flex items-start gap-2.5 text-xs text-gray-mid font-text">
               <input

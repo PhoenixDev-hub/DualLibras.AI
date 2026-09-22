@@ -1,3 +1,4 @@
+import { adminRoutes } from './routes/admin.routes';
 import { educationRoutes } from './routes/education.routes';
 import express from 'express';
 import cors from 'cors';
@@ -22,6 +23,7 @@ export function createApp() {
     res.json({ status: 'ok' });
   });
 
+  app.use('/admin', adminRoutes);
   app.use('/education', educationRoutes);
   app.use('/auth', authRoutes);
   app.use('/users', userRoutes);

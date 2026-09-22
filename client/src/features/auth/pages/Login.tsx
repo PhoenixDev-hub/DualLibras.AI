@@ -14,6 +14,7 @@ export default function Login() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (isSubmitting) return
     setError('')
     setIsSubmitting(true)
 
@@ -75,7 +76,7 @@ export default function Login() {
             </Link>
           </p>
 
-          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
             <div>
               <label
                 htmlFor="email"
@@ -92,6 +93,9 @@ export default function Login() {
                 />
                 <input
                   id="email"
+                  maxLength={254}
+                  autoCapitalize="none"
+                  spellCheck={false}
                   type="email"
                   autoComplete="email"
                   placeholder="voce@escola.com"
@@ -124,6 +128,7 @@ export default function Login() {
                 />
                 <input
                   id="password"
+                  maxLength={1024}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   placeholder="Digite sua senha"

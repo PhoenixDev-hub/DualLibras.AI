@@ -1,3 +1,5 @@
+import { DATA_CHANGED_EVENT } from '../hooks/useAutoRefresh'
+import { emailError, nameError, normalizeEmail, normalizeName, passwordError, profileError } from '../validation/account'
 import type {
   Classroom as Room,
   Student,
@@ -7,7 +9,7 @@ import type {
 } from '../types/education'
 import { AUTH_API_BASE } from '../config/backend'
 
-export type UserRole = 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE' | 'ADMIN'
+export type UserRole = 'PROFESSOR' | 'ALUNO' | 'ADMIN'
 export type DashboardSection =
   | 'Dashboard'
   | 'Minhas Turmas'
@@ -97,7 +99,7 @@ export type EducationData = {
   terms: Term[]
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${AUTH_API_BASE}${path}`, {
     ...init,
     credentials: 'include',
@@ -108,8 +110,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    const data = (await response.json().catch(() => null)) as { error?: string } | null
-    throw new ApiError(data?.error ?? 'Não foi possível completar a solicitação.', response.status)
+    const data = (await response.json().catch(() => null)) as { error?: string; details?: Record<string, string[]> } | null
+    const detail = data?.details ? Object.values(data.details).flat().join('. ') : ''
+    throw new ApiError(detail || data?.error || 'Não foi possível completar a solicitação.', response.status)
+  }
+
+  if (init?.method && !['GET', 'HEAD'].includes(init.method.toUpperCase()) && !path.startsWith('/auth/')) {
+    window.dispatchEvent(new Event(DATA_CHANGED_EVENT))
+    try {
+      localStorage.setItem(DATA_CHANGED_EVENT, `${Date.now()}-${Math.random()}`)
+    } catch {
+      // Local refresh still works when browser storage is unavailable.
+    }
   }
 
   if (response.status === 204) {
@@ -157,6 +169,9 @@ export const authApi = {
     )
   },
   login(email: string, password: string) {
+    const error = emailError(email) || passwordError(password, true)
+    if (error) throw new ApiError(error, 400)
+    email = normalizeEmail(email)
     return request<{ user: Omit<DashboardUser, 'access'> }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
@@ -167,11 +182,21 @@ export const authApi = {
     name: string
     email: string
     password: string
-    role: 'PROFESSOR' | 'ALUNO' | 'SOCIEDADE'
+    role: 'PROFESSOR' | 'ALUNO'
     institution?: string
     discipline?: string
     registrationNumber?: string
   }) {
+    const error = nameError(data.name) || emailError(data.email) || passwordError(data.password)
+      || profileError(data.institution ?? '', 'Instituição', 150)
+      || profileError(data.discipline ?? '', 'Disciplina', 100)
+      || profileError(data.registrationNumber ?? '', 'Matrícula', 50)
+      || (data.role === 'PROFESSOR' && !data.discipline?.trim() ? 'Disciplina é obrigatória para professores' : undefined)
+      || (data.role === 'ALUNO' && !data.registrationNumber?.trim() ? 'Matrícula é obrigatória para alunos' : undefined)
+    if (error) throw new ApiError(error, 400)
+    data = { ...data, name: normalizeName(data.name), email: normalizeEmail(data.email),
+      institution: data.institution?.trim(), discipline: data.discipline?.trim(),
+      registrationNumber: data.registrationNumber?.trim() }
     return request<{ user: Omit<DashboardUser, 'access'> }>('/auth/cadastro', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -203,6 +228,10 @@ export const authApi = {
 
   materials() {
     return request<{ materials: Material[] }>('/materials')
+  },
+
+  materialUploadOptions() {
+    return request<{ extensions: string[]; maxBytes: number }>('/materials/options')
   },
 
   uploadMaterial(data: {

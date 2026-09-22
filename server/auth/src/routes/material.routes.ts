@@ -4,5 +4,6 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 
 export const materialRoutes = Router();
 
+materialRoutes.get('/options', authMiddleware, materialController.options);
 materialRoutes.get('/', authMiddleware, materialController.list);
 materialRoutes.post('/', authMiddleware, materialController.upload);

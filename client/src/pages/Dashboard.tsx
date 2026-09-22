@@ -1,3 +1,4 @@
+import AdminDashboard from '../features/admin/AdminDashboard'
 import StudentDashboard from '../features/student/StudentDashboard'
 import { Copy, X } from 'lucide-react'
 import TeacherShell from '../components/layout/TeacherShell'
@@ -81,6 +82,13 @@ export default function Dashboard() {
         <a href="/entrar"> Voltar ao login</a>
       </main>
     )
+  if (contextValue.user?.role === 'ADMIN') {
+    return (
+      <TeacherContext.Provider value={contextValue}>
+        <AdminDashboard user={contextValue.user} logout={contextValue.logout} />
+      </TeacherContext.Provider>
+    )
+  }
   if (contextValue.user?.role === 'ALUNO') {
     return (
       <>
