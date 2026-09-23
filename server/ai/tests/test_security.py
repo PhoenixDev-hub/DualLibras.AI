@@ -146,3 +146,49 @@ class SecurityTest(unittest.IsolatedAsyncioTestCase):
             await api.websocket_endpoint(ws)
             ws.accept.assert_not_awaited()
             session.assert_not_called()
+
+    async def test_demo_deadline_no_persistence_and_no_lesson_authorization(self):
+        from test_audio_pipeline import Frontend
+        ws = Frontend([])
+        ws.headers = {'origin': security.ALLOWED_ORIGINS[0],
+                      'sec-websocket-protocol': 'duallibras, duallibras-ticket.' + 'c' * 64}
+        ws.accept = AsyncMock()
+        with patch.object(security, 'exchange_demo_ticket', return_value=USER_A), \
+             patch.object(security, 'DEMO_SECONDS', 0.02), \
+             patch.object(security, 'authorize') as authorize, \
+             patch.object(api, 'scoped_manager') as manager, \
+             patch('app.realtime.session.TranscriptSaver') as saver, \
+             patch.object(api.ClientSession, 'start') as provider:
+            await asyncio.wait_for(api.demo_websocket_endpoint(ws), 1)
+            ws.accept.assert_awaited_once_with(subprotocol='duallibras')
+            self.assertTrue(any('60 segundos' in message.get('text', '') for message in ws.messages))
+            authorize.assert_not_called()
+            manager.assert_not_called()
+            saver.assert_not_called()
+            provider.assert_not_called()
+        self.assertEqual(security.demo_sessions, set())
+        self.assertEqual(security.sessions, {})
+
+    async def test_demo_refuses_lesson_scope_and_missing_ticket(self):
+        from test_audio_pipeline import Frontend
+        for query, protocols in [({'lesson_id': LESSON}, 'duallibras, duallibras-ticket.' + 'd' * 64), ({}, '')]:
+            ws = Frontend([])
+            ws.headers = {'origin': security.ALLOWED_ORIGINS[0], 'sec-websocket-protocol': protocols}
+            ws.query_params = query
+            ws.accept = AsyncMock()
+            with patch.object(security, 'exchange_demo_ticket') as exchange, patch.object(api, 'ClientSession') as session:
+                await api.demo_websocket_endpoint(ws)
+                ws.accept.assert_not_awaited()
+                exchange.assert_not_called()
+                session.assert_not_called()
+
+    async def test_demo_concurrency_is_bounded_and_released(self):
+        try:
+            security.acquire_demo_session(USER_A)
+            security.acquire_demo_session(USER_B)
+            with self.assertRaises(HTTPException): security.acquire_demo_session(ROOM)
+            security.release_demo_session(USER_A)
+            security.acquire_demo_session(ROOM)
+        finally:
+            for visitor in list(security.demo_sessions): security.release_demo_session(visitor)
+        self.assertEqual(security.sessions, {})

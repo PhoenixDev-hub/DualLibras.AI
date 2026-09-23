@@ -39,6 +39,7 @@ class ClientSession:
         websocket: WebSocket,
         transcript_manager: TranscriptManager | None = None,
         transcript_dir: Path | None = None,
+        persist: bool = True,
     ):
         self.websocket = websocket
         self.audio_buffer = AudioBuffer(max_size=SETTINGS.audio_queue_size)
@@ -49,8 +50,8 @@ class ClientSession:
         self.provider_task: asyncio.Task[Any] | None = None
         self.active = True
         self.mode: str | None = None
-        self.saver = TranscriptSaver(transcript_dir) if SETTINGS.save_transcripts else None
-        self.transcript_manager = transcript_manager
+        self.saver = TranscriptSaver(transcript_dir) if persist and SETTINGS.save_transcripts else None
+        self.transcript_manager = transcript_manager if persist else None
 
     async def send_to_client(self, message: dict[str, Any]) -> None:
         if not self.active:

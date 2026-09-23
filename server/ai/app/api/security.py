@@ -159,6 +159,34 @@ class WindowLimiter:
 
 limiter = WindowLimiter()
 sessions: dict[str, int] = {}
+demo_sessions: set[str] = set()
+DEMO_SECONDS = 60
+
+
+def exchange_demo_ticket(ticket: str) -> str:
+    if not INTERNAL_TOKEN:
+        raise HTTPException(503, 'Demonstração indisponível')
+    req = URLRequest(f'{AUTH_URL}/internal/ai/demo-session', method='POST',
+                     data=json.dumps({'ticket': ticket}).encode(),
+                     headers={'X-AI-Internal-Token': INTERNAL_TOKEN, 'Content-Type': 'application/json'})
+    try:
+        with urlopen(req, timeout=3) as response:
+            data = json.loads(response.read(4096))
+        return identifier(data['visitorId'])
+    except (HTTPError, URLError, OSError, ValueError, KeyError, TypeError):
+        raise HTTPException(401, 'Demonstração expirada. Inicie novamente.') from None
+
+
+def acquire_demo_session(visitor_id: str):
+    if len(demo_sessions) >= 2 or visitor_id in demo_sessions:
+        raise HTTPException(429, 'Demonstração ocupada. Tente novamente em instantes.')
+    acquire_session(visitor_id)
+    demo_sessions.add(visitor_id)
+
+
+def release_demo_session(visitor_id: str):
+    demo_sessions.discard(visitor_id)
+    release_session(visitor_id)
 
 
 def acquire_session(user_id: str):

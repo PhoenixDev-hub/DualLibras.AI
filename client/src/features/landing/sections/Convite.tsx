@@ -7,7 +7,7 @@ export default function Convite() {
       <div className="edu-container">
         <div className="edu-section-heading">
           <h2 id="convite-title">Experimente o DualLibras.ai.</h2>
-          <p>Experimente a demonstração de texto para Libras, sem precisar criar uma conta.</p>
+          <p>Experimente voz, texto e Libras por até 60 segundos, sem precisar criar uma conta.</p>
         </div>
         <div className="edu-actions">
           <Link to="/demonstracao" className="edu-button">

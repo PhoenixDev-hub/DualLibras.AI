@@ -18,7 +18,7 @@ os.environ["DOCUMENTATION_OUTPUT_DIR"] = _storage.name
 from app.services import assemblyai
 from app.realtime.audio import AudioBuffer
 from app.realtime import session
-from app.api.app import websocket_endpoint
+from app.api.app import websocket_endpoint, demo_websocket_endpoint
 from app.api import security
 
 
@@ -160,6 +160,27 @@ class AudioPipelineTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn(json.dumps({"type": "Terminate"}), provider.sent)
         self.assertTrue(provider.closed)
         self.assertTrue(front.closed)
+
+    async def test_demo_pcm_transcribes_without_saving_and_closes_provider(self):
+        provider = Provider()
+        self.connect.return_value = provider
+        pcm = b"\x00\x20" * 800
+        front = Frontend([{"bytes": pcm}])
+        front.headers = {'origin': security.ALLOWED_ORIGINS[0],
+                         'sec-websocket-protocol': 'duallibras, duallibras-ticket.' + 'a' * 64}
+        front.accept = AsyncMock()
+        with patch.object(security, 'exchange_demo_ticket', return_value='00000000-0000-4000-8000-000000000099'), \
+             patch.object(session, 'SETTINGS', replace(session.SETTINGS, save_transcripts=True)), \
+             patch.object(session, 'TranscriptSaver') as saver:
+            await asyncio.wait_for(demo_websocket_endpoint(front), 2)
+            saver.assert_not_called()
+        self.connect.assert_awaited_once()
+        self.assertIn(pcm, provider.sent)
+        turns = [x for x in front.messages if x['type'] == 'transcript']
+        self.assertEqual([x['is_final'] for x in turns], [False, True])
+        self.assertEqual(turns[-1]['text'], 'Bom dia turma')
+        self.assertTrue(provider.closed)
+        self.assertEqual(security.demo_sessions, set())
 
     async def test_invalid_pcm_never_opens_provider(self):
         front = Frontend([{"bytes": b"123"}])

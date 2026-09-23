@@ -10,9 +10,10 @@ type TranscriptionProvider = Exclude<ConnectionMode, 'offline'>
 type UseAudioCaptureOptions = {
   onTranscript: (message: TranscriptMessage) => void
   lessonId?: string | number
+  demo?: boolean
 }
 
-export function useAudioCapture({ onTranscript, lessonId }: UseAudioCaptureOptions) {
+export function useAudioCapture({ onTranscript, lessonId, demo = false }: UseAudioCaptureOptions) {
   const onTranscriptRef = useRef(onTranscript)
   useEffect(() => {
     onTranscriptRef.current = onTranscript
@@ -59,13 +60,16 @@ export function useAudioCapture({ onTranscript, lessonId }: UseAudioCaptureOptio
       return
     }
 
-    if (!lessonId) throw new Error('Selecione uma aula antes de iniciar a captura.')
-    const { ticket } = await request<{ ticket: string }>('/realtime/ticket', {
-      method: 'POST', body: JSON.stringify({ lessonId: String(lessonId) }),
+    if (!demo && !lessonId) throw new Error('Selecione uma aula antes de iniciar a captura.')
+    const { ticket } = await request<{ ticket: string }>(demo ? '/realtime/demo-ticket' : '/realtime/ticket', {
+      method: 'POST', body: JSON.stringify(demo ? {} : { lessonId: String(lessonId) }),
     })
     if (generation !== captureGeneration.current) return
     const url = new URL(WS_URL)
-    url.searchParams.set('lesson_id', String(lessonId))
+    if (demo) {
+      url.pathname = `${url.pathname.replace(/\/$/, '')}/demo`
+      url.search = ''
+    } else url.searchParams.set('lesson_id', String(lessonId))
     const ws = new WebSocket(url, ['duallibras', `duallibras-ticket.${ticket}`])
     wsRef.current = ws
 

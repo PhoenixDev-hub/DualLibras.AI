@@ -75,6 +75,30 @@ HTML da SPA; `client/vercel.json` limita o fallback a caminhos sem extensão.
 
 ## Verificação
 
+### Demonstração pública com microfone
+
+`/demonstracao` usa o mesmo PCM, VAD, transcrição AssemblyAI e avatar da aula,
+com um ticket anônimo separado da sessão de login. Não cria usuário no banco.
+O ticket é emitido por `POST /api/auth/realtime/demo-ticket` e só pode ser usado
+em `/api/ai/ws/demo`; a troca pelo identificador de visitante é interna.
+
+Limites aplicados pelo servidor, sem depender da interface:
+
+- 60 segundos por conexão e ticket de uso único válido por 60 segundos.
+- 3 tickets por hora por IP observado pelo Express; 20 tickets por hora no total.
+- Até 2 demonstrações simultâneas, respeitando também o limite global de áudio.
+- Sem troca para Whisper local, acesso a aulas, histórico ou gravação de transcrições
+  no armazenamento do projeto. A voz é processada pelo provedor de transcrição.
+
+Os contadores ficam na memória de uma instância e são reiniciados no deploy.
+Proxies e redes compartilhadas podem agrupar visitantes no mesmo IP e, portanto,
+no mesmo limite. Não confie em cabeçalhos de IP fornecidos pelo cliente para
+contornar isso. Tentativas contam ao emitir o ticket, mesmo se o visitante desistir
+ou o provedor estiver indisponível. Não é necessário adicionar variáveis de ambiente:
+usa a chave AssemblyAI e o token interno já configurados. Publique Render e Vercel.
+
+### Comandos
+
 ```sh
 docker build -t duallibras-server server
 # Execute a partir da raiz, com um arquivo de variáveis de produção preenchido:

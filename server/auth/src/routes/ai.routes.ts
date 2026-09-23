@@ -6,6 +6,7 @@ import { prisma } from '../config/prisma'
 import { authMiddleware } from '../middlewares/auth.middleware'
 import { AppError } from '../middlewares/error.middleware'
 import { wsTickets } from '../services/ws-tickets'
+import { demoTickets } from '../services/demo-tickets'
 
 // Only the Python service can introspect. User identity always comes from the
 // original session, never from uploaded_by or a caller-supplied user identifier.
@@ -27,6 +28,14 @@ aiRoutes.post('/ws-session', (req, res) => {
   if (!headers) { res.status(401).json({ error: 'Ticket expirado ou inválido' }); return }
   res.setHeader('Cache-Control', 'no-store')
   res.json(headers)
+})
+aiRoutes.post('/demo-session', (req, res) => {
+  const parsed = z.object({ ticket: z.string().regex(/^[a-f0-9]{64}$/) }).strict().safeParse(req.body)
+  if (!parsed.success) { res.status(400).json({ error: 'Ticket inválido' }); return }
+  const visitorId = demoTickets.consume(parsed.data.ticket)
+  if (!visitorId) { res.status(401).json({ error: 'Ticket expirado ou inválido' }); return }
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ visitorId })
 })
 aiRoutes.use(authMiddleware)
 aiRoutes.get('/authorize', async (req, res, next) => {

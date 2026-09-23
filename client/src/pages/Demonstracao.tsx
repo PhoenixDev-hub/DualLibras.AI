@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Hand } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Hand, Mic, Square } from 'lucide-react'
 import VLibras from '../features/libras/components/VLibras'
 import VLibrasStage from '../features/libras/components/VLibrasStage'
-import type { LibrasUtterance } from '../features/libras/hooks/useLibrasTranscripts'
+import { useLibrasTranscripts } from '../features/libras/hooks/useLibrasTranscripts'
+import { useAudioCapture } from '../features/transcription/hooks/useAudioCapture'
 
 const examples = [
   'Olá! Seja bem-vindo à nossa escola.',
@@ -13,25 +14,31 @@ const examples = [
 
 export default function Demonstracao() {
   const [text, setText] = useState(examples[0])
-  const [utterances, setUtterances] = useState<LibrasUtterance[]>([])
-  const [playingText, setPlayingText] = useState('')
+  const libras = useLibrasTranscripts()
+  const [transcript, setTranscript] = useState('')
+  const [starting, setStarting] = useState(false)
+  const audio = useAudioCapture({
+    demo: true,
+    onTranscript: (message) => {
+      if (message.type === 'transcript' && !message.error) setTranscript(message.text)
+      libras.receiveTranscript(message)
+    },
+  })
   const [status, setStatus] = useState<'idle' | 'loading' | 'translating' | 'error' | 'ready'>(
     'loading',
   )
-  const [speed, setSpeed] = useState(1)
   const [version, setVersion] = useState(0)
-  const sequence = useRef(0)
-  const busy = status === 'loading' || status === 'translating' || utterances.length > 0
+  const busy = status === 'loading' || status === 'translating' || libras.utterances.length > 0
 
   return (
     <main className="transcription-app min-h-screen bg-slate-950 text-slate-100 light:bg-slate-50 light:text-slate-900">
       <VLibras
         key={version}
-        utterances={utterances}
-        onQueued={(lastId) => setUtterances((pending) => pending.filter(({ id }) => id > lastId))}
-        onPlayingTextChange={setPlayingText}
+        utterances={libras.utterances}
+        onQueued={libras.acknowledge}
+        onPlayingTextChange={libras.setPlayingText}
         onStatusChange={setStatus}
-        speed={speed}
+        speed={libras.speed}
       />
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
         <Link
@@ -46,8 +53,8 @@ export default function Demonstracao() {
           </p>
           <h1 className="text-3xl font-bold sm:text-4xl">Experimente o protótipo</h1>
           <p className="mt-4 text-slate-300 light:text-slate-600">
-            Escolha uma frase ou escreva a sua e veja a representação pelo avatar em Libras. Esta
-            demonstração usa texto digitado; a captura de voz fica na área de aulas.
+            Fale pelo microfone e acompanhe a transcrição e o avatar em Libras, como em uma aula.
+            Você também pode experimentar digitando uma frase.
           </p>
         </header>
         <div className="grid items-start gap-6 lg:grid-cols-2">
@@ -58,6 +65,60 @@ export default function Demonstracao() {
             <h2 id="demo-text-title" className="text-xl font-semibold">
               O que vamos comunicar?
             </h2>
+            <div className="my-5 rounded-xl border border-sky-700 p-4 light:border-sky-200">
+              <h3 className="font-semibold">Experimente com sua voz</h3>
+              <p className="mt-2 text-sm text-slate-300 light:text-slate-600">
+                Até 60 segundos por tentativa e 3 tentativas por hora por conexão. A demonstração
+                não salva transcrições no histórico do projeto. Sua fala é enviada ao serviço de
+                transcrição para gerar o texto.
+              </p>
+              <button
+                type="button"
+                disabled={starting || (!audio.capturing && status === 'loading')}
+                onClick={async () => {
+                  if (audio.capturing) {
+                    await audio.pararCaptura()
+                    return
+                  }
+                  setStarting(true)
+                  setTranscript('')
+                  try {
+                    await audio.iniciarCaptura()
+                  } finally {
+                    setStarting(false)
+                  }
+                }}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {audio.capturing ? (
+                  <Square size={18} aria-hidden="true" />
+                ) : (
+                  <Mic size={18} aria-hidden="true" />
+                )}
+                {starting
+                  ? 'Preparando microfone…'
+                  : audio.capturing
+                    ? 'Parar demonstração'
+                    : 'Testar com minha voz'}
+              </button>
+              {audio.capturing && (
+                <p role="status" className="mt-3 text-sm">
+                  {audio.conectado
+                    ? 'Ouvindo. Fale uma frase curta e faça uma pausa.'
+                    : 'Conectando ao serviço de transcrição…'}
+                </p>
+              )}
+              {audio.audioError && (
+                <p role="alert" className="mt-3 text-sm text-rose-400 light:text-red-700">
+                  {audio.audioError}
+                </p>
+              )}
+              {transcript && (
+                <p role="status" className="mt-3 rounded-lg bg-slate-800 p-3 light:bg-slate-100">
+                  {transcript}
+                </p>
+              )}
+            </div>
             <div className="my-5 flex flex-col gap-2" aria-label="Frases de exemplo">
               {examples.map((example) => (
                 <button
@@ -73,8 +134,14 @@ export default function Demonstracao() {
             <form
               onSubmit={(event) => {
                 event.preventDefault()
-                if (busy || status === 'error' || !text.trim()) return
-                setUtterances([{ id: ++sequence.current, text: text.trim() }])
+                if (busy || audio.capturing || starting || status === 'error' || !text.trim())
+                  return
+                libras.receiveTranscript({
+                  type: 'transcript',
+                  text: text.trim(),
+                  isFinal: true,
+                  error: false,
+                })
               }}
             >
               <label htmlFor="demo-text" className="mb-2 block font-medium">
@@ -97,7 +164,7 @@ export default function Demonstracao() {
               </p>
               <button
                 type="submit"
-                disabled={busy || status === 'error' || !text.trim()}
+                disabled={busy || audio.capturing || starting || status === 'error' || !text.trim()}
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Hand size={20} aria-hidden="true" />
@@ -112,23 +179,23 @@ export default function Demonstracao() {
               Tradução automática pelo VLibras. Pode apresentar limitações e não substitui um
               intérprete.
             </p>
-            {playingText && (
+            {libras.playingText && (
               <p role="status" className="mt-4 rounded-xl bg-slate-800 p-4 light:bg-slate-100">
-                {playingText}
+                {libras.playingText}
               </p>
             )}
           </section>
           <VLibrasStage
             status={status}
             lessonTitle="Demonstração de Libras"
-            currentSpeed={speed}
-            onSpeedChange={setSpeed}
+            currentSpeed={libras.speed}
+            onSpeedChange={libras.setSpeed}
             className="min-h-[460px]"
             onReload={
               status === 'error'
                 ? () => {
-                    setUtterances([])
-                    setPlayingText('')
+                    libras.acknowledge(Number.MAX_SAFE_INTEGER)
+                    libras.setPlayingText('')
                     setStatus('loading')
                     setVersion((value) => value + 1)
                   }
