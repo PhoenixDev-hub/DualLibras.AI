@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Hand, Mic, Square } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock, Hand, Mic, ShieldCheck, Square } from 'lucide-react'
+import ProjectLogo from '../components/brand/ProjectLogo'
+import ThemeToggle from '../features/theme/ThemeToggle'
+import '../features/demo/demo.css'
 import VLibras from '../features/libras/components/VLibras'
 import VLibrasStage from '../features/libras/components/VLibrasStage'
 import { useLibrasTranscripts } from '../features/libras/hooks/useLibrasTranscripts'
@@ -31,7 +34,7 @@ export default function Demonstracao() {
   const busy = status === 'loading' || status === 'translating' || libras.utterances.length > 0
 
   return (
-    <main className="transcription-app min-h-screen bg-slate-950 text-slate-100 light:bg-slate-50 light:text-slate-900">
+    <div className="demo-page transcription-app">
       <VLibras
         key={version}
         utterances={libras.utterances}
@@ -40,34 +43,57 @@ export default function Demonstracao() {
         onStatusChange={setStatus}
         speed={libras.speed}
       />
-      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 rounded-lg text-sm underline underline-offset-4"
-        >
+      <header className="demo-header">
+        <div className="demo-container demo-header-inner">
+          <Link to="/" aria-label="DualLibras — início">
+            <ProjectLogo />
+          </Link>
+          <nav className="demo-header-actions" aria-label="Navegação da demonstração">
+            <Link to="/entrar" className="demo-button demo-button-outline">
+              Entrar na minha conta
+            </Link>
+            <ThemeToggle />
+          </nav>
+        </div>
+      </header>
+      <main className="demo-container demo-main" id="conteudo">
+        <Link to="/" className="demo-back">
           <ArrowLeft size={16} aria-hidden="true" /> Voltar ao início
         </Link>
-        <header className="my-8 max-w-2xl">
-          <p className="mb-3 text-sm font-semibold text-sky-400 light:text-sky-700">
-            Demonstração gratuita · Sem cadastro
+        <header className="demo-intro">
+          <p className="demo-eyebrow">
+            <Hand size={17} aria-hidden="true" /> Conheça na prática
           </p>
-          <h1 className="text-3xl font-bold sm:text-4xl">Experimente o protótipo</h1>
-          <p className="mt-4 text-slate-300 light:text-slate-600">
+          <h1>
+            Experimente o <span>DualLibras.</span>
+          </h1>
+          <p className="demo-description">
             Fale pelo microfone e acompanhe a transcrição e o avatar em Libras, como em uma aula.
             Você também pode experimentar digitando uma frase.
           </p>
+          <div className="demo-badges">
+            <span>
+              <Clock size={16} aria-hidden="true" /> Até 60 segundos
+            </span>
+            <span>
+              <ShieldCheck size={16} aria-hidden="true" /> Sem cadastro
+            </span>
+          </div>
         </header>
-        <div className="grid items-start gap-6 lg:grid-cols-2">
-          <section
-            className="rounded-2xl border border-slate-700 bg-slate-900 p-6 light:border-slate-200 light:bg-white"
-            aria-labelledby="demo-text-title"
-          >
-            <h2 id="demo-text-title" className="text-xl font-semibold">
-              O que vamos comunicar?
-            </h2>
-            <div className="my-5 rounded-xl border border-sky-700 p-4 light:border-sky-200">
-              <h3 className="font-semibold">Experimente com sua voz</h3>
-              <p className="mt-2 text-sm text-slate-300 light:text-slate-600">
+        <div className="demo-workspace">
+          <section className="demo-card" aria-labelledby="demo-text-title">
+            <h2 id="demo-text-title">O que vamos comunicar?</h2>
+            <div className="demo-voice" data-capturing={audio.capturing}>
+              <div className="demo-voice-heading">
+                <span className="demo-icon">
+                  <Mic size={23} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3>Experimente com sua voz</h3>
+                  <p>Fale, acompanhe e descubra.</p>
+                </div>
+              </div>
+              <p className="demo-note">
                 Até 60 segundos por tentativa e 3 tentativas por hora por conexão. A demonstração
                 não salva transcrições no histórico do projeto. Sua fala é enviada ao serviço de
                 transcrição para gerar o texto.
@@ -88,7 +114,7 @@ export default function Demonstracao() {
                     setStarting(false)
                   }
                 }}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`demo-button demo-button-wide ${audio.capturing ? 'demo-button-stop' : ''}`}
               >
                 {audio.capturing ? (
                   <Square size={18} aria-hidden="true" />
@@ -102,30 +128,36 @@ export default function Demonstracao() {
                     : 'Testar com minha voz'}
               </button>
               {audio.capturing && (
-                <p role="status" className="mt-3 text-sm">
+                <p role="status" className="demo-recording">
+                  <span aria-hidden="true" />
                   {audio.conectado
                     ? 'Ouvindo. Fale uma frase curta e faça uma pausa.'
                     : 'Conectando ao serviço de transcrição…'}
                 </p>
               )}
               {audio.audioError && (
-                <p role="alert" className="mt-3 text-sm text-rose-400 light:text-red-700">
+                <p role="alert" className="demo-error">
                   {audio.audioError}
                 </p>
               )}
               {transcript && (
-                <p role="status" className="mt-3 rounded-lg bg-slate-800 p-3 light:bg-slate-100">
-                  {transcript}
-                </p>
+                <div className="demo-transcript">
+                  <span className="demo-label">Sua fala em texto</span>
+                  <p role="status">{transcript}</p>
+                </div>
               )}
             </div>
-            <div className="my-5 flex flex-col gap-2" aria-label="Frases de exemplo">
+            <div className="demo-divider">
+              <span>Ou experimente com texto</span>
+            </div>
+            <div className="demo-examples" aria-label="Frases de exemplo">
               {examples.map((example) => (
                 <button
                   key={example}
                   type="button"
                   onClick={() => setText(example)}
-                  className="rounded-xl border border-slate-600 px-4 py-3 text-left text-sm hover:border-sky-400 focus-visible:outline-2 focus-visible:outline-sky-400 light:border-slate-300"
+                  aria-pressed={text === example}
+                  className="demo-example"
                 >
                   {example}
                 </button>
@@ -144,7 +176,7 @@ export default function Demonstracao() {
                 })
               }}
             >
-              <label htmlFor="demo-text" className="mb-2 block font-medium">
+              <label htmlFor="demo-text" className="demo-label">
                 Sua frase
               </label>
               <textarea
@@ -154,18 +186,15 @@ export default function Demonstracao() {
                 maxLength={240}
                 rows={4}
                 aria-describedby="demo-limit"
-                className="w-full resize-y rounded-xl border border-slate-600 bg-slate-950 p-3 text-base focus:outline-2 focus:outline-sky-400 light:border-slate-300 light:bg-white"
+                className="demo-textarea"
               />
-              <p
-                id="demo-limit"
-                className="mt-1 text-right text-sm text-slate-400 light:text-slate-600"
-              >
+              <p id="demo-limit" className="demo-counter">
                 {text.length}/240 caracteres
               </p>
               <button
                 type="submit"
                 disabled={busy || audio.capturing || starting || status === 'error' || !text.trim()}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="demo-button demo-button-outline demo-button-wide"
               >
                 <Hand size={20} aria-hidden="true" />
                 {status === 'loading'
@@ -175,44 +204,50 @@ export default function Demonstracao() {
                     : 'Ver em Libras'}
               </button>
             </form>
-            <p className="mt-5 text-sm text-slate-400 light:text-slate-600">
+            <p className="demo-disclaimer">
               Tradução automática pelo VLibras. Pode apresentar limitações e não substitui um
               intérprete.
             </p>
             {libras.playingText && (
-              <p role="status" className="mt-4 rounded-xl bg-slate-800 p-4 light:bg-slate-100">
+              <p role="status" className="demo-playing">
                 {libras.playingText}
               </p>
             )}
           </section>
-          <VLibrasStage
-            status={status}
-            lessonTitle="Demonstração de Libras"
-            currentSpeed={libras.speed}
-            onSpeedChange={libras.setSpeed}
-            className="min-h-[460px]"
-            onReload={
-              status === 'error'
-                ? () => {
-                    libras.acknowledge(Number.MAX_SAFE_INTEGER)
-                    libras.setPlayingText('')
-                    setStatus('loading')
-                    setVersion((value) => value + 1)
-                  }
-                : undefined
-            }
-          />
+          <div className="demo-avatar-column">
+            <VLibrasStage
+              status={status}
+              lessonTitle="Demonstração de Libras"
+              currentSpeed={libras.speed}
+              onSpeedChange={libras.setSpeed}
+              className="demo-avatar"
+              onReload={
+                status === 'error'
+                  ? () => {
+                      libras.acknowledge(Number.MAX_SAFE_INTEGER)
+                      libras.setPlayingText('')
+                      setStatus('loading')
+                      setVersion((value) => value + 1)
+                    }
+                  : undefined
+              }
+            />
+            <p className="demo-avatar-note">
+              <Hand size={17} aria-hidden="true" /> O avatar acompanha o texto da sua fala ou da
+              frase escolhida.
+            </p>
+          </div>
         </div>
-        <footer className="mt-8 flex flex-wrap items-center gap-4 text-sm">
-          <span>Quer usar a captura de voz nas suas aulas?</span>
-          <Link
-            to="/entrar"
-            className="inline-flex items-center gap-2 font-semibold text-sky-400 underline underline-offset-4 light:text-sky-700"
-          >
+        <footer className="demo-invitation">
+          <div>
+            <h2>Leve essa experiência para a sala de aula.</h2>
+            <p>Entre na sua conta para acessar suas turmas e aulas.</p>
+          </div>
+          <Link to="/entrar" className="demo-button">
             Entrar na minha conta <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </footer>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }
