@@ -1,14 +1,14 @@
+import { Request, Router } from 'express'
 import fs from 'node:fs'
-import { materialAccessWhere } from '../services/material-access'
 import path from 'node:path'
-import { env } from '../config/env'
-import { Router, Request } from 'express'
 import { z } from 'zod'
+import { env } from '../config/env'
 import { prisma } from '../config/prisma'
 import { authMiddleware } from '../middlewares/auth.middleware'
 import { AppError } from '../middlewares/error.middleware'
-import { createClassroomSchema } from '../schemas/Classroom.schema'
 import { rateLimit } from '../middlewares/security.middleware'
+import { createClassroomSchema } from '../schemas/Classroom.schema'
+import { materialAccessWhere } from '../services/material-access'
 import { publishTranscript } from '../services/transcription.service'
 
 type AuthRequest = Request
@@ -176,7 +176,17 @@ educationRoutes.get('/', async (req: AuthRequest, res, next) => {
 educationRoutes.patch('/classrooms/:id', async (req: AuthRequest, res, next) => {
   try {
     const id = String(req.params.id)
-    await owned(req.user!.sub, id, req.authenticatedUser?.role)
+    const room = await prisma.classroom.findUnique({ where: { id } })
+    if (!room) throw new AppError('Sala não encontrada', 404)
+    const actor =
+      req.authenticatedUser ??
+      (await prisma.user.findUniqueOrThrow({
+        where: { id: req.user!.sub },
+        select: { id: true, role: true, isActive: true },
+      }))
+    if (actor.role !== 'ADMIN' && room.teacherId !== req.user!.sub) {
+      throw new AppError('Sem permissão para alterar esta sala', 403)
+    }
     const parsed = createClassroomSchema.safeParse(req.body)
     if (!parsed.success) throw new AppError('Nome ou descrição inválidos', 400)
     await prisma.classroom.update({ where: { id }, data: parsed.data })
@@ -216,7 +226,17 @@ educationRoutes.post('/join', rateLimit(env.joinLimit), async (req, res, next) =
 educationRoutes.delete('/classrooms/:id/members/:userId', async (req: AuthRequest, res, next) => {
   try {
     const classroomId = String(req.params.id)
-    await owned(req.user!.sub, classroomId, req.authenticatedUser?.role)
+    const room = await prisma.classroom.findUnique({ where: { id: classroomId } })
+    if (!room) throw new AppError('Sala não encontrada', 404)
+    const actor =
+      req.authenticatedUser ??
+      (await prisma.user.findUniqueOrThrow({
+        where: { id: req.user!.sub },
+        select: { id: true, role: true, isActive: true },
+      }))
+    if (actor.role !== 'ADMIN' && room.teacherId !== req.user!.sub) {
+      throw new AppError('Sem permissão para alterar esta sala', 403)
+    }
     await prisma.classroomMember.deleteMany({
       where: { classroomId, userId: String(req.params.userId) },
     })
