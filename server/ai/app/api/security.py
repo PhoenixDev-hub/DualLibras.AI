@@ -123,6 +123,22 @@ async def authorize(headers, action='read', lesson_id=None, material_id=None) ->
         raise HTTPException(503, 'Autorização indisponível') from None
 
 
+def exchange_ws_ticket(ticket: str, lesson_id: str) -> dict:
+    if not INTERNAL_TOKEN:
+        raise HTTPException(503, 'Autorização indisponível')
+    req = URLRequest(f'{AUTH_URL}/internal/ai/ws-session', method='POST',
+                     data=json.dumps({'ticket': ticket, 'lessonId': identifier(lesson_id)}).encode(),
+                     headers={'X-AI-Internal-Token': INTERNAL_TOKEN, 'Content-Type': 'application/json'})
+    try:
+        with urlopen(req, timeout=3) as response:
+            data = json.loads(response.read(16384))
+        if not isinstance(data, dict) or not (data.get('cookie') or data.get('authorization')):
+            raise ValueError('Invalid session')
+        return {key: data[key] for key in ('cookie', 'authorization') if isinstance(data.get(key), str)}
+    except (HTTPError, URLError, OSError, ValueError):
+        raise HTTPException(401, 'Conexão expirada. Inicie novamente.') from None
+
+
 class WindowLimiter:
     def __init__(self):
         self.windows = OrderedDict()

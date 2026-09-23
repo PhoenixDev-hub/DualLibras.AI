@@ -12,6 +12,7 @@ import { errorMiddleware } from './middlewares/error.middleware'
 import { aiRoutes } from './routes/ai.routes'
 import { browserSecurity, rateLimit } from './middlewares/security.middleware'
 import { prisma } from './config/prisma'
+import { realtimeRoutes } from './routes/realtime.routes'
 
 export function createApp() {
   const app = express()
@@ -40,6 +41,7 @@ export function createApp() {
 
   app.use('/admin', adminRoutes)
   app.use('/internal/ai', aiRoutes)
+  app.use('/realtime', realtimeRoutes)
   app.use('/education', educationRoutes)
   app.use('/auth', authRoutes)
   app.use('/users', userRoutes)

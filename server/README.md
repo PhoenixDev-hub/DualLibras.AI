@@ -49,6 +49,7 @@ Use `client` como Root Directory. O arquivo `client/vercel.json` encaminha
 ```dotenv
 VITE_AUTH_BACKEND_HTTP_URL=/api/auth
 VITE_BACKEND_HTTP_URL=/api/ai
+VITE_BACKEND_WS_URL=wss://duallibras-ai.onrender.com/api/ai/ws
 ```
 
 Publique novamente o frontend para carregar essa configuração. O login segue
@@ -60,9 +61,17 @@ Vercel /api/auth/auth/login → Render /api/auth/auth/login → Express /auth/lo
 
 As rotas `/api/auth/internal/*` e `/api/ai/materials/ingest` ficam bloqueadas no
 proxy público. Os serviços se comunicam diretamente pelas portas internas.
-O gateway suporta upgrade de WebSocket em `/api/ai/ws`; a captura via domínio
-da Vercel ainda precisa ser validada no deploy, incluindo cookies e upgrade
-através do proxy externo. A validação de login não comprova transcrição ao vivo.
+O WebSocket conecta diretamente ao Render em `/api/ai/ws`. O frontend obtém
+um ticket de uso único, válido por 60 segundos, pela sessão HTTP na Vercel.
+O ticket viaja no subprotocolo do handshake, sem cookies entre domínios nem
+credenciais na URL. O Python troca o ticket pela sessão através da porta
+interna do Express e revalida a conta e o acesso à aula durante a captura.
+Republique ambos os serviços para ativar esse fluxo. A validação de login
+não comprova transcrição ao vivo.
+
+O build do frontend copia os módulos `.mjs`, binários `.wasm` e modelo VAD das
+dependências instaladas para `public`. Arquivos ausentes não devem receber o
+HTML da SPA; `client/vercel.json` limita o fallback a caminhos sem extensão.
 
 ## Verificação
 

@@ -5,6 +5,7 @@ import { env } from '../config/env'
 import { prisma } from '../config/prisma'
 import { authMiddleware } from '../middlewares/auth.middleware'
 import { AppError } from '../middlewares/error.middleware'
+import { wsTickets } from '../services/ws-tickets'
 
 // Only the Python service can introspect. User identity always comes from the
 // original session, never from uploaded_by or a caller-supplied user identifier.
@@ -17,6 +18,15 @@ aiRoutes.use((req, res, next) => {
     return
   }
   next()
+})
+// This exchange is behind the internal secret and the public gateway block.
+aiRoutes.post('/ws-session', (req, res) => {
+  const parsed = z.object({ ticket: z.string().regex(/^[a-f0-9]{64}$/), lessonId: z.string().uuid() }).strict().safeParse(req.body)
+  if (!parsed.success) { res.status(400).json({ error: 'Ticket inválido' }); return }
+  const headers = wsTickets.consume(parsed.data.ticket, parsed.data.lessonId)
+  if (!headers) { res.status(401).json({ error: 'Ticket expirado ou inválido' }); return }
+  res.setHeader('Cache-Control', 'no-store')
+  res.json(headers)
 })
 aiRoutes.use(authMiddleware)
 aiRoutes.get('/authorize', async (req, res, next) => {

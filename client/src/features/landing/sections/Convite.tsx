@@ -7,11 +7,11 @@ export default function Convite() {
       <div className="edu-container">
         <div className="edu-section-heading">
           <h2 id="convite-title">Experimente o DualLibras.ai.</h2>
-          <p>Conheça na prática uma experiência de comunicação entre voz, texto e Libras.</p>
+          <p>Experimente a demonstração de texto para Libras, sem precisar criar uma conta.</p>
         </div>
         <div className="edu-actions">
-          <Link to="/app" className="edu-button">
-            Testar agora <ArrowRight size={18} aria-hidden="true" />
+          <Link to="/demonstracao" className="edu-button">
+            Testar protótipo <ArrowRight size={18} aria-hidden="true" />
           </Link>
           <a href="#impacto" className="edu-button edu-button-outline">
             Conhecer o projeto

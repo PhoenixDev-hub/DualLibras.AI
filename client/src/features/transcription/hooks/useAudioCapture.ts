@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MicVAD } from '@ricky0123/vad-web'
 import { WS_URL } from '../../../config/backend'
+import { request } from '../../../services/authApi'
 import { parseTranscriptMessage, type TranscriptMessage } from '../services/websocket'
 
 type ConnectionMode = 'assemblyai' | 'local' | 'offline'
@@ -53,13 +54,19 @@ export function useAudioCapture({ onTranscript, lessonId }: UseAudioCaptureOptio
     onTranscriptRef.current(message)
   }
 
-  const conectarSocket = () => {
+  const conectarSocket = async (generation: number) => {
     if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
       return
     }
 
-    console.log(`[WebSocket] Conectando ao backend em ${WS_URL}`)
-    const ws = new WebSocket(lessonId ? `${WS_URL}${WS_URL.includes('?') ? '&' : '?'}lesson_id=${encodeURIComponent(lessonId)}` : WS_URL)
+    if (!lessonId) throw new Error('Selecione uma aula antes de iniciar a captura.')
+    const { ticket } = await request<{ ticket: string }>('/realtime/ticket', {
+      method: 'POST', body: JSON.stringify({ lessonId: String(lessonId) }),
+    })
+    if (generation !== captureGeneration.current) return
+    const url = new URL(WS_URL)
+    url.searchParams.set('lesson_id', String(lessonId))
+    const ws = new WebSocket(url, ['duallibras', `duallibras-ticket.${ticket}`])
     wsRef.current = ws
 
     ws.onopen = () => {
@@ -251,7 +258,8 @@ export function useAudioCapture({ onTranscript, lessonId }: UseAudioCaptureOptio
       }
       updateLevel()
 
-      conectarSocket()
+      await conectarSocket(generation)
+      if (generation !== captureGeneration.current) return
       setCapturing(true)
       startingRef.current = false
       void carregarDispositivos()

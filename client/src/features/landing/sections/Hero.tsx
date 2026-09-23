@@ -16,8 +16,8 @@ export default function Hero() {
           sua representação em Libras em tempo real.
         </p>
         <div className="edu-actions">
-          <Link className="edu-button" to="/app">
-            Experimentar agora <ArrowRight size={18} aria-hidden="true" />
+          <Link className="edu-button" to="/demonstracao">
+            Testar protótipo <ArrowRight size={18} aria-hidden="true" />
           </Link>
           <a className="edu-button edu-button-outline" href="#impacto">
             Conheça o projeto

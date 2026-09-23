@@ -97,10 +97,20 @@ async def websocket_endpoint(websocket: WebSocket):
         security.limiter.take('ws-ip:' + (websocket.client.host if websocket.client else 'unknown'), security.WS_STARTS_PER_MINUTE * 4)
         security.check_origin(websocket.headers, websocket=True)
         lesson_id = websocket.query_params.get('lesson_id')
-        principal = await security.authorize(websocket.headers, 'capture', lesson_id)
+        auth_headers = websocket.headers
+        protocols = [value.strip() for value in websocket.headers.get('sec-websocket-protocol', '').split(',')]
+        tickets = [value.removeprefix('duallibras-ticket.') for value in protocols if value.startswith('duallibras-ticket.')]
+        if tickets:
+            if len(tickets) != 1 or 'duallibras' not in protocols or not lesson_id or len(tickets[0]) != 64:
+                raise HTTPException(401, 'Ticket inválido')
+            auth_headers = await asyncio.to_thread(security.exchange_ws_ticket, tickets[0], lesson_id)
+        principal = await security.authorize(auth_headers, 'capture', lesson_id)
         security.acquire_session(principal.user_id)
         acquired = True
-        await websocket.accept()
+        if tickets:
+            await websocket.accept(subprotocol='duallibras')
+        else:
+            await websocket.accept()
         session_path = security.contained(STORAGE_ROOT, 'scoped', *principal.scope, 'live', str(uuid4()))
         session = ClientSession(websocket, transcript_manager=scoped_manager(principal), transcript_dir=session_path)
         started = False
@@ -117,7 +127,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if now - last_audio_at >= 15:
                 raise HTTPException(408, 'Sessão encerrada por ausência de áudio')
             if now >= next_check:
-                renewed = await security.authorize(websocket.headers, 'capture', lesson_id)
+                renewed = await security.authorize(auth_headers, 'capture', lesson_id)
                 if renewed != principal:
                     raise HTTPException(401, 'Sessão alterada. Entre novamente.')
                 next_check = time.monotonic() + security.RECHECK_SECONDS

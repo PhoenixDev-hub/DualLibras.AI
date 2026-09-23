@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/sync-vad-assets.mjs",
+    "prebuild": "node scripts/sync-vad-assets.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Copied from the installed ONNX runtime by predev/prebuild.
+public/ort-wasm*.mjs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

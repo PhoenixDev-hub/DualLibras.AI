@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 import httpx
 from fastapi import HTTPException
@@ -113,3 +113,36 @@ class SecurityTest(unittest.IsolatedAsyncioTestCase):
         with patch.object(security, 'SESSION_SECONDS', 0.01):
             await asyncio.wait_for(api.websocket_endpoint(ws), 1)
         self.assertEqual(security.sessions, {})
+
+    async def test_websocket_ticket_uses_exchanged_session_and_rechecks_revocation(self):
+        from test_audio_pipeline import Frontend
+        ws = Frontend([])
+        ws.headers = {'origin': security.ALLOWED_ORIGINS[0],
+                      'sec-websocket-protocol': 'duallibras, duallibras-ticket.' + 'a' * 64}
+        ws.query_params = {'lesson_id': LESSON}
+        ws.accept = AsyncMock()
+        session_headers = {'authorization': 'Bearer A'}
+        with patch.object(security, 'exchange_ws_ticket', return_value=session_headers) as exchange, \
+             patch.object(security, 'RECHECK_SECONDS', 0.01), \
+             patch.object(security, 'lookup_session', side_effect=[lookup(session_headers, 'capture', LESSON, None), HTTPException(401, 'revoked')]) as authorize, \
+             patch.object(api.ClientSession, 'start') as provider:
+            await asyncio.wait_for(api.websocket_endpoint(ws), 1)
+            exchange.assert_called_once_with('a' * 64, LESSON)
+            ws.accept.assert_awaited_once_with(subprotocol='duallibras')
+            self.assertEqual(authorize.call_count, 2)
+            self.assertTrue(all(call.args[0] == session_headers for call in authorize.call_args_list))
+            self.assertTrue(any(message.get('error') for message in ws.messages))
+            provider.assert_not_called()
+        self.assertEqual(security.sessions, {})
+
+    async def test_invalid_websocket_ticket_never_starts_provider(self):
+        from test_audio_pipeline import Frontend
+        ws = Frontend([])
+        ws.headers = {'origin': security.ALLOWED_ORIGINS[0],
+                      'sec-websocket-protocol': 'duallibras, duallibras-ticket.' + 'b' * 64}
+        ws.query_params = {'lesson_id': LESSON}
+        ws.accept = AsyncMock()
+        with patch.object(security, 'exchange_ws_ticket', side_effect=HTTPException(401, 'expired')), patch.object(api, 'ClientSession') as session:
+            await api.websocket_endpoint(ws)
+            ws.accept.assert_not_awaited()
+            session.assert_not_called()

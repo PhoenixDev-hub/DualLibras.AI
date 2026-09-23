@@ -6,6 +6,7 @@ import RequireSession from './features/auth/RequireSession'
 const Auth = lazy(() => import('./pages/Auth'))
 const RoomCode = lazy(() => import('./pages/RoomCode'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Demonstracao = lazy(() => import('./pages/Demonstracao'))
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/demonstracao" element={<Demonstracao />} />
           <Route path="/app" element={<RequireSession><AppPrincipal /></RequireSession>} />
           <Route path="/aula" element={<RequireSession><AppPrincipal /></RequireSession>} />
           <Route path="/codigo" element={<RoomCode />} />
