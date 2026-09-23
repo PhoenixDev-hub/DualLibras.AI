@@ -14,7 +14,7 @@ export default function Home({ onNavigate }: { onNavigate: (page: string) => voi
         title={`Olá, ${user?.name ?? ''}`}
         description="Que bom ter você aqui. Vamos criar novas conexões hoje?"
         action={
-          <span className="flex items-center gap-2 text-xs text-slate-500">
+          <span className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <CalendarDays size={16} />
             {new Date().toLocaleDateString('pt-BR')}
           </span>
@@ -26,19 +26,19 @@ export default function Home({ onNavigate }: { onNavigate: (page: string) => voi
             label: 'Turmas ativas',
             value: classrooms.filter((item) => !item.archived).length,
             icon: BookOpen,
-            color: 'bg-blue-50 text-primary',
+            color: 'bg-blue-50 dark:bg-blue-950 text-primary dark:text-blue-300',
           },
           {
             label: 'Alunos conectados',
             value: students.filter((item) => item.classroomIds.length).length,
             icon: Users,
-            color: 'bg-violet-50 text-violet-600',
+            color: 'bg-violet-50 dark:bg-violet-950 text-violet-600 dark:text-violet-300',
           },
           {
             label: 'Aulas realizadas',
             value: lessons.filter((item) => item.status === 'finished').length,
             icon: Video,
-            color: 'bg-teal-50 text-teal-600',
+            color: 'bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-300',
           },
         ].map(({ label, value, icon: Icon, color }) => (
           <article key={label} className="t-card flex items-center gap-4 p-5">
@@ -47,21 +47,21 @@ export default function Home({ onNavigate }: { onNavigate: (page: string) => voi
             </span>
             <section>
               <p className="text-3xl font-bold">{value.toString().padStart(2, '0')}</p>
-              <p className="mt-1 text-xs text-slate-500">{label}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{label}</p>
             </section>
           </article>
         ))}
       </section>
       {live && (
-        <section className="mb-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-blue-200 bg-blue-50 p-6">
+        <section className="mb-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-6">
           <section className="flex items-center gap-4">
-            <span className="hidden rounded-xl bg-white p-4 text-primary sm:block">
+            <span className="hidden rounded-xl bg-white dark:bg-slate-900 p-4 text-primary dark:text-blue-300 sm:block">
               <Video size={26} />
             </span>
             <section>
               <span className="t-badge mb-2">● Aula em andamento</span>
               <h2 className="font-ui text-lg font-bold">{live.title}</h2>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {classrooms.find((item) => item.id === live.classroomId)?.name} · Sua sala está
                 esperando por você
               </p>
@@ -76,7 +76,7 @@ export default function Home({ onNavigate }: { onNavigate: (page: string) => voi
       <section className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <section>
           <h2 className="font-ui text-lg font-bold">Suas turmas</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Conhecimento compartilhado, possibilidades ampliadas.
           </p>
         </section>
@@ -101,7 +101,7 @@ export default function Home({ onNavigate }: { onNavigate: (page: string) => voi
       </section>
       <button
         onClick={() => onNavigate('Minhas turmas')}
-        className="mb-8 mt-3 flex items-center gap-2 text-xs font-bold text-primary"
+        className="mb-8 mt-3 flex items-center gap-2 text-xs font-bold text-primary dark:text-blue-300"
       >
         Ver todas as turmas
         <ArrowRight size={14} />

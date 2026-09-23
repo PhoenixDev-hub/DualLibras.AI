@@ -16,13 +16,13 @@ Esta implementação substitui o painel demonstrativo por consultas autenticadas
 
 Todas as rotas exigem sessão válida; token ausente, inválido ou cookie malformado retorna 401. Não existe fallback guest.
 
-| Método | Rota | Entrada/resultado |
-| --- | --- | --- |
-| GET | `/education` | `{ classrooms, students, lessons, materials, terms }`; somente dados acessíveis |
-| POST | `/classrooms` | `{ name, description? }`; 201 `{ classroom }` com UUID/código gerados |
-| PATCH | `/education/classrooms/:id` | `{ name, description? }`; dono/admin; 204 |
-| POST | `/education/join` | `{ code }`; normalizado para maiúsculas; `{ classroomId }`; código inexistente 404 |
-| DELETE | `/education/classrooms/:id/members/:userId` | dono/admin; 204, idempotente |
+| Método | Rota                                        | Entrada/resultado                                                                  |
+| ------ | ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| GET    | `/education`                                | `{ classrooms, students, lessons, materials, terms }`; somente dados acessíveis    |
+| POST   | `/classrooms`                               | `{ name, description? }`; 201 `{ classroom }` com UUID/código gerados              |
+| PATCH  | `/education/classrooms/:id`                 | `{ name, description? }`; dono/admin; 204                                          |
+| POST   | `/education/join`                           | `{ code }`; normalizado para maiúsculas; `{ classroomId }`; código inexistente 404 |
+| DELETE | `/education/classrooms/:id/members/:userId` | dono/admin; 204, idempotente                                                       |
 
 `name` tem mínimo de dois caracteres após trim; descrição até 2000 caracteres. A resposta de turmas existente acrescenta `description`.
 

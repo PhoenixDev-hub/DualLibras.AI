@@ -1,89 +1,48 @@
-import { Cpu, Hand, Mic, type LucideIcon } from 'lucide-react'
-import { useInView } from '../../../hooks/useInView'
-
-interface Step {
-  icon: LucideIcon
-  title: string
-  text: string
-}
-
-const steps: Step[] = [
+import { Mic, FileText, Cpu, Hand } from 'lucide-react'
+const steps = [
   {
     icon: Mic,
-    title: 'Captura da fala',
-    text: 'O microfone capta o áudio do professor ou palestrante diretamente através da interface web.',
+    title: 'Você fala',
+    text: 'O sistema captura o áudio utilizando o microfone do dispositivo.',
+  },
+  {
+    icon: FileText,
+    title: 'A fala é processada',
+    text: 'Tecnologias de reconhecimento de voz transformam o áudio em texto.',
   },
   {
     icon: Cpu,
-    title: 'Processamento em tempo real',
-    text: 'O sistema converte o áudio em texto simplificado utilizando reconhecimento de voz em tempo real.',
+    title: 'A informação é processada',
+    text: 'O sistema prepara o conteúdo para sua representação em Libras.',
   },
   {
     icon: Hand,
-    title: 'Tradução para Libras',
-    text: 'O conteúdo traduzido é transmitido ao avatar 3D ou exibido em texto acessível para o estudante.',
+    title: 'O conteúdo é apresentado',
+    text: 'O resultado é apresentado por meio de recursos visuais e avatar em Libras.',
   },
 ]
-
 export default function Funcionamento() {
-  const [headerRef, headerInView] = useInView<HTMLDivElement>()
-  const [flowRef, flowInView] = useInView<HTMLDivElement>({ threshold: 0.1 })
-
   return (
-    <section id="funcionamento" className="relative bg-background-dark px-4 py-24 overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-
-      <div className="max-w-5xl mx-auto text-center">
-        <div
-          ref={headerRef}
-          className={`transition-all duration-700 ease-out ${
-            headerInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-          }`}
-        >
-          <span className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-logo text-xs uppercase tracking-[0.2em]">
-            Como funciona
-          </span>
-
-          <h2 className="font-ui font-extrabold tracking-tight leading-tight text-text-light text-3xl md:text-4xl lg:text-5xl">
-            Da fala ao sinal, <span className="text-primary">em segundos.</span>
-          </h2>
-
-          <p className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-gray-mid leading-relaxed font-text">
-            Nossa solução conecta o áudio da aula à conversão textual e acessibilidade em Libras de
-            forma contínua e automatizada.
-          </p>
+    <section id="funcionamento" className="edu-section" aria-labelledby="funcionamento-title">
+      <div className="edu-container">
+        <div className="edu-section-heading">
+          <span className="edu-eyebrow">Como Funciona</span>
+          <h2 id="funcionamento-title">Comunicação em tempo real, de forma simples.</h2>
         </div>
-
-        <div
-          ref={flowRef}
-          className="relative mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6"
-        >
-          <div
-            className={`hidden md:block absolute top-8 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-primary/10 via-primary/60 to-primary/10 transition-opacity duration-700 ${
-              flowInView ? 'opacity-100' : 'opacity-0'
-            }`}
-            aria-hidden="true"
-          />
-
+        <ol className="edu-three-columns edu-steps edu-four-steps">
           {steps.map(({ icon: Icon, title, text }, index) => (
-            <div
-              key={title}
-              style={{ transitionDelay: flowInView ? `${index * 150}ms` : '0ms' }}
-              className={`relative flex flex-col items-center text-center transition-all duration-700 ease-out ${
-                flowInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-            >
-              <div className="relative z-10 mb-6 w-16 h-16 flex items-center justify-center rounded-full bg-background-dark border-2 border-primary/40 text-primary shadow-[0_0_24px_-6px_rgba(47,105,177,0.6)]">
-                <Icon size={26} strokeWidth={1.75} aria-hidden="true" />
-                <span className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-text-light font-logo text-xs font-bold">
-                  {index + 1}
-                </span>
-              </div>
-              <h3 className="font-ui font-semibold text-text-light text-lg mb-3">{title}</h3>
-              <p className="text-sm text-gray-mid leading-relaxed font-text max-w-xs">{text}</p>
-            </div>
+            <li key={title}>
+              <span className="edu-step-number">0{index + 1}</span>
+              <Icon size={28} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </li>
           ))}
-        </div>
+        </ol>
+        <p className="edu-content-note">
+          Tudo isso acontece por meio de uma arquitetura desenvolvida para processamento em tempo
+          real.
+        </p>
       </div>
     </section>
   )

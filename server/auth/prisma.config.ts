@@ -1,13 +1,14 @@
-import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import 'dotenv/config'
+import { defineConfig } from 'prisma/config'
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: 'prisma/schema.prisma',
   migrations: {
-    path: "prisma/migrations",
+    path: 'prisma/migrations',
   },
   datasource: {
-    url: env("DATABASE_URL"),
-    directUrl: env("DIRECT_URL"),
+    // Generation/build do not require a database or credentials. Database CLI
+    // operations use the direct connection when supplied (e.g. Supabase).
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL,
   },
-});
+})

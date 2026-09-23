@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { dateLike, optionalString, uuid } from "./Common";
+import { z } from 'zod'
+import { dateLike, optionalString, uuid } from './Common'
 
 /* ========================================================================
  * GLOSSARY
@@ -14,20 +14,20 @@ export const GlossaryBaseSchema = z.object({
   classroomId: uuid.nullable().optional(),
   createdAt: dateLike,
   updatedAt: dateLike,
-});
-export type Glossary = z.infer<typeof GlossaryBaseSchema>;
+})
+export type Glossary = z.infer<typeof GlossaryBaseSchema>
 
 export const GlossaryCreateSchema = GlossaryBaseSchema.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
-export type GlossaryCreateInput = z.infer<typeof GlossaryCreateSchema>;
+})
+export type GlossaryCreateInput = z.infer<typeof GlossaryCreateSchema>
 
 export const GlossaryUpdateSchema = GlossaryCreateSchema.omit({
   ownerId: true,
-}).partial();
-export type GlossaryUpdateInput = z.infer<typeof GlossaryUpdateSchema>;
+}).partial()
+export type GlossaryUpdateInput = z.infer<typeof GlossaryUpdateSchema>
 
 /* ========================================================================
  * GLOSSARY TERM
@@ -42,17 +42,17 @@ export const GlossaryTermBaseSchema = z.object({
   glossaryId: uuid,
   createdAt: dateLike,
   updatedAt: dateLike,
-});
-export type GlossaryTerm = z.infer<typeof GlossaryTermBaseSchema>;
+})
+export type GlossaryTerm = z.infer<typeof GlossaryTermBaseSchema>
 
 export const GlossaryTermCreateSchema = GlossaryTermBaseSchema.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
-export type GlossaryTermCreateInput = z.infer<typeof GlossaryTermCreateSchema>;
+})
+export type GlossaryTermCreateInput = z.infer<typeof GlossaryTermCreateSchema>
 
 export const GlossaryTermUpdateSchema = GlossaryTermCreateSchema.omit({
   glossaryId: true,
-}).partial();
-export type GlossaryTermUpdateInput = z.infer<typeof GlossaryTermUpdateSchema>;
+}).partial()
+export type GlossaryTermUpdateInput = z.infer<typeof GlossaryTermUpdateSchema>

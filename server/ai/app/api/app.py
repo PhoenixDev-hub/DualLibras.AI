@@ -1,397 +1,235 @@
 import asyncio
 import base64
+import binascii
 import json
 import logging
 import os
-import time
-from contextlib import asynccontextmanager
 from pathlib import Path
+import time
+from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from .schemas import (
-    SaveTranscriptRequest,
-    MaterialIngestRequest,
-    MaterialIngestResponse,
-    TranscriptListResponse,
-    TranscriptResponse,
-)
-from ..services.documentation import DocumentationGenerator
-from ..realtime.session import AIORTC_AVAILABLE, ClientSession
+from . import security
+from .schemas import SaveTranscriptRequest, MaterialIngestRequest, MaterialIngestResponse, TranscriptListResponse, TranscriptResponse
+from ..realtime.session import ClientSession
 from ..services.transcripts import TranscriptManager
+from ..services.documentation import DocumentationGenerator
 
-logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO"),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-
+logging.basicConfig(level=os.getenv('LOG_LEVEL', 'INFO'), format='%(asctime)s %(name)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
-PORT = int(os.getenv("PORT", "5455"))
-MATERIAL_OUTPUT_DIR = os.getenv("MATERIAL_OUTPUT_DIR", "../../storage/materials/ai")
+PORT = int(os.getenv('PORT', '5455'))
+STORAGE_ROOT = Path(os.getenv('OUTPUT_PATH', '../../storage')).resolve()
+MATERIAL_OUTPUT_DIR = Path(os.getenv('MATERIAL_OUTPUT_DIR', '../../storage/materials/ai')).resolve()
 
-transcript_manager = TranscriptManager()
-doc_generator = DocumentationGenerator()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("Iniciando DualLibras Backend na porta %s", PORT)
-    try:
-        yield
-    finally:
-        logger.info("Finalizando aplicação...")
+app = FastAPI(title='DualLibras.AI Backend', version='1.1.0', docs_url=None, redoc_url=None, openapi_url=None)
+app.add_middleware(security.SecurityMiddleware)
+app.add_middleware(CORSMiddleware, allow_origins=security.ALLOWED_ORIGINS, allow_credentials=True,
+                   allow_methods=['GET', 'POST'], allow_headers=['Content-Type', 'Authorization'])
 
 
-app = FastAPI(
-    title="DualLibras.AI Backend",
-    description="API de transcrição em tempo real para Libras",
-    version="1.0.0",
-    lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+def scoped_manager(principal: security.Principal) -> TranscriptManager:
+    # Legacy unscoped exports are deliberately not exposed. Migration requires
+    # an explicit ownership mapping, not guessing owners from filenames.
+    directory = security.contained(STORAGE_ROOT, 'scoped', *principal.scope)
+    return TranscriptManager(str(directory))
 
 
-@app.get("/health")
+@app.get('/health')
 async def health():
-    return {
-        "status": "ok",
-        "porta": PORT,
-        "webrtc_suportado": AIORTC_AVAILABLE,
-    }
+    return {'status': 'ok', 'authorization_configured': bool(security.INTERNAL_TOKEN)}
 
 
-@app.post("/test-message")
+@app.get('/ready')
+async def ready():
+    # Reaching this route includes live session/database authorization.
+    if not os.getenv('ASSEMBLYAI_API_KEY'):
+        raise HTTPException(503, 'Provedor de transcrição não configurado')
+    return {'status': 'ready', 'provider_credentials_tested': False}
+
+
+@app.post('/test-message')
 async def test_message():
-    return {"status": "ok", "message": "Teste do backend. Conexão ok."}
+    return {'status': 'ok', 'message': 'Conexão autenticada.'}
 
 
-@app.post("/materials/ingest", response_model=MaterialIngestResponse)
-async def ingest_material(request: MaterialIngestRequest) -> MaterialIngestResponse:
+@app.post('/materials/ingest', response_model=MaterialIngestResponse)
+async def ingest_material(request: MaterialIngestRequest, http: Request):
+    if not security.internal_request(http.headers):
+        raise HTTPException(403, 'Acesso interno obrigatório')
+    if http.query_params.get('lesson_id'):
+        raise HTTPException(400, 'Escopo de material deve vir do banco')
+    principal = await security.authorize(http.headers, 'ingest', material_id=str(request.material_id))
     try:
-        output_dir = Path(MATERIAL_OUTPUT_DIR).resolve()
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        safe_filename = Path(request.filename).name
-        if not safe_filename:
-            raise HTTPException(status_code=400, detail="Nome de arquivo inválido")
-
-        raw_content = base64.b64decode(request.content_base64)
-        filepath = output_dir / f"{request.material_id}_{safe_filename}"
-        filepath.write_bytes(raw_content)
-
-        metadata_path = output_dir / f"{request.material_id}.json"
-        metadata_path.write_text(
-            json.dumps(
-                {
-                    "material_id": request.material_id,
-                    "filename": safe_filename,
-                    "display_type": request.display_type,
-                    "uploaded_by": request.uploaded_by,
-                    "file": str(filepath),
-                },
-                ensure_ascii=False,
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
-
-        logger.info("Material ingerido para IA: %s", filepath)
-        return MaterialIngestResponse(
-            success=True,
-            message="Material recebido pela IA",
-            file=str(filepath),
-        )
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error("Erro ao ingerir material: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Erro ao ingerir material: {str(exc)}")
+        raw = base64.b64decode(request.content_base64, validate=True)
+    except (ValueError, binascii.Error):
+        raise HTTPException(400, 'Base64 inválido') from None
+    if not raw or len(raw) > security.MATERIAL_MAX_BYTES:
+        raise HTTPException(413, 'Tamanho de material inválido')
+    filename = request.filename
+    if filename != Path(filename).name or '\\' in filename or filename in ('.', '..'):
+        raise HTTPException(400, 'Nome de arquivo inválido')
+    if Path(filename).suffix.lower() not in {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt'}:
+        raise HTTPException(400, 'Formato não permitido')
+    directory = security.contained(MATERIAL_OUTPUT_DIR, 'classrooms', security.identifier(principal.classroom_id))
+    directory.mkdir(parents=True, exist_ok=True)
+    target = security.contained(directory, str(request.material_id) + Path(filename).suffix.lower())
+    # Atomic replacement and server-controlled metadata; uploaded_by is ignored.
+    temporary = security.contained(directory, uuid4().hex + '.tmp')
+    def store():
+        try:
+            with temporary.open('xb') as handle: handle.write(raw)
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
+    await asyncio.to_thread(store)
+    return MaterialIngestResponse(success=True, message='Cópia armazenada; análise automática não disponível', file=target.name)
 
 
-@app.websocket("/ws")
+@app.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
+    principal = None
+    acquired = False
+    session = None
     try:
+        security.limiter.take('ws-ip:' + (websocket.client.host if websocket.client else 'unknown'), security.WS_STARTS_PER_MINUTE * 4)
+        security.check_origin(websocket.headers, websocket=True)
+        lesson_id = websocket.query_params.get('lesson_id')
+        principal = await security.authorize(websocket.headers, 'capture', lesson_id)
+        security.acquire_session(principal.user_id)
+        acquired = True
         await websocket.accept()
-    except Exception as exc:
-        logger.error("Erro ao aceitar conexão WebSocket: %s", exc)
-        raise
-
-    logger.info("Novo cliente WebSocket conectado. Criando sessão.")
-    session = ClientSession(websocket, transcript_manager=transcript_manager)
-    started = False
-    last_audio_at = time.monotonic()
-
-    try:
+        session_path = security.contained(STORAGE_ROOT, 'scoped', *principal.scope, 'live', str(uuid4()))
+        session = ClientSession(websocket, transcript_manager=scoped_manager(principal), transcript_dir=session_path)
+        started = False
+        now = time.monotonic()
+        last_audio_at = now
+        deadline = now + security.SESSION_SECONDS
+        next_check = now + security.RECHECK_SECONDS
+        audio_window, audio_bytes = now, 0
+        control_window, controls = now, 0
         while True:
-            message = await asyncio.wait_for(
-                websocket.receive(), timeout=max(0.001, 15 - (time.monotonic() - last_audio_at))
-            )
-            if message.get("type") == "websocket.disconnect":
-                break
-
-            if message.get("bytes"):
-                last_audio_at = time.monotonic()
-                if len(message["bytes"]) % 2 or len(message["bytes"]) > 32000:
-                    await session.send_to_client({"type": "error", "text": "Quadro PCM inválido", "error": True})
-                    break
+            now = time.monotonic()
+            if now >= deadline:
+                raise HTTPException(429, 'Duração máxima da sessão atingida')
+            if now - last_audio_at >= 15:
+                raise HTTPException(408, 'Sessão encerrada por ausência de áudio')
+            if now >= next_check:
+                renewed = await security.authorize(websocket.headers, 'capture', lesson_id)
+                if renewed != principal:
+                    raise HTTPException(401, 'Sessão alterada. Entre novamente.')
+                next_check = time.monotonic() + security.RECHECK_SECONDS
+            try:
+                message = await asyncio.wait_for(websocket.receive(), timeout=max(0.001, min(deadline, next_check, last_audio_at + 15) - time.monotonic()))
+            except asyncio.TimeoutError:
+                continue
+            if message.get('type') == 'websocket.disconnect': break
+            if message.get('bytes'):
+                raw = message['bytes']
+                if len(raw) % 2 or len(raw) > 32000:
+                    raise HTTPException(400, 'Quadro PCM inválido')
+                now = time.monotonic()
+                if now - audio_window >= 1: audio_window, audio_bytes = now, 0
+                audio_bytes += len(raw)
+                if audio_bytes > 64000:
+                    raise HTTPException(429, 'Envio de áudio acima do limite')
+                last_audio_at = now
                 if not started:
                     started = True
                     session.provider_task = asyncio.create_task(session.start())
-                session.audio_buffer.push(message["bytes"], time.monotonic())
-                if session.audio_buffer.stats.queued % 100 == 1:
-                    logger.info(
-                        "WebSocket recebeu chunk de áudio %s. Tamanho da fila: %s",
-                        session.audio_buffer.stats.queued,
-                        session.audio_buffer.queue.qsize(),
-                    )
-
-            elif "text" in message:
-                try:
-                    data = json.loads(message["text"])
-                    msg_type = data.get("type")
-
-                    if msg_type == "webrtc_offer":
-                        logger.info("Recebeu WebRTC offer do cliente pelo WebSocket")
-                        await session.handle_webrtc_offer(data.get("sdp"))
-                    elif msg_type == "set_provider" and started:
-                        provider = data.get("provider")
-                        if provider not in {"assemblyai", "local"}:
-                            await session.send_to_client(
-                                {
-                                    "type": "error",
-                                    "text": "Provider inválido. Use 'assemblyai' ou 'local'.",
-                                    "error": True,
-                                    "is_final": True,
-                                }
-                            )
-                        else:
-                            logger.info("Alternando provedor de transcrição para %s", provider)
-                            await session.request_provider_switch(provider)
-                    elif msg_type == "ping":
-                        await session.send_to_client({"type": "pong"})
-                except Exception as exc:
-                    logger.error("Erro ao processar mensagem JSON: %s", exc)
-
-    except asyncio.TimeoutError:
-        logger.info("Sessão encerrada por ausência de áudio")
+                session.audio_buffer.push(raw, now)
+            elif message.get('text'):
+                now = time.monotonic()
+                if now - control_window >= 60: control_window, controls = now, 0
+                controls += 1
+                if len(message['text']) > 4096 or controls > 30:
+                    raise HTTPException(429, 'Limite de mensagens atingido')
+                try: data = json.loads(message['text'])
+                except ValueError: raise HTTPException(400, 'Mensagem inválida') from None
+                if not isinstance(data, dict): raise HTTPException(400, 'Mensagem inválida')
+                if data.get('type') == 'set_provider' and started:
+                    provider = data.get('provider')
+                    if provider not in {'assemblyai', 'local'}: raise HTTPException(400, 'Provedor inválido')
+                    await session.request_provider_switch(provider)
+                elif data.get('type') == 'ping':
+                    await session.send_to_client({'type': 'pong'})
+                else:
+                    raise HTTPException(400, 'Mensagem não suportada; use áudio PCM pelo WebSocket')
+    except HTTPException as exc:
+        if session:
+            await session.send_to_client({'type': 'error', 'text': exc.detail, 'error': True})
+        try: await websocket.close(code=1008)
+        except RuntimeError: pass
     except WebSocketDisconnect:
-        logger.info("Cliente WebSocket desconectado")
-    except Exception as exc:
-        logger.error("Erro na conexão do WebSocket: %s: %s", type(exc).__name__, exc)
+        pass
+    except Exception:
+        logger.exception('Falha na sessão de transcrição')
     finally:
-        await session.stop()
         try:
-            await websocket.close()
-        except RuntimeError:
-            pass
+            if session: await session.stop()
+        finally:
+            if acquired: security.release_session(principal.user_id)
+            try: await websocket.close()
+            except RuntimeError: pass
 
 
-@app.post("/save-transcript", response_model=TranscriptResponse)
-async def save_transcript(request: SaveTranscriptRequest) -> TranscriptResponse:
-    try:
-        if not request.text.strip():
-            raise HTTPException(status_code=400, detail="Texto não pode estar vazio")
-
-        logger.info("Recebendo requisição de salvamento de transcrição: %s", request.title)
-        files = transcript_manager.save_transcript(
-            text=request.text,
-            title=request.title,
-            formats=request.formats,
-            **request.metadata,
-        )
-
-        files_dict = {
-            fmt: str(files[fmt].relative_to(transcript_manager.base_path))
-            for fmt in files
-        }
-
-        response = TranscriptResponse(
-            success=True,
-            message=f"Transcrição salva com sucesso em {len(files)} formato(s)",
-            files=files_dict,
-            metadata={
-                "title": request.title,
-                "text_length": len(request.text),
-                "formats_saved": list(files.keys()),
-                **request.metadata,
-            },
-        )
-        logger.info("Transcrição salva: %s", response.message)
-        return response
-
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error("Erro ao salvar transcrição: %s", exc, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao salvar transcrição: {str(exc)}",
-        )
+@app.post('/save-transcript', response_model=TranscriptResponse)
+def save_transcript(request: SaveTranscriptRequest, http: Request):
+    if not request.text.strip(): raise HTTPException(400, 'Texto não pode estar vazio')
+    manager = scoped_manager(http.state.principal)
+    files = manager.save_transcript(text=request.text, title=request.title, formats=request.formats,
+                                   owner_id=http.state.principal.user_id, lesson_id=http.state.principal.lesson_id)
+    return TranscriptResponse(success=True, message='Transcrição salva', files={fmt: path.name for fmt, path in files.items()}, metadata={'title': request.title})
 
 
-@app.get("/transcripts", response_model=TranscriptListResponse)
-async def list_transcripts() -> TranscriptListResponse:
-    try:
-        transcripts = transcript_manager.list_transcripts()
-        total = sum(len(files) for files in transcripts.values())
-
-        response = TranscriptListResponse(
-            total=total,
-            pdfs=transcripts["pdfs"],
-            texts=transcripts["texts"],
-            metadata=transcripts["metadata"],
-        )
-        logger.info("Listadas %s transcrições", total)
-        return response
-
-    except Exception as exc:
-        logger.error("Erro ao listar transcrições: %s", exc, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao listar transcrições: {str(exc)}",
-        )
+@app.get('/transcripts', response_model=TranscriptListResponse)
+def list_transcripts(http: Request):
+    files = scoped_manager(http.state.principal).list_transcripts()
+    return TranscriptListResponse(total=sum(map(len, files.values())), **files)
 
 
-@app.get("/transcripts/download/{filename}")
-async def download_transcript(filename: str):
-    try:
-        if ".." in filename or "/" in filename or "\\" in filename:
-            raise HTTPException(status_code=400, detail="Nome de arquivo inválido")
-
-        for directory in [
-            transcript_manager.pdfs_dir,
-            transcript_manager.texts_dir,
-            transcript_manager.metadata_dir,
-        ]:
-            filepath = directory / filename
-            if filepath.exists() and filepath.is_file():
-                logger.info("Baixando arquivo: %s", filename)
-                media_type = (
-                    "application/pdf" if filename.endswith(".pdf") else "text/plain"
-                )
-                return FileResponse(
-                    path=filepath,
-                    media_type=media_type,
-                    filename=filename,
-                )
-
-        raise HTTPException(
-            status_code=404,
-            detail=f"Arquivo não encontrado: {filename}",
-        )
-
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error("Erro ao baixar arquivo: %s", exc, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao baixar arquivo: {str(exc)}",
-        )
+def download(filename: str, principal: security.Principal):
+    if Path(filename).name != filename or '\\' in filename or '..' in filename:
+        raise HTTPException(400, 'Nome de arquivo inválido')
+    manager = scoped_manager(principal)
+    for directory in (manager.pdfs_dir, manager.texts_dir, manager.metadata_dir):
+        target = security.contained(directory, filename)
+        if target.is_file():
+            return FileResponse(target, filename=filename, headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'})
+    raise HTTPException(404, 'Arquivo indisponível')
 
 
-@app.get("/transcripts/pdf/{filename}")
-async def get_pdf(filename: str):
-    try:
-        filepath = transcript_manager.pdfs_dir / filename
-        if not filepath.exists():
-            raise HTTPException(
-                status_code=404,
-                detail=f"PDF não encontrado: {filename}",
-            )
-
-        return FileResponse(
-            path=filepath,
-            media_type="application/pdf",
-            filename=filename,
-        )
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error("Erro ao servir PDF: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Erro ao servir PDF: {str(exc)}")
+@app.get('/transcripts/download/{filename}')
+def download_transcript(filename: str, http: Request):
+    return download(filename, http.state.principal)
 
 
-@app.get("/upload-status")
-async def upload_status():
-    try:
-        transcripts = transcript_manager.list_transcripts()
-        total_size = 0
-        for directory in [
-            transcript_manager.pdfs_dir,
-            transcript_manager.texts_dir,
-            transcript_manager.metadata_dir,
-        ]:
-            total_size += sum(
-                file.stat().st_size for file in directory.glob("*") if file.is_file()
-            )
-
-        return {
-            "paths": {
-                "base": str(transcript_manager.base_path),
-                "pdfs": str(transcript_manager.pdfs_dir),
-                "texts": str(transcript_manager.texts_dir),
-                "metadata": str(transcript_manager.metadata_dir),
-            },
-            "counts": {
-                "pdfs": len(transcripts["pdfs"]),
-                "texts": len(transcripts["texts"]),
-                "metadata": len(transcripts["metadata"]),
-            },
-            "total_size_mb": round(total_size / (1024 * 1024), 2),
-            "status": "online",
-        }
-
-    except Exception as exc:
-        logger.error("Erro ao obter status de upload: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Erro ao obter status: {str(exc)}")
+@app.get('/transcripts/pdf/{filename}')
+def get_pdf(filename: str, http: Request):
+    if not filename.endswith('.pdf'): raise HTTPException(400, 'PDF inválido')
+    return download(filename, http.state.principal)
 
 
-@app.get("/documentation/generate")
-async def generate_documentation():
-    try:
-        logger.info("Gerando documentação do projeto...")
-        pdf_path = doc_generator.generate_project_documentation()
-
-        return {
-            "success": True,
-            "message": "Documentação gerada com sucesso",
-            "file": str(pdf_path),
-            "download_url": "/documentation/download",
-        }
-    except Exception as exc:
-        logger.error("Erro ao gerar documentação: %s", exc, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao gerar documentação: {str(exc)}",
-        )
+@app.get('/upload-status')
+def upload_status(http: Request):
+    files = scoped_manager(http.state.principal).list_transcripts()
+    return {'counts': {key: len(values) for key, values in files.items()}, 'status': 'online'}
 
 
-@app.get("/documentation/download")
-async def download_documentation():
-    try:
-        doc_path = doc_generator.output_dir / "Festival2026_Documentacao.pdf"
-        if not doc_path.exists():
-            doc_path = doc_generator.generate_project_documentation()
+@app.get('/documentation/generate')
+def generate_documentation(http: Request):
+    if http.state.principal.role != 'ADMIN': raise HTTPException(403, 'Acesso administrativo obrigatório')
+    generator = DocumentationGenerator()
+    generator.generate_project_documentation()
+    return {'success': True, 'file': 'Festival2026_Documentacao.pdf', 'download_url': '/documentation/download'}
 
-        logger.info("Servindo documentação: %s", doc_path)
-        return FileResponse(
-            path=doc_path,
-            media_type="application/pdf",
-            filename="Festival2026_Documentacao.pdf",
-        )
-    except Exception as exc:
-        logger.error("Erro ao servir documentação: %s", exc, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao servir documentação: {str(exc)}",
-        )
+
+@app.get('/documentation/download')
+def download_documentation(http: Request):
+    if http.state.principal.role != 'ADMIN': raise HTTPException(403, 'Acesso administrativo obrigatório')
+    generator = DocumentationGenerator()
+    target = generator.output_dir / 'Festival2026_Documentacao.pdf'
+    if not target.exists(): target = generator.generate_project_documentation()
+    return FileResponse(target, filename=target.name, headers={'Cache-Control': 'private, no-store'})

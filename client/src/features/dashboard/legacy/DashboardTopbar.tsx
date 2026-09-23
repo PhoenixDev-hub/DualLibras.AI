@@ -1,4 +1,5 @@
-import { Bell, Menu, Moon, Search } from 'lucide-react'
+import ThemeToggle from '../../theme/ThemeToggle'
+import { Bell, Menu, Search } from 'lucide-react'
 import { getInitials, type DashboardSection } from './dashboardData'
 import type { DashboardData, DashboardUser } from '../../../services/authApi'
 
@@ -37,12 +38,7 @@ export default function DashboardTopbar({
         </label>
 
         <section className="ml-auto flex items-center gap-2">
-          <button
-            className="grid h-11 w-11 place-items-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-100 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
-            aria-label="Alternar modo escuro"
-          >
-            <Moon className="h-5 w-5" />
-          </button>
+          <ThemeToggle />
           <button
             className="relative grid h-11 w-11 place-items-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-100 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
             aria-label="Notificações"

@@ -1,5 +1,13 @@
 BEGIN;
+
+
 SET LOCAL lock_timeout = '5s';
+
+
 ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN NOT NULL DEFAULT true;
+
+
 ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS "sessionVersion" INTEGER NOT NULL DEFAULT 0;
+
+
 COMMIT;

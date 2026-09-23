@@ -1,77 +1,101 @@
-import { randomUUID } from 'crypto';
-import { mkdir, writeFile, unlink } from 'fs/promises';
-import path from 'path';
-import { env } from '../config/env';
-import { prisma } from '../config/prisma';
-import { AppError } from '../middlewares/error.middleware';
-import { materialAccessWhere } from './material-access';
-import type { UploadMaterialInput } from '../schemas/Material.schema';
+import { randomUUID } from 'crypto'
+import { mkdir, writeFile, unlink } from 'fs/promises'
+import path from 'path'
+import { env } from '../config/env'
+import { prisma } from '../config/prisma'
+import { AppError } from '../middlewares/error.middleware'
+import { materialAccessWhere } from './material-access'
+import type { UploadMaterialInput } from '../schemas/Material.schema'
 
 type MaterialKind = {
-  prismaType: 'PDF' | 'DOCX' | 'PPTX' | 'OUTRO';
-  displayType: string;
-  extension: string;
-  mimeHint: string;
-};
+  prismaType: 'PDF' | 'DOCX' | 'PPTX' | 'OUTRO'
+  displayType: string
+  extension: string
+  mimeHint: string
+}
 
 const acceptedExtensions: Record<string, MaterialKind> = {
   pdf: { prismaType: 'PDF', displayType: 'PDF', extension: 'pdf', mimeHint: 'application/pdf' },
-  doc: { prismaType: 'DOCX', displayType: 'Documento Word', extension: 'doc', mimeHint: 'application/msword' },
-  docx: { prismaType: 'DOCX', displayType: 'Documento Word', extension: 'docx', mimeHint: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
-  ppt: { prismaType: 'PPTX', displayType: 'Apresentação', extension: 'ppt', mimeHint: 'application/vnd.ms-powerpoint' },
-  pptx: { prismaType: 'PPTX', displayType: 'Apresentação', extension: 'pptx', mimeHint: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' },
+  doc: {
+    prismaType: 'DOCX',
+    displayType: 'Documento Word',
+    extension: 'doc',
+    mimeHint: 'application/msword',
+  },
+  docx: {
+    prismaType: 'DOCX',
+    displayType: 'Documento Word',
+    extension: 'docx',
+    mimeHint: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  },
+  ppt: {
+    prismaType: 'PPTX',
+    displayType: 'Apresentação',
+    extension: 'ppt',
+    mimeHint: 'application/vnd.ms-powerpoint',
+  },
+  pptx: {
+    prismaType: 'PPTX',
+    displayType: 'Apresentação',
+    extension: 'pptx',
+    mimeHint: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  },
   txt: { prismaType: 'OUTRO', displayType: 'Texto', extension: 'txt', mimeHint: 'text/plain' },
-};
+}
 
 function getMaterialKind(filename: string) {
-  const extension = filename.split('.').pop()?.toLowerCase() ?? '';
-  const kind = Object.hasOwn(acceptedExtensions, extension) ? acceptedExtensions[extension] : undefined;
+  const extension = filename.split('.').pop()?.toLowerCase() ?? ''
+  const kind = Object.hasOwn(acceptedExtensions, extension)
+    ? acceptedExtensions[extension]
+    : undefined
 
   if (!kind) {
-    throw new AppError('Formato inválido. Envie PDF, Word, PowerPoint ou Texto.', 400);
+    throw new AppError('Formato inválido. Envie PDF, Word, PowerPoint ou Texto.', 400)
   }
 
-  return kind;
+  return kind
 }
 
 function sanitizeFilename(filename: string) {
-  const parsed = path.parse(filename);
-  const safeName = parsed.name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9_-]/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 80) || 'material';
+  const parsed = path.parse(filename)
+  const safeName =
+    parsed.name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9_-]/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 80) || 'material'
 
-  return safeName;
+  return safeName
 }
 
 function decodeBase64(contentBase64: string) {
-  const match = contentBase64.match(/^data:[^;,]+;base64,([\s\S]*)$/);
-  const payload = match ? match[1] : contentBase64;
+  const match = contentBase64.match(/^data:[^;,]+;base64,([\s\S]*)$/)
+  const payload = match ? match[1] : contentBase64
   if (payload.length > 4 * Math.ceil(env.materialMaxBytes / 3)) {
-    throw new AppError('Arquivo excede o limite permitido', 400);
+    throw new AppError('Arquivo excede o limite permitido', 400)
   }
   if (!payload || payload.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
-    throw new AppError('Conteúdo do arquivo inválido', 400);
+    throw new AppError('Conteúdo do arquivo inválido', 400)
   }
-  const buffer = Buffer.from(payload, 'base64');
-  if (buffer.toString('base64') !== payload) throw new AppError('Conteúdo do arquivo inválido', 400);
-  return buffer;
+  const buffer = Buffer.from(payload, 'base64')
+  if (buffer.toString('base64') !== payload) throw new AppError('Conteúdo do arquivo inválido', 400)
+  return buffer
 }
 
 async function sendToAi(input: {
-  materialId: string;
-  filename: string;
-  displayType: string;
-  contentBase64: string;
-  uploadedBy: string;
+  materialId: string
+  filename: string
+  displayType: string
+  contentBase64: string
+  uploadedBy: string
+  credentials: Record<string, string>
 }) {
   try {
     const response = await fetch(`${env.aiBackendUrl}/materials/ingest`, {
       method: 'POST',
       signal: AbortSignal.timeout(8000),
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...input.credentials, 'X-AI-Internal-Token': env.aiInternalToken },
       body: JSON.stringify({
         material_id: input.materialId,
         filename: input.filename,
@@ -79,31 +103,33 @@ async function sendToAi(input: {
         content_base64: input.contentBase64,
         uploaded_by: input.uploadedBy,
       }),
-    });
+    })
 
-    return response.ok;
+    return response.ok
   } catch {
-    return false;
+    return false
   }
 }
 
 function ensureCanUploadMaterial(role: string) {
   if (role !== 'PROFESSOR' && role !== 'ADMIN') {
-    throw new AppError('Somente professores podem enviar materiais', 403);
+    throw new AppError('Somente professores podem enviar materiais', 403)
   }
 }
 
 export function formatMaterial(material: {
-  id: string;
-  name: string;
-  url: string;
-  type: string;
-  createdAt: Date;
-  classroomId?: string | null;
-  lessonId?: string | null;
+  id: string
+  name: string
+  url: string
+  type: string
+  createdAt: Date
+  classroomId?: string | null
+  lessonId?: string | null
 }) {
-  const extension = material.name.split('.').pop()?.toLowerCase() ?? '';
-  const kind = Object.hasOwn(acceptedExtensions, extension) ? acceptedExtensions[extension] : undefined;
+  const extension = material.name.split('.').pop()?.toLowerCase() ?? ''
+  const kind = Object.hasOwn(acceptedExtensions, extension)
+    ? acceptedExtensions[extension]
+    : undefined
 
   return {
     id: material.id,
@@ -114,73 +140,84 @@ export function formatMaterial(material: {
     type: material.type,
     displayType: kind?.displayType ?? 'Arquivo',
     createdAt: material.createdAt,
-  };
+  }
 }
 
 export const materialService = {
   getUploadOptions() {
-    return { extensions: Object.keys(acceptedExtensions).map(value => `.${value}`), maxBytes: env.materialMaxBytes };
+    return {
+      extensions: Object.keys(acceptedExtensions).map((value) => `.${value}`),
+      maxBytes: env.materialMaxBytes,
+    }
   },
 
   async listForUser(userId: string, role: string) {
     return prisma.material.findMany({
       where: materialAccessWhere(userId, role),
       orderBy: { createdAt: 'desc' },
-    });
+    })
   },
 
-  async upload(userId: string, role: string, data: UploadMaterialInput) {
-    ensureCanUploadMaterial(role);
+  async upload(userId: string, role: string, data: UploadMaterialInput, credentials: Record<string, string> = {}) {
+    ensureCanUploadMaterial(role)
 
-    if (!data.classroomId && !data.lessonId) throw new AppError('Selecione uma sala ou aula para anexar o arquivo', 400);
-    let classroomId = data.classroomId;
+    if (!data.classroomId && !data.lessonId)
+      throw new AppError('Selecione uma sala ou aula para anexar o arquivo', 400)
+    let classroomId = data.classroomId
     if (data.lessonId) {
-      const lesson = await prisma.lesson.findFirst({ where: {
-        id: data.lessonId,
-        ...(role === 'ADMIN' ? {} : { classroom: { teacherId: userId } }),
-      } });
-      if (!lesson) throw new AppError('Sem permissão para publicar nesta aula', 403);
-      if (classroomId && classroomId !== lesson.classroomId) throw new AppError('A aula não pertence à turma selecionada', 400);
-      classroomId = lesson.classroomId;
+      const lesson = await prisma.lesson.findFirst({
+        where: {
+          id: data.lessonId,
+          ...(role === 'ADMIN' ? {} : { classroom: { teacherId: userId } }),
+        },
+      })
+      if (!lesson) throw new AppError('Sem permissão para publicar nesta aula', 403)
+      if (classroomId && classroomId !== lesson.classroomId)
+        throw new AppError('A aula não pertence à turma selecionada', 400)
+      classroomId = lesson.classroomId
     }
     if (!data.lessonId && classroomId) {
-      const room = await prisma.classroom.findFirst({ where: {
-        id: classroomId,
-        ...(role === 'ADMIN' ? {} : { teacherId: userId }),
-      } });
-      if (!room) throw new AppError('Sem permissão para publicar nesta turma', 403);
+      const room = await prisma.classroom.findFirst({
+        where: {
+          id: classroomId,
+          ...(role === 'ADMIN' ? {} : { teacherId: userId }),
+        },
+      })
+      if (!room) throw new AppError('Sem permissão para publicar nesta turma', 403)
     }
-    const kind = getMaterialKind(data.filename);
-    const fileBuffer = decodeBase64(data.contentBase64);
+    const kind = getMaterialKind(data.filename)
+    const fileBuffer = decodeBase64(data.contentBase64)
 
     if (fileBuffer.byteLength === 0) {
-      throw new AppError('Arquivo vazio', 400);
+      throw new AppError('Arquivo vazio', 400)
     }
 
     if (fileBuffer.byteLength > env.materialMaxBytes) {
-      throw new AppError('Arquivo excede o limite permitido', 400);
+      throw new AppError('Arquivo excede o limite permitido', 400)
     }
 
-    const uploadDir = path.resolve(env.materialUploadDir);
-    await mkdir(uploadDir, { recursive: true });
+    const uploadDir = path.resolve(env.materialUploadDir)
+    await mkdir(uploadDir, { recursive: true })
 
-    const storedFilename = `${randomUUID()}-${sanitizeFilename(data.filename)}.${kind.extension}`;
-    const filePath = path.join(uploadDir, storedFilename);
-    await writeFile(filePath, fileBuffer);
+    const storedFilename = `${randomUUID()}-${sanitizeFilename(data.filename)}.${kind.extension}`
+    const filePath = path.join(uploadDir, storedFilename)
+    await writeFile(filePath, fileBuffer)
 
-    const material = await prisma.material.create({
-      data: {
-        lessonId: data.lessonId,
-        classroomId,
-        name: data.filename,
-        url: filePath,
-        type: kind.prismaType,
-        uploadedById: userId,
-      },
-    }).catch(async error => {
-      await unlink(filePath).catch(() => {});
-      throw error;
-    });
+    const material = await prisma.material
+      .create({
+        data: {
+          lessonId: data.lessonId,
+          classroomId,
+          name: data.filename,
+          url: filePath,
+          type: kind.prismaType,
+          uploadedById: userId,
+        },
+      })
+      .catch(async (error) => {
+        await unlink(filePath).catch(() => {})
+        throw error
+      })
 
     const sentToAi = await sendToAi({
       materialId: material.id,
@@ -188,11 +225,12 @@ export const materialService = {
       displayType: kind.displayType,
       contentBase64: fileBuffer.toString('base64'),
       uploadedBy: userId,
-    });
+      credentials,
+    })
 
     return {
       material,
       sentToAi,
-    };
+    }
   },
-};
+}

@@ -29,26 +29,26 @@ export default function LessonList({
   const handleOpen = onOpenLesson ?? teacher?.openLesson
 
   return lessons.length ? (
-    <section className="t-card divide-y divide-slate-100">
+    <section className="t-card divide-y divide-slate-100 dark:divide-slate-700">
       {lessons.map((lesson) => (
         <button
           key={lesson.id}
           type="button"
           onClick={() => handleOpen?.(lesson.id)}
-          className="flex w-full flex-wrap items-center gap-4 p-5 text-left transition hover:bg-blue-50/50"
+          className="flex w-full flex-wrap items-center gap-4 p-5 text-left transition hover:bg-blue-50/50 dark:hover:bg-blue-950/50"
         >
-          <span className="rounded-xl bg-blue-50 p-3 text-primary">
+          <span className="rounded-xl bg-blue-50 dark:bg-blue-950 p-3 text-primary dark:text-blue-300">
             <Video size={18} />
           </span>
           <section className="min-w-40 flex-1">
             <h3 className="text-sm font-semibold">{lesson.title}</h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               {classrooms.find((item) => String(item.id) === String(lesson.classroomId))?.name ||
                 'Turma'}{' '}
               · {formatLessonDate(lesson.date)}
             </p>
           </section>
-          <span className="flex items-center gap-1 text-xs text-slate-500">
+          <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
             <Clock size={13} />
             {lesson.duration}
           </span>

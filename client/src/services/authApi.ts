@@ -1,5 +1,13 @@
+import { PendingRequests } from './pendingRequests'
 import { DATA_CHANGED_EVENT } from '../hooks/useAutoRefresh'
-import { emailError, nameError, normalizeEmail, normalizeName, passwordError, profileError } from '../validation/account'
+import {
+  emailError,
+  nameError,
+  normalizeEmail,
+  normalizeName,
+  passwordError,
+  profileError,
+} from '../validation/account'
 import type {
   Classroom as Room,
   Student,
@@ -99,7 +107,22 @@ export type EducationData = {
   terms: Term[]
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+const pendingReads = new PendingRequests()
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', () => pendingReads.clear())
+}
+
+export function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // Requests with custom headers/signals retain their individual semantics.
+  if (!init) return pendingReads.run(path, () => performRequest<T>(path))
+  const mutation = !['GET', 'HEAD'].includes((init.method ?? 'GET').toUpperCase())
+  if (mutation) pendingReads.clear()
+  return performRequest<T>(path, init).finally(() => {
+    if (mutation) pendingReads.clear()
+  })
+}
+
+async function performRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${AUTH_API_BASE}${path}`, {
     ...init,
     credentials: 'include',
@@ -110,12 +133,19 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    const data = (await response.json().catch(() => null)) as { error?: string; details?: Record<string, string[]> } | null
+    if (response.status === 401) pendingReads.clear()
+    const data = (await response.json().catch(() => null)) as {
+      error?: string
+      details?: Record<string, string[]>
+    } | null
     const detail = data?.details ? Object.values(data.details).flat().join('. ') : ''
-    throw new ApiError(detail || data?.error || 'Não foi possível completar a solicitação.', response.status)
+    throw new ApiError(
+      detail || data?.error || 'Não foi possível completar a solicitação.',
+      response.status,
+    )
   }
 
-  if (init?.method && !['GET', 'HEAD'].includes(init.method.toUpperCase()) && !path.startsWith('/auth/')) {
+  if (init?.method && !['GET', 'HEAD'].includes(init.method.toUpperCase())) {
     window.dispatchEvent(new Event(DATA_CHANGED_EVENT))
     try {
       localStorage.setItem(DATA_CHANGED_EVENT, `${Date.now()}-${Math.random()}`)
@@ -138,10 +168,10 @@ export const authApi = {
       body: JSON.stringify({ title, classroomId }),
     })
   },
-  publishTranscript(id: string | number, text: string) {
+  publishTranscript(id: string | number, entry: { text: string; segmentId: string; capturedAt: string }) {
     return request<void>(`/education/lessons/${encodeURIComponent(id)}/transcript`, {
       method: 'POST',
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(entry),
     })
   },
   finishLesson(id: string | number) {
@@ -187,16 +217,28 @@ export const authApi = {
     discipline?: string
     registrationNumber?: string
   }) {
-    const error = nameError(data.name) || emailError(data.email) || passwordError(data.password)
-      || profileError(data.institution ?? '', 'Instituição', 150)
-      || profileError(data.discipline ?? '', 'Disciplina', 100)
-      || profileError(data.registrationNumber ?? '', 'Matrícula', 50)
-      || (data.role === 'PROFESSOR' && !data.discipline?.trim() ? 'Disciplina é obrigatória para professores' : undefined)
-      || (data.role === 'ALUNO' && !data.registrationNumber?.trim() ? 'Matrícula é obrigatória para alunos' : undefined)
+    const error =
+      nameError(data.name) ||
+      emailError(data.email) ||
+      passwordError(data.password) ||
+      profileError(data.institution ?? '', 'Instituição', 150) ||
+      profileError(data.discipline ?? '', 'Disciplina', 100) ||
+      profileError(data.registrationNumber ?? '', 'Matrícula', 50) ||
+      (data.role === 'PROFESSOR' && !data.discipline?.trim()
+        ? 'Disciplina é obrigatória para professores'
+        : undefined) ||
+      (data.role === 'ALUNO' && !data.registrationNumber?.trim()
+        ? 'Matrícula é obrigatória para alunos'
+        : undefined)
     if (error) throw new ApiError(error, 400)
-    data = { ...data, name: normalizeName(data.name), email: normalizeEmail(data.email),
-      institution: data.institution?.trim(), discipline: data.discipline?.trim(),
-      registrationNumber: data.registrationNumber?.trim() }
+    data = {
+      ...data,
+      name: normalizeName(data.name),
+      email: normalizeEmail(data.email),
+      institution: data.institution?.trim(),
+      discipline: data.discipline?.trim(),
+      registrationNumber: data.registrationNumber?.trim(),
+    }
     return request<{ user: Omit<DashboardUser, 'access'> }>('/auth/cadastro', {
       method: 'POST',
       body: JSON.stringify(data),

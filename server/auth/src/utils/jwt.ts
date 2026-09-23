@@ -1,16 +1,16 @@
-import jwt from "jsonwebtoken";
-import { env } from "../config/env";
+import jwt from 'jsonwebtoken'
+import { env } from '../config/env'
 
 export interface TokenPayload {
-    sub: string,
-    email: string,
-    version?: number,
+  sub: string
+  email: string
+  version?: number
 }
 
 export function signToken(payLoad: TokenPayload): string {
-    return jwt.sign(payLoad, env.jwtSecret, { expiresIn: env.jwtExpiresIn as any });
+  return jwt.sign(payLoad, env.jwtSecret, { expiresIn: env.jwtExpiresIn as any })
 }
 
 export function verifyToken(token: string): TokenPayload {
-    return jwt.verify(token, env.jwtSecret) as TokenPayload;
+  return jwt.verify(token, env.jwtSecret) as TokenPayload
 }

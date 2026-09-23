@@ -42,12 +42,12 @@ O Nginx serve a SPA com fallback para `index.html`, `/health.html`, proxy `/ws` 
 
 ## Portas, volumes e diagnóstico
 
-| Serviço | Porta publicada | Persistência |
-| --- | --- | --- |
-| frontend | 80 | bundle dentro da imagem |
-| auth | 4000 | bind mount `./storage:/app/storage` |
-| backend | 5455 | bind mount `./storage:/app/storage` |
-| db | 5432 | volume `db-data` |
+| Serviço  | Porta publicada | Persistência                        |
+| -------- | --------------- | ----------------------------------- |
+| frontend | 80              | bundle dentro da imagem             |
+| auth     | 4000            | bind mount `./storage:/app/storage` |
+| backend  | 5455            | bind mount `./storage:/app/storage` |
+| db       | 5432            | volume `db-data`                    |
 
 O volume nomeado `transcripts` permanece declarado, mas não é montado por nenhum serviço. Não foi removido, pois pode estar associado a dados anteriores. Diretórios locais antigos também foram preservados.
 

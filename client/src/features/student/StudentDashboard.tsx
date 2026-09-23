@@ -81,10 +81,10 @@ export default function StudentDashboard({
       {materials.length ? (
         materials.map((item) => (
           <article className="t-card flex items-center gap-4 p-5" key={item.id}>
-            <FileText className="shrink-0 text-primary" />
+            <FileText className="shrink-0 text-primary dark:text-blue-300" />
             <div className="min-w-0 flex-1">
               <h3 className="break-words font-semibold">{item.name}</h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {item.type} · {roomName(item.classroomId)}
               </p>
             </div>
@@ -100,7 +100,7 @@ export default function StudentDashboard({
           </article>
         ))
       ) : (
-        <p className="t-card p-6 text-slate-500">
+        <p className="t-card p-6 text-slate-500 dark:text-slate-400">
           O professor ainda não disponibilizou materiais{' '}
           {lesson ? 'para esta aula' : 'para suas turmas'}.
         </p>
@@ -150,7 +150,7 @@ export default function StudentDashboard({
       {notice && (
         <div
           role="status"
-          className="mb-5 flex items-center justify-between gap-3 rounded-xl bg-blue-50 p-4 text-sm text-primary"
+          className="mb-5 flex items-center justify-between gap-3 rounded-xl bg-blue-50 dark:bg-blue-950 p-4 text-sm text-primary dark:text-blue-300"
         >
           {notice}
           <button className="t-btn-secondary" onClick={() => setNotice('')}>
@@ -159,7 +159,10 @@ export default function StudentDashboard({
         </div>
       )}
       {error && (
-        <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">
+        <p
+          role="alert"
+          className="mb-4 rounded-xl bg-red-50 dark:bg-red-950 p-4 text-red-700 dark:text-red-300"
+        >
           {error}
         </p>
       )}
@@ -191,7 +194,7 @@ export default function StudentDashboard({
       {page === 'Minha turma' ? (
         <div className="grid gap-5 sm:grid-cols-2">
           {query && (
-            <div className="col-span-full flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <div className="col-span-full flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
               <p>Resultados para “{query}”</p>
               <button className="t-btn-secondary" onClick={() => setQuery('')}>
                 Limpar busca
@@ -204,7 +207,9 @@ export default function StudentDashboard({
                 .toLocaleLowerCase('pt-BR')
                 .includes(query.toLocaleLowerCase('pt-BR')),
             ) && (
-              <p className="t-card col-span-full p-6 text-slate-500">Nenhuma turma encontrada.</p>
+              <p className="t-card col-span-full p-6 text-slate-500 dark:text-slate-400">
+                Nenhuma turma encontrada.
+              </p>
             )}
           {data.classrooms
             .filter(
@@ -217,23 +222,25 @@ export default function StudentDashboard({
             )
             .map((classroom) => (
               <article key={classroom.id} className="t-card flex flex-col p-6">
-                <div className="mb-4 flex items-center gap-3 text-primary">
+                <div className="mb-4 flex items-center gap-3 text-primary dark:text-blue-300">
                   <Users size={24} />
                   <span className="text-sm font-semibold">Minha turma</span>
                 </div>
                 <h2 className="text-xl font-bold">{classroom.name}</h2>
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   Professor: {classroom.teacherName || 'Não informado'}
                 </p>
                 {classroom.subject && (
-                  <p className="mt-1 text-sm text-primary">{classroom.subject}</p>
+                  <p className="mt-1 text-sm text-primary dark:text-blue-300">
+                    {classroom.subject}
+                  </p>
                 )}
                 {classroom.description && (
-                  <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-slate-500">
+                  <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-slate-500 dark:text-slate-400">
                     {classroom.description}
                   </p>
                 )}
-                <p className="my-5 text-sm text-slate-500">
+                <p className="my-5 text-sm text-slate-500 dark:text-slate-400">
                   {data.lessons.filter((item) => item.classroomId === classroom.id).length} aulas ·{' '}
                   {data.materials.filter((item) => item.classroomId === classroom.id).length}{' '}
                   materiais
@@ -271,9 +278,9 @@ export default function StudentDashboard({
             ))}
           {!data.classrooms.length && (
             <section className="t-card col-span-full p-8">
-              <Users size={32} className="mb-4 text-primary" />
+              <Users size={32} className="mb-4 text-primary dark:text-blue-300" />
               <h2 className="font-bold">Você ainda não entrou em uma turma</h2>
-              <p className="my-4 text-slate-500">
+              <p className="my-4 text-slate-500 dark:text-slate-400">
                 Peça o código ao professor para acessar sua turma, aulas e materiais.
               </p>
               <a className="t-btn" href="/codigo">
@@ -316,9 +323,11 @@ export default function StudentDashboard({
             lessons.map((item) => (
               <article key={item.id} className="t-card flex flex-col items-start p-6">
                 <span className="t-badge-neutral">{statuses[item.status]}</span>
-                <p className="mt-4 text-sm text-primary">{roomName(item.classroomId)}</p>
+                <p className="mt-4 text-sm text-primary dark:text-blue-300">
+                  {roomName(item.classroomId)}
+                </p>
                 <h2 className="mb-2 mt-1 text-xl font-bold">{item.title}</h2>
-                <p className="mb-6 text-sm text-slate-500">
+                <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
                   {new Date(item.date).toLocaleDateString('pt-BR')} · {item.duration}
                 </p>
                 <button className="t-btn mt-auto" onClick={() => setLessonId(item.id)}>
@@ -332,9 +341,9 @@ export default function StudentDashboard({
             ))
           ) : (
             <div className="t-card col-span-full p-8">
-              <BookOpen className="mb-4 text-primary" size={32} />
+              <BookOpen className="mb-4 text-primary dark:text-blue-300" size={32} />
               <h2 className="font-bold">Suas aulas aparecerão aqui</h2>
-              <p className="mt-2 text-slate-500">
+              <p className="mt-2 text-slate-500 dark:text-slate-400">
                 Entre em uma turma com o código do professor e aguarde a publicação das aulas.
               </p>
             </div>

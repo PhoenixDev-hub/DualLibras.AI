@@ -1,76 +1,79 @@
-import { ChevronDown, Radio } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import { ArrowDown, ArrowRight, BookOpen, FileText, Hand, Mic } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import heroBg from '../../../assets/hero-bg.png'
-
-const revealClass = 'motion-safe:opacity-0 motion-safe:animate-[fadeInUp_0.7s_ease-out_forwards]'
-const revealStyle = (delayMs: number): CSSProperties => ({ animationDelay: `${delayMs}ms` })
 
 export default function Hero() {
   return (
-    <section
-      id="inicio"
-      className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center px-4 py-24 overflow-hidden bg-background-dark"
-    >
-      <div
-        className="absolute inset-0 bg-cover bg-center scale-110 blur-sm"
-        style={{ backgroundImage: `url(${heroBg})` }}
-        aria-hidden="true"
-      />
-      <div className="absolute inset-0 bg-primary/50 mix-blend-multiply" aria-hidden="true" />
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-background-dark/90 via-background-dark/50 to-background-dark/95"
-        aria-hidden="true"
-      />
-
-      <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
-        <span
-          className={`inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-logo text-xs uppercase tracking-[0.2em] ${revealClass}`}
-          style={revealStyle(0)}
-        >
-          <Radio size={14} strokeWidth={2} aria-hidden="true" />
-          Tradução em tempo real
+    <section id="inicio" className="edu-hero edu-container">
+      <div className="edu-hero-copy">
+        <span className="edu-eyebrow">
+          <BookOpen size={17} aria-hidden="true" /> Início
         </span>
-
-        <h1
-          className={`font-ui font-extrabold tracking-tight leading-[1.05] text-text-light text-[2.75rem] md:text-6xl lg:text-7xl ${revealClass}`}
-          style={revealStyle(100)}
-        >
-          Uma ponte em tempo real <span className="text-primary">entre voz e Libras.</span>
+        <h1>
+          Voz que vira informação. <span>Informação que chega em Libras.</span>
         </h1>
-
-        <p
-          className={`mt-8 max-w-xl mx-auto text-lg md:text-xl text-gray-mid leading-relaxed font-text ${revealClass}`}
-          style={revealStyle(200)}
-        >
-          Nossa plataforma transforma a fala do professor em texto simplificado e tradução para
-          Libras, permitindo que alunos surdos acompanhem a aula com a mesma clareza e ritmo dos
-          colegas ouvintes.
+        <p>
+          O DualLibras.ai utiliza inteligência artificial para transformar fala em texto e apoiar
+          sua representação em Libras em tempo real.
         </p>
-
-        <div
-          className={`mt-10 flex flex-col sm:flex-row items-center gap-4 ${revealClass}`}
-          style={revealStyle(300)}
-        >
-          <Link
-            to="/cadastrar"
-            className="inline-flex items-center px-7 py-3.5 bg-gradient-to-r from-primary to-secondary text-text-light font-ui font-semibold tracking-wide rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:brightness-110 hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-dark"
-          >
-            Cadastrar
+        <div className="edu-actions">
+          <Link className="edu-button" to="/app">
+            Experimentar agora <ArrowRight size={18} aria-hidden="true" />
           </Link>
-          <Link
-            to="/entrar"
-            className="inline-flex items-center px-7 py-3.5 text-text-light font-ui font-semibold tracking-wide rounded-full border border-text-light/20 hover:border-primary/60 hover:text-primary hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-dark"
-          >
-            Entrar
-          </Link>
+          <a className="edu-button edu-button-outline" href="#impacto">
+            Conheça o projeto
+          </a>
         </div>
+        <a className="edu-text-link" href="#dicionario">
+          <Hand size={18} aria-hidden="true" /> Que tal praticar um pouco de Libras?
+        </a>
       </div>
-
-      <div className="absolute z-10 bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-mid motion-safe:animate-bounce">
-        <span className="font-logo text-[10px] uppercase tracking-[0.3em]">Scroll</span>
-        <ChevronDown size={20} strokeWidth={1.5} aria-hidden="true" />
-      </div>
+      <figure className="edu-notebook" aria-labelledby="activity-caption">
+        <figcaption id="activity-caption">
+          <span className="edu-notebook-dot" /> Da voz à Libras{' '}
+          <span>Entenda a proposta do projeto</span>
+        </figcaption>
+        <div className="edu-notebook-page">
+          <span className="edu-subject">Comunicação · Acessibilidade</span>
+          <h2>Uma fala, novas formas de acesso.</h2>
+          <div
+            className="edu-cycle"
+            aria-label="A voz é capturada, transformada em texto e preparada para sua representação em Libras"
+          >
+            <span>
+              <Mic size={44} strokeWidth={1.5} aria-hidden="true" />
+              <strong>Voz</strong>
+            </span>
+            <ArrowRight className="edu-cycle-arrow" size={22} aria-hidden="true" />
+            <span>
+              <FileText size={44} strokeWidth={1.5} aria-hidden="true" />
+              <strong>Texto</strong>
+            </span>
+            <ArrowRight className="edu-cycle-arrow" size={22} aria-hidden="true" />
+            <span>
+              <Hand size={44} strokeWidth={1.5} aria-hidden="true" />
+              <strong>Libras</strong>
+            </span>
+          </div>
+          <blockquote>
+            A fala vira texto. A informação ganha apoio visual com o avatar em Libras, aproximando
+            diferentes formas de comunicação.
+          </blockquote>
+          <p className="edu-notebook-note">
+            Uma proposta de apoio à acessibilidade, em fase de protótipo e testes.
+          </p>
+        </div>
+        <aside className="edu-sticky-note">
+          <Hand size={23} aria-hidden="true" />
+          <span>
+            Voz e Libras,
+            <br />
+            <strong>pessoas mais próximas.</strong>
+          </span>
+        </aside>
+      </figure>
+      <a href="#funcionamento" className="edu-hero-next">
+        Como funciona <ArrowDown size={16} aria-hidden="true" />
+      </a>
     </section>
   )
 }

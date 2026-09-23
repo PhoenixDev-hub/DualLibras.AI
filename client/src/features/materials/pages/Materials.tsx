@@ -193,7 +193,7 @@ export default function Materials({
             {pending ? 'Anexando…' : 'Anexar material para os alunos'}
           </button>
           {!availableLessons.length && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Você pode anexar materiais à turma mesmo antes de iniciar uma aula.
             </p>
           )}
@@ -203,7 +203,7 @@ export default function Materials({
       {filtered.map((m) => (
         <article className="t-card mb-3 p-5" key={m.id}>
           <h2>{m.name}</h2>
-          <p className="mb-3 text-sm text-slate-500">
+          <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
             {m.type} ·{' '}
             {m.lessonId
               ? (lessons.find((lesson) => lesson.id === m.lessonId)?.title ?? 'Material da aula')

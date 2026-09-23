@@ -116,7 +116,7 @@ async def receive_transcripts(
                 await asyncio.sleep(0.1)
                 continue
 
-            raw = await websocket.recv()
+            raw = await asyncio.wait_for(websocket.recv(), timeout=SETTINGS.recv_timeout)
             message = json.loads(raw)
             message_type = message.get("type")
             logger.info("Mensagem recebida da AssemblyAI: %s", message_type)

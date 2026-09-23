@@ -1,17 +1,17 @@
-import { AppError } from '../middlewares/error.middleware';
-import type { LoginInput, RegisterInput } from '../schemas/Auth.schema';
-import { comparePassword, hashPassword } from '../utils/hash';
-import { signToken } from '../utils/jwt';
-import { userService } from './user.service';
+import { AppError } from '../middlewares/error.middleware'
+import type { LoginInput, RegisterInput } from '../schemas/Auth.schema'
+import { comparePassword, hashPassword } from '../utils/hash'
+import { signToken } from '../utils/jwt'
+import { userService } from './user.service'
 
 export const authService = {
   async register(data: RegisterInput) {
-    const existing = await userService.findByEmail(data.email);
+    const existing = await userService.findByEmail(data.email)
     if (existing) {
-      throw new AppError('Este e-mail já está cadastrado', 409);
+      throw new AppError('Este e-mail já está cadastrado', 409)
     }
 
-    const passwordHash = await hashPassword(data.password);
+    const passwordHash = await hashPassword(data.password)
     const user = await userService.create({
       name: data.name,
       email: data.email,
@@ -20,9 +20,9 @@ export const authService = {
       institution: data.institution,
       discipline: data.discipline,
       registrationNumber: data.registrationNumber,
-    });
+    })
 
-    const token = signToken({ sub: user.id, email: user.email, version: user.sessionVersion });
+    const token = signToken({ sub: user.id, email: user.email, version: user.sessionVersion })
     return {
       token,
       user: {
@@ -33,21 +33,21 @@ export const authService = {
         discipline: data.discipline,
         institution: data.institution,
       },
-    };
+    }
   },
 
   async login(data: LoginInput) {
-    const user = await userService.findByEmail(data.email, true);
+    const user = await userService.findByEmail(data.email, true)
     if (!user || !user.passwordHash || !user.isActive) {
-      throw new AppError('E-mail ou senha inválidos', 401);
+      throw new AppError('E-mail ou senha inválidos', 401)
     }
 
-    const passwordMatches = await comparePassword(data.password, user.passwordHash);
+    const passwordMatches = await comparePassword(data.password, user.passwordHash)
     if (!passwordMatches) {
-      throw new AppError('E-mail ou senha inválidos', 401);
+      throw new AppError('E-mail ou senha inválidos', 401)
     }
 
-    const token = signToken({ sub: user.id, email: user.email, version: user.sessionVersion });
+    const token = signToken({ sub: user.id, email: user.email, version: user.sessionVersion })
     return {
       token,
       user: {
@@ -59,6 +59,6 @@ export const authService = {
         institution: user.teacherProfile?.institution ?? user.studentProfile?.institution,
         registrationNumber: user.studentProfile?.registrationNumber,
       },
-    };
+    }
   },
-};
+}

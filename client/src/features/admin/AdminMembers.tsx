@@ -95,24 +95,24 @@ export default function AdminMembers({
         if (!busy) onClose()
       }}
     >
-      <p className="mb-5 text-sm text-slate-500">
+      <p className="mb-5 text-sm text-slate-500 dark:text-slate-400">
         Professor responsável: {room.teacher.name}. Remover um participante encerra o acesso dele à
         sala e aos materiais.
       </p>
       {error && (
-        <p role="alert" className="mb-4 text-sm text-red-700">
+        <p role="alert" className="mb-4 text-sm text-red-700 dark:text-red-300">
           {error}
         </p>
       )}
       {loading ? (
         <p role="status">Carregando participantes…</p>
       ) : (
-        <ul className="mb-6 divide-y divide-slate-100">
+        <ul className="mb-6 divide-y divide-slate-100 dark:divide-slate-700">
           {members.map((member) => (
             <li className="flex items-center justify-between gap-3 py-3" key={member.userId}>
               <div>
                 <strong className="text-sm">{member.user.name}</strong>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {member.user.email}
                   {!member.user.isActive && ' · Bloqueado'}
                 </p>
@@ -127,7 +127,9 @@ export default function AdminMembers({
             </li>
           ))}
           {!members.length && (
-            <li className="text-sm text-slate-500">Nenhum participante cadastrado.</li>
+            <li className="text-sm text-slate-500 dark:text-slate-400">
+              Nenhum participante cadastrado.
+            </li>
           )}
         </ul>
       )}
@@ -137,14 +139,14 @@ export default function AdminMembers({
         onChange={setQuery}
         placeholder="Buscar aluno pelo nome ou e-mail"
       />
-      <ul className="mt-3 max-h-64 overflow-auto divide-y divide-slate-100">
+      <ul className="mt-3 max-h-64 overflow-auto divide-y divide-slate-100 dark:divide-slate-700">
         {students
           .filter((student) => !members.some((member) => member.userId === student.id))
           .map((student) => (
             <li key={student.id} className="flex items-center justify-between gap-3 py-3">
               <div>
                 <strong className="text-sm">{student.name}</strong>
-                <p className="text-xs text-slate-500">{student.email}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{student.email}</p>
               </div>
               <button
                 className="t-btn-secondary"
@@ -156,7 +158,7 @@ export default function AdminMembers({
             </li>
           ))}
       </ul>
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
         Busca entre alunos ativos. Refine o nome ou e-mail para localizar a conta desejada.
       </p>
     </Modal>

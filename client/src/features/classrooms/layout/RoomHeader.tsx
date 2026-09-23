@@ -1,6 +1,7 @@
+import ThemeToggle from '../../theme/ThemeToggle'
 import { ArrowLeft, GraduationCap, UserRound, UsersRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import logo from '../../../assets/Logotipo.png'
+import ProjectLogo from '../../../components/brand/ProjectLogo'
 import RoomNavButton from '../components/RoomNavButton'
 
 type Props = { onNavigate: (section: 'Minhas turmas' | 'Meus professores' | 'Usuário') => void }
@@ -17,7 +18,7 @@ export default function RoomHeader({ onNavigate }: Props) {
           aria-label="DualLibras — início"
           className="mr-2 rounded-lg lg:mr-8 focus-visible:outline-2 focus-visible:outline-text-light"
         >
-          <img src={logo} alt="DualLibras" className="h-16 w-32 object-contain" />
+          <ProjectLogo />
         </Link>
         <RoomNavButton icon={UsersRound} onClick={() => onNavigate('Minhas turmas')}>
           Minhas turmas
@@ -38,6 +39,7 @@ export default function RoomHeader({ onNavigate }: Props) {
         >
           Usuário
         </RoomNavButton>
+        <ThemeToggle />
       </nav>
     </header>
   )

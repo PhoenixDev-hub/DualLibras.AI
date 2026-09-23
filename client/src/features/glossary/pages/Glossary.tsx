@@ -52,11 +52,13 @@ export default function Glossary() {
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((item) => (
           <article key={item.id} className="t-card p-6">
-            <BookOpen size={23} className="mb-5 text-primary" />
-            <span className="text-xs text-primary">{item.subject}</span>
+            <BookOpen size={23} className="mb-5 text-primary dark:text-blue-300" />
+            <span className="text-xs text-primary dark:text-blue-300">{item.subject}</span>
             <h2 className="my-3 font-ui text-xl font-bold">{item.term}</h2>
-            <p className="text-sm leading-6 text-slate-500">{item.definition}</p>
-            <p className="mt-5 rounded-lg bg-slate-50 p-3 text-xs leading-5 text-slate-500">
+            <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {item.definition}
+            </p>
+            <p className="mt-5 rounded-lg bg-slate-50 dark:bg-slate-950 p-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
               <strong>Exemplo:</strong> {item.example}
             </p>
           </article>

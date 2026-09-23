@@ -80,7 +80,7 @@ function Action({
       type="button"
       title={label}
       aria-label={label}
-      className={`t-icon ${danger ? 'text-red-600' : 'text-slate-500'}`}
+      className={`t-icon ${danger ? 'text-red-600 dark:text-red-300' : 'text-slate-500 dark:text-slate-400'}`}
       onClick={onClick}
       disabled={disabled}
     >
@@ -92,7 +92,7 @@ function Table({ headers, children }: { headers: string[]; children: ReactNode }
   return (
     <div className="t-card overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <thead className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
           <tr>
             {headers.map((header) => (
               <th key={header} className="px-5 py-4 font-semibold">
@@ -101,7 +101,9 @@ function Table({ headers, children }: { headers: string[]; children: ReactNode }
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-4">{children}</tbody>
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-700 [&_td]:px-5 [&_td]:py-4">
+          {children}
+        </tbody>
       </table>
     </div>
   )
@@ -304,7 +306,7 @@ export default function AdminDashboard({
       {notice && (
         <div
           role="status"
-          className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-primary"
+          className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-4 text-sm text-primary dark:text-blue-300"
         >
           <span>{notice}</span>
           <button onClick={() => setNotice('')} aria-label="Fechar mensagem">
@@ -358,7 +360,10 @@ export default function AdminDashboard({
         }
       />
       {error && (
-        <div role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-5 rounded-xl bg-red-50 dark:bg-red-950 p-4 text-sm text-red-700 dark:text-red-300"
+        >
           {error}
           <button className="ml-3 underline" onClick={reload}>
             Tentar novamente
@@ -401,18 +406,20 @@ export default function AdminDashboard({
               <button
                 key={card.title}
                 onClick={() => navigate(card.target)}
-                className="t-card p-6 text-left transition hover:border-blue-300"
+                className="t-card p-6 text-left transition hover:border-blue-300 dark:hover:border-blue-800"
               >
                 <div className="mb-5 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-500">{card.title}</span>
-                  <span className="rounded-xl bg-blue-50 p-3 text-primary">
+                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {card.title}
+                  </span>
+                  <span className="rounded-xl bg-blue-50 dark:bg-blue-950 p-3 text-primary dark:text-blue-300">
                     <card.icon size={22} />
                   </span>
                 </div>
                 <strong className="text-4xl font-bold tracking-tight">
                   {card.value.toLocaleString('pt-BR')}
                 </strong>
-                <p className="mt-2 text-xs text-slate-500">{card.detail}</p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{card.detail}</p>
               </button>
             ))}
           </section>
@@ -430,19 +437,19 @@ export default function AdminDashboard({
                     navigate('Usuários')
                     setRole(item.role)
                   }}
-                  className="flex w-full items-center justify-between border-b border-slate-100 py-4 text-sm last:border-0"
+                  className="flex w-full items-center justify-between border-b border-slate-100 dark:border-slate-700 py-4 text-sm last:border-0"
                 >
                   <span>{roleLabels[item.role as keyof typeof roleLabels]}</span>
-                  <strong className="rounded-lg bg-slate-50 px-3 py-1 text-primary">
+                  <strong className="rounded-lg bg-slate-50 dark:bg-slate-950 px-3 py-1 text-primary dark:text-blue-300">
                     {item.value}
                   </strong>
                 </button>
               ))}
             </section>
             <section className="t-card p-6">
-              <ShieldCheck className="mb-4 text-primary" size={28} />
+              <ShieldCheck className="mb-4 text-primary dark:text-blue-300" size={28} />
               <h2 className="text-lg font-bold">Gestão da plataforma</h2>
-              <p className="my-3 text-sm leading-relaxed text-slate-500">
+              <p className="my-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
                 Organize escolas, atribua professores às salas e controle o acesso de cada usuário.
                 Alterações de acesso encerram as sessões anteriores da conta.
               </p>
@@ -460,11 +467,11 @@ export default function AdminDashboard({
       )}
       {view === 'Minha conta' && (
         <section className="t-card max-w-2xl space-y-4 p-6">
-          <ShieldCheck className="text-primary" />
+          <ShieldCheck className="text-primary dark:text-blue-300" />
           <h2 className="text-lg font-bold">{user.name}</h2>
-          <p className="text-sm text-slate-500">{user.email}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
           <span className="t-badge">Administrador</span>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Seu acesso inclui escolas, usuários, salas, aulas e materiais de toda a plataforma.
           </p>
           <button
@@ -555,11 +562,11 @@ export default function AdminDashboard({
                 <tr key={item.id}>
                   <td>
                     <strong>{item.name}</strong>
-                    <p className="mt-1 text-xs text-slate-500">{item.email}</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.email}</p>
                   </td>
                   <td>
                     {roleLabels[item.role]}
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       {item._count.classroomsOwned} salas · {item._count.memberships} participações
                     </p>
                   </td>
@@ -624,7 +631,7 @@ export default function AdminDashboard({
                   <td>{[item.city, item.state].filter(Boolean).join(' / ') || 'Não informada'}</td>
                   <td>
                     <button
-                      className="text-primary underline"
+                      className="text-primary dark:text-blue-300 underline"
                       onClick={() => {
                         navigate('Usuários')
                         setSchoolId(item.id)
@@ -635,7 +642,7 @@ export default function AdminDashboard({
                   </td>
                   <td>
                     <button
-                      className="text-primary underline"
+                      className="text-primary dark:text-blue-300 underline"
                       onClick={() => {
                         navigate('Salas')
                         setSchoolId(item.id)
@@ -671,13 +678,15 @@ export default function AdminDashboard({
                 <tr key={item.id}>
                   <td>
                     <strong>{item.name}</strong>
-                    <p className="mt-1 font-mono text-xs text-slate-500">{item.code}</p>
+                    <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
+                      {item.code}
+                    </p>
                   </td>
                   <td>{item.teacher.name}</td>
                   <td>{item.school?.name ?? 'Sem vínculo'}</td>
                   <td>
                     {item._count.members} participantes
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {item._count.lessons} aulas · {item._count.materials} materiais
                     </p>
                   </td>
@@ -714,12 +723,12 @@ export default function AdminDashboard({
                 <tr key={item.id}>
                   <td>
                     <button
-                      className="text-left font-semibold text-primary hover:underline"
+                      className="text-left font-semibold text-primary dark:text-blue-300 hover:underline"
                       onClick={() => setPreviewLesson(item.id)}
                     >
                       {item.title}
                     </button>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       {new Date(item.createdAt).toLocaleDateString('pt-BR')}
                     </p>
                   </td>
@@ -759,11 +768,11 @@ export default function AdminDashboard({
                 <tr key={item.id}>
                   <td>
                     <strong className="break-all">{item.name}</strong>
-                    <p className="mt-1 text-xs text-slate-500">{item.type}</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.type}</p>
                   </td>
                   <td>
                     {item.classroom?.name ?? item.lesson?.classroom.name ?? 'Sem vínculo'}
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {item.lesson?.title ?? 'Material da sala'}
                     </p>
                   </td>
@@ -771,7 +780,7 @@ export default function AdminDashboard({
                   <td>
                     <div className="flex gap-1">
                       <a
-                        className="t-icon text-primary"
+                        className="t-icon text-primary dark:text-blue-300"
                         aria-label={`Baixar ${item.name}`}
                         href={`${AUTH_API_BASE}/education/materials/${encodeURIComponent(item.id)}/download`}
                         target="_blank"
@@ -798,7 +807,7 @@ export default function AdminDashboard({
             </div>
           )}
           {list && !loading && !error && (
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">
               <span>
                 {list.total} registros · Página {list.page} de{' '}
                 {Math.max(1, Math.ceil(list.total / list.pageSize))}
@@ -824,7 +833,7 @@ export default function AdminDashboard({
         </>
       )}
       {loading && (
-        <p role="status" className="py-8 text-sm text-slate-500">
+        <p role="status" className="py-8 text-sm text-slate-500 dark:text-slate-400">
           Carregando dados da plataforma…
         </p>
       )}
@@ -865,9 +874,11 @@ export default function AdminDashboard({
             if (!busy) setConfirmation(null)
           }}
         >
-          <p className="mb-5 text-sm leading-relaxed text-slate-600">{confirmation.description}</p>
+          <p className="mb-5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            {confirmation.description}
+          </p>
           {actionError && (
-            <p role="alert" className="mb-5 text-sm text-red-700">
+            <p role="alert" className="mb-5 text-sm text-red-700 dark:text-red-300">
               {actionError}
             </p>
           )}

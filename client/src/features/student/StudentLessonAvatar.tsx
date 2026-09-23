@@ -40,7 +40,7 @@ function LessonPlayer({
         className="t-card mb-5 flex flex-wrap items-center justify-between gap-4 p-4"
         aria-label="Controles de visualização da aula"
       >
-        <span className="text-sm text-slate-500" role="status">
+        <span className="text-sm text-slate-500 dark:text-slate-400" role="status">
           {summary
             ? 'Resumo em Libras'
             : live
@@ -109,8 +109,8 @@ function LessonPlayer({
               : undefined
           }
         />
-        <article className="t-card flex min-w-0 flex-col p-6 text-slate-800">
-          <h2 className="mb-5 border-b border-slate-200 pb-4 text-sm font-bold">
+        <article className="t-card flex min-w-0 flex-col p-6 text-slate-800 dark:text-slate-100">
+          <h2 className="mb-5 border-b border-slate-200 dark:border-slate-700 pb-4 text-sm font-bold">
             {summary ? 'Resumo da aula' : 'Legenda da aula'}
           </h2>
           <div className="my-auto max-h-[520px] overflow-y-auto py-4">
@@ -124,12 +124,12 @@ function LessonPlayer({
                 onActiveWordChange={setActiveWord}
               />
             ) : (
-              <p className="text-slate-500">
+              <p className="text-slate-500 dark:text-slate-400">
                 Aguardando o professor disponibilizar a transcrição da aula.
               </p>
             )}
           </div>
-          <p className="mt-5 border-t border-slate-200 pt-4 text-xs text-slate-500">
+          <p className="mt-5 border-t border-slate-200 dark:border-slate-700 pt-4 text-xs text-slate-500 dark:text-slate-400">
             O destaque das palavras é um guia de leitura aproximado.
           </p>
         </article>

@@ -1,5 +1,5 @@
 import { useAutoRefresh } from '../../../hooks/useAutoRefresh'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi, ApiError, type DashboardUser } from '../../../services/authApi'
 import type { Student, Lesson, Material, Term } from '../../../types/education'
@@ -12,7 +12,6 @@ export function useTeacherDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [page, setPage] = useState('Início')
-  const sessionLessons = useRef<Lesson[]>([])
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null)
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
   const [students, setStudents] = useState<Student[]>([])
@@ -46,6 +45,11 @@ export function useTeacherDashboard() {
           ? { classrooms: [], students: [], lessons: [], materials: [], terms: [] }
           : await authApi.education()
       setUser(account)
+      if (account.role === 'PROFESSOR') {
+        const live = data.lessons.find(item => item.status === 'live' && data.classrooms.some(room => room.id === item.classroomId && room.canAttachMaterials))
+        setActiveLesson(live ?? null)
+        if (live) setPage('Assistir aula')
+      }
       setClassrooms(data.classrooms)
       setStudents(data.students)
       setLessons(data.lessons)
@@ -91,49 +95,46 @@ export function useTeacherDashboard() {
     { enabled: !!user && !loading },
   )
 
-  async function logout() {
+  const logout = useCallback(async () => {
     try {
       await authApi.logout()
       route('/entrar', { replace: true })
     } catch (err) {
       setNotice(err instanceof Error ? err.message : 'Não foi possível sair.')
     }
-  }
+  }, [route])
   useEffect(() => {
     if (!notice) return
     const timer = window.setTimeout(() => setNotice(''), 6000)
     return () => window.clearTimeout(timer)
   }, [notice])
-  function finishActiveLesson() {
+  async function finishActiveLesson() {
     if (!activeLesson) return
-    void authApi
-      .finishLesson(activeLesson.id)
-      .catch(() => setNotice('Não foi possível marcar a aula como finalizada no servidor.'))
-    const finished: Lesson = {
-      ...activeLesson,
-      status: 'finished',
-      duration: `${Math.max(0, Math.floor((Date.now() - Date.parse(activeLesson.date)) / 60000))} min`,
-    }
-    sessionLessons.current = [finished, ...sessionLessons.current]
-    setLessons((current) => [finished, ...current.filter((item) => item.id !== finished.id)])
+    await authApi.finishLesson(activeLesson.id)
+    const finished: Lesson = { ...activeLesson, status: 'finished' }
+    setLessons(current => current.map(item => item.id === finished.id ? finished : item))
     setActiveLesson(null)
-    setNotice('Aula finalizada ao sair da aba.')
+    setPage('Minhas aulas')
+    setNotice('Aula finalizada e confirmada pelo servidor.')
   }
   function navigate(next: string) {
-    if (next !== 'Assistir aula') finishActiveLesson()
     setPage(next)
     setClassroomId(null)
     setLessonId(null)
     window.scrollTo({ top: 0 })
   }
   function openClassroom(id: string | number) {
-    finishActiveLesson()
     setPage('Minhas turmas')
     setClassroomId(id)
     setLessonId(null)
   }
   function openLesson(id: string | number) {
-    finishActiveLesson()
+    const selected = lessons.find(item => item.id === id)
+    if (selected?.status === 'live' && classrooms.some(room => room.id === selected.classroomId && room.canAttachMaterials)) {
+      setActiveLesson(selected)
+      setPage('Assistir aula')
+      return
+    }
     setPage('Minhas aulas')
     setLessonId(id)
   }
@@ -200,12 +201,12 @@ export function useTeacherDashboard() {
     loading,
     error,
     retry: () => {
-      finishActiveLesson()
-      setPage('Início')
+        setPage('Início')
       return load()
     },
     contextValue,
     activeLesson,
+    finishActiveLesson,
     beginLesson: (lesson: Lesson) => {
       setActiveLesson(lesson)
       navigate('Assistir aula')

@@ -1,8 +1,17 @@
 BEGIN;
+
+
 SET LOCAL lock_timeout = '5s';
+
+
 ALTER TABLE public."Classroom" ADD COLUMN IF NOT EXISTS "description" TEXT;
+
+
 ALTER TABLE public."Glossary" ADD COLUMN IF NOT EXISTS "classroomId" TEXT;
+
+
 CREATE INDEX IF NOT EXISTS "Glossary_classroomId_idx" ON public."Glossary"("classroomId");
+
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
@@ -14,4 +23,6 @@ DO $$ BEGIN
       ON DELETE CASCADE ON UPDATE CASCADE;
   END IF;
 END $$;
+
+
 COMMIT;

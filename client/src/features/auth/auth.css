@@ -1,0 +1,53 @@
+/* Visual theme only. Layout, typography sizes and spacing remain in the original JSX. */
+.auth-original {
+  --color-background-dark: #fcfaf5;
+  --color-text-light: #263d46;
+  --color-gray-mid: #53666d;
+  --color-primary: #285ca0;
+  --color-secondary: #204b84;
+}
+
+.auth-original .auth-art {
+  background-image:
+    radial-gradient(ellipse at 25% 30%, #d7e4cd 0%, transparent 65%),
+    linear-gradient(145deg, #edf2e9, #f4eddb);
+}
+
+.auth-original input:not([type='checkbox']),
+.auth-original select {
+  background-color: #fffefa;
+  border-color: #c9d3d5;
+  color: #263d46;
+}
+
+.auth-original input::placeholder {
+  color: #6b7880;
+  opacity: 1;
+}
+
+.auth-original input:focus,
+.auth-original select:focus {
+  border-color: #285ca0;
+}
+
+.auth-original button[type='submit'] {
+  color: #fff;
+  background-image: linear-gradient(to right, #285ca0, #204b84);
+  box-shadow: 0 4px 12px #285ca01a;
+}
+
+.auth-original [role='alert'] {
+  background-color: #fff0ee;
+  border-color: #e5b8b8;
+  color: #9e2727;
+}
+
+.auth-original input[type='checkbox'] {
+  accent-color: #285ca0;
+}
+
+.auth-original a:focus-visible,
+.auth-original button:focus-visible {
+  outline: 2px solid #285ca0;
+  outline-offset: 3px;
+}

@@ -16,20 +16,20 @@ As rotas de usuários, dashboard, turmas e materiais passam por middleware que a
 
 ### Rotas
 
-| Método e caminho | Entrada | Sucesso e regras |
-| --- | --- | --- |
-| `GET /health` | Nenhuma | 200 `{ "status": "ok" }`; não consulta banco |
-| `POST /auth/cadastro` | `name` (mín. 2), `email`, `password` (mín. 8), `role`; campos opcionais abaixo | 201 `{ user }`; e-mail duplicado: 409 |
-| `POST /auth/login` | `email`, `password` não vazia | 200 `{ user }`; credenciais inválidas: 401 |
-| `POST /auth/logout` | Nenhuma | 204, limpa cookie; não invalida outros JWTs já emitidos |
-| `GET /users/me` | Cookie/Bearer ou fallback | 200 usuário, perfis e `access`; 404 se ausente |
-| `GET /dashboard` | Cookie/Bearer ou fallback | 200 dados de dashboard; combinação de consultas e exemplos estáticos |
-| `GET /classrooms` | Cookie/Bearer ou fallback | 200 `{ classrooms: [...] }` |
-| `POST /classrooms` | `{ "name": "Turma de exemplo" }`, nome aparado mín. 2 | 201 `{ classroom }`; somente PROFESSOR/ADMIN, demais 403 |
-| `GET /materials` | Sessão válida e participação na sala | 200 `{ materials: [...] }` |
-| `GET /materials/options` | Sessão válida | 200 `{ extensions, maxBytes }` |
-| `GET /education/materials/:id/download` | Professor responsável, participante atual ou ADMIN | Download privado; 404 sem acesso |
-| `POST /materials` | `filename`, `contentBase64`, `classroomId?`, `lessonId?` UUID; sala ou aula obrigatória | 201 `{ material, ai: { sent, status } }`; PROFESSOR responsável pela sala ou ADMIN |
+| Método e caminho                        | Entrada                                                                                 | Sucesso e regras                                                                   |
+| --------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `GET /health`                           | Nenhuma                                                                                 | 200 `{ "status": "ok" }`; não consulta banco                                       |
+| `POST /auth/cadastro`                   | `name` (mín. 2), `email`, `password` (mín. 8), `role`; campos opcionais abaixo          | 201 `{ user }`; e-mail duplicado: 409                                              |
+| `POST /auth/login`                      | `email`, `password` não vazia                                                           | 200 `{ user }`; credenciais inválidas: 401                                         |
+| `POST /auth/logout`                     | Nenhuma                                                                                 | 204, limpa cookie; não invalida outros JWTs já emitidos                            |
+| `GET /users/me`                         | Cookie/Bearer ou fallback                                                               | 200 usuário, perfis e `access`; 404 se ausente                                     |
+| `GET /dashboard`                        | Cookie/Bearer ou fallback                                                               | 200 dados de dashboard; combinação de consultas e exemplos estáticos               |
+| `GET /classrooms`                       | Cookie/Bearer ou fallback                                                               | 200 `{ classrooms: [...] }`                                                        |
+| `POST /classrooms`                      | `{ "name": "Turma de exemplo" }`, nome aparado mín. 2                                   | 201 `{ classroom }`; somente PROFESSOR/ADMIN, demais 403                           |
+| `GET /materials`                        | Sessão válida e participação na sala                                                    | 200 `{ materials: [...] }`                                                         |
+| `GET /materials/options`                | Sessão válida                                                                           | 200 `{ extensions, maxBytes }`                                                     |
+| `GET /education/materials/:id/download` | Professor responsável, participante atual ou ADMIN                                      | Download privado; 404 sem acesso                                                   |
+| `POST /materials`                       | `filename`, `contentBase64`, `classroomId?`, `lessonId?` UUID; sala ou aula obrigatória | 201 `{ material, ai: { sent, status } }`; PROFESSOR responsável pela sala ou ADMIN |
 
 `role` no cadastro aceita `PROFESSOR` e `ALUNO`, não `ADMIN`. Professor exige `discipline`; aluno exige `registrationNumber`; `institution` é opcional. Os campos de perfil são criados de acordo com o papel.
 
@@ -64,20 +64,20 @@ Não existem rotas CRUD de aulas, alunos ou glossários nesta API, apesar de hav
 
 Rotas definidas em [app/api/app.py](../server/ai/app/api/app.py), schemas em [schemas.py](../server/ai/app/api/schemas.py). Não há autenticação HTTP/WebSocket. Validação Pydantic retorna 422; erros de rota usam `{ "detail": ... }`.
 
-| Método e caminho | Entrada | Resposta |
-| --- | --- | --- |
-| `GET /health` | Nenhuma | `{ status: "ok", porta, webrtc_suportado }` |
-| `POST /test-message` | Nenhuma | `{ status: "ok", message }`; não envia áudio |
-| `POST /save-transcript` | Modelo descrito abaixo | `{ success, message, files, metadata }` |
-| `GET /transcripts` | Nenhuma | `{ total, pdfs, texts, metadata }`; arrays de nomes |
-| `GET /transcripts/download/{filename}` | Nome de arquivo | PDF ou `text/plain` para TXT/JSON; 400 para nome inválido, 404 se ausente |
-| `GET /transcripts/pdf/{filename}` | Nome de PDF | `application/pdf`; 404 se ausente |
-| `GET /upload-status` | Nenhuma | `{ paths: { base, pdfs, texts, metadata }, counts: { pdfs, texts, metadata }, total_size_mb, status }` |
-| `POST /materials/ingest` | Modelo descrito abaixo | `{ success, message, file }` |
-| `GET /documentation/generate` | Nenhuma | Gera PDF; `{ success, message, file, download_url }` |
-| `GET /documentation/download` | Nenhuma | PDF; gera se ainda não existir |
-| `GET /docs`, `/redoc`, `/openapi.json` | Nenhuma | Documentação automática do FastAPI |
-| `WS /ws` | Áudio e mensagens descritos abaixo | Sessão de transcrição por conexão |
+| Método e caminho                       | Entrada                            | Resposta                                                                                               |
+| -------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `GET /health`                          | Nenhuma                            | `{ status: "ok", porta, webrtc_suportado }`                                                            |
+| `POST /test-message`                   | Nenhuma                            | `{ status: "ok", message }`; não envia áudio                                                           |
+| `POST /save-transcript`                | Modelo descrito abaixo             | `{ success, message, files, metadata }`                                                                |
+| `GET /transcripts`                     | Nenhuma                            | `{ total, pdfs, texts, metadata }`; arrays de nomes                                                    |
+| `GET /transcripts/download/{filename}` | Nome de arquivo                    | PDF ou `text/plain` para TXT/JSON; 400 para nome inválido, 404 se ausente                              |
+| `GET /transcripts/pdf/{filename}`      | Nome de PDF                        | `application/pdf`; 404 se ausente                                                                      |
+| `GET /upload-status`                   | Nenhuma                            | `{ paths: { base, pdfs, texts, metadata }, counts: { pdfs, texts, metadata }, total_size_mb, status }` |
+| `POST /materials/ingest`               | Modelo descrito abaixo             | `{ success, message, file }`                                                                           |
+| `GET /documentation/generate`          | Nenhuma                            | Gera PDF; `{ success, message, file, download_url }`                                                   |
+| `GET /documentation/download`          | Nenhuma                            | PDF; gera se ainda não existir                                                                         |
+| `GET /docs`, `/redoc`, `/openapi.json` | Nenhuma                            | Documentação automática do FastAPI                                                                     |
+| `WS /ws`                               | Áudio e mensagens descritos abaixo | Sessão de transcrição por conexão                                                                      |
 
 ### Transcrições
 

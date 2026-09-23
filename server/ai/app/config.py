@@ -47,20 +47,14 @@ class Settings:
     local_fallback: bool = os.getenv("LOCAL_FALLBACK", "1") == "1"
     local_fallback_model: str = os.getenv("LOCAL_FALLBACK_MODEL", "medium")
     local_whisper_device: str = os.getenv("LOCAL_WHISPER_DEVICE", "cpu")
-    local_whisper_compute_type: str = os.getenv(
-        "LOCAL_WHISPER_COMPUTE_TYPE", "int8"
-    )
-    local_whisper_cpu_threads: int = int(
-        os.getenv("LOCAL_WHISPER_CPU_THREADS", "6")
-    )
+    local_whisper_compute_type: str = os.getenv("LOCAL_WHISPER_COMPUTE_TYPE", "int8")
+    local_whisper_cpu_threads: int = int(os.getenv("LOCAL_WHISPER_CPU_THREADS", "6"))
     local_whisper_beam_size: int = int(os.getenv("LOCAL_WHISPER_BEAM_SIZE", "2"))
     local_whisper_vad_filter: bool = os.getenv("LOCAL_WHISPER_VAD_FILTER", "1") == "1"
     local_whisper_vad_min_silence_ms: int = int(
         os.getenv("LOCAL_WHISPER_VAD_MIN_SILENCE_MS", "300")
     )
-    local_whisper_vad_speech_pad_ms: int = int(
-        os.getenv("LOCAL_WHISPER_VAD_SPEECH_PAD_MS", "200")
-    )
+    local_whisper_vad_speech_pad_ms: int = int(os.getenv("LOCAL_WHISPER_VAD_SPEECH_PAD_MS", "200"))
     local_whisper_no_speech_threshold: float = float(
         os.getenv("LOCAL_WHISPER_NO_SPEECH_THRESHOLD", "0.6")
     )

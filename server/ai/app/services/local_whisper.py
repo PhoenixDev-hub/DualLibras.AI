@@ -113,9 +113,7 @@ async def run_local_transcription(
                 if len(local_data) >= chunk_bytes:
                     chunk = bytes(local_data)
                     local_data.clear()
-                    last_text = await _send_texts(
-                        model, chunk, saver, send_to_client, last_text
-                    )
+                    last_text = await _send_texts(model, chunk, saver, send_to_client, last_text)
             except asyncio.TimeoutError:
                 if len(local_data) >= min_chunk_bytes:
                     chunk = bytes(local_data)

@@ -8,28 +8,28 @@ SPA React 19 + TypeScript, React Router 7, Vite 8, Tailwind CSS 4 e Lucide. Entr
 
 Dentro de `client`, use `npm ci` e `npm run dev`. Requisitos de Node e estado da instalação estão no [README principal](../README.md). Se precisar alterar os endereços, copie `.env.example` para `.env` apenas se ainda não existir e ajuste as URLs públicas. Reinicie o Vite após mudar o ambiente.
 
-| Comando | Função |
-| --- | --- |
-| `npm run dev` | Servidor Vite; porta padrão 5173 |
-| `npm run build` | `tsc -b` e bundle Vite em `dist` |
-| `npm run preview` | Visualiza o build local; não é servidor de produção |
-| `npm run lint` | ESLint do projeto |
-| `npm run format` | Prettier em todo `src` |
-| `npm run format:check` | Confere formatação sem editar |
+| Comando                | Função                                              |
+| ---------------------- | --------------------------------------------------- |
+| `npm run dev`          | Servidor Vite; porta padrão 5173                    |
+| `npm run build`        | `tsc -b` e bundle Vite em `dist`                    |
+| `npm run preview`      | Visualiza o build local; não é servidor de produção |
+| `npm run lint`         | ESLint do projeto                                   |
+| `npm run format`       | Prettier em todo `src`                              |
+| `npm run format:check` | Confere formatação sem editar                       |
 
 Não existe comando `npm test`. Os [resultados de verificação](../docs/VERIFICACAO.md) distinguem build aprovado e falhas de lint preexistentes.
 
 ## Rotas existentes
 
-| Rota | Componente | Comportamento |
-| --- | --- | --- |
-| `/` | `pages/LandingPage.tsx` | Apresentação do projeto |
-| `/entrar` | `pages/Auth.tsx` → `features/auth/pages/Login.tsx` | Login na API Express |
-| `/cadastrar` | `pages/Auth.tsx` → `features/auth/pages/Cadastro.tsx` | Cadastro na API Express; redireciona a `/app` |
-| `/dashboard` | `pages/Dashboard.tsx` | Demonstração do professor, sem consulta de sessão |
-| `/codigo` | `pages/RoomCode.tsx` | Formulário de código; entrada real não integrada |
-| `/app`, `/aula` | `pages/AppPrincipal.tsx` | Captura, transcrição e VLibras do protótipo |
-| Demais caminhos | `Navigate` | Redirecionam a `/` |
+| Rota            | Componente                                            | Comportamento                                     |
+| --------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| `/`             | `pages/LandingPage.tsx`                               | Apresentação do projeto                           |
+| `/entrar`       | `pages/Auth.tsx` → `features/auth/pages/Login.tsx`    | Login na API Express                              |
+| `/cadastrar`    | `pages/Auth.tsx` → `features/auth/pages/Cadastro.tsx` | Cadastro na API Express; redireciona a `/app`     |
+| `/dashboard`    | `pages/Dashboard.tsx`                                 | Demonstração do professor, sem consulta de sessão |
+| `/codigo`       | `pages/RoomCode.tsx`                                  | Formulário de código; entrada real não integrada  |
+| `/app`, `/aula` | `pages/AppPrincipal.tsx`                              | Captura, transcrição e VLibras do protótipo       |
+| Demais caminhos | `Navigate`                                            | Redirecionam a `/`                                |
 
 O link de recuperação de senha aponta para uma rota ainda não implementada. Não há guardas de autenticação no roteador atual. A área demonstrativa não representa autorização de backend.
 

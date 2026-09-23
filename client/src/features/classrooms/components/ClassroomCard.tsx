@@ -21,15 +21,15 @@ export default function ClassroomCard({ classroom }: { classroom: Classroom }) {
         <button
           aria-label={`Opções de ${classroom.name}`}
           aria-expanded={menu}
-          className="absolute right-3 top-2 rounded-lg p-2 hover:bg-white/20"
+          className="absolute right-3 top-2 rounded-lg p-2 hover:bg-white/20 dark:hover:bg-slate-900/20"
           onClick={() => setMenu(!menu)}
         >
           <MoreHorizontal size={19} />
         </button>
         {menu && (
-          <section className="absolute right-3 top-12 z-10 grid w-40 rounded-xl border border-slate-200 bg-white p-1 text-sm text-slate-700 shadow-xl">
+          <section className="absolute right-3 top-12 z-10 grid w-40 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 text-sm text-slate-700 dark:text-slate-200 shadow-xl">
             <button
-              className="rounded-lg p-3 text-left hover:bg-slate-50"
+              className="rounded-lg p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-950"
               onClick={() => {
                 editClassroom(classroom)
                 setMenu(false)
@@ -41,7 +41,7 @@ export default function ClassroomCard({ classroom }: { classroom: Classroom }) {
         )}
       </header>
       <section className="p-5">
-        <p className="flex items-center gap-2 text-xs text-slate-500">
+        <p className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <Users size={15} />
           {
             students.filter((student) => student.classroomIds.includes(classroom.id)).length
@@ -56,12 +56,14 @@ export default function ClassroomCard({ classroom }: { classroom: Classroom }) {
               Aula em andamento
             </span>
           ) : (
-            <span className="text-xs text-slate-400">Seu próximo encontro começa aqui</span>
+            <span className="text-xs text-slate-400 dark:text-slate-400">
+              Seu próximo encontro começa aqui
+            </span>
           )}
         </section>
-        <footer className="flex items-center justify-between border-t border-slate-100 pt-4">
+        <footer className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 pt-4">
           <button
-            className="flex items-center gap-2 text-xs text-slate-500"
+            className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"
             onClick={() => copy(classroom.code)}
             aria-label={`Copiar código ${classroom.code}`}
           >
@@ -70,7 +72,7 @@ export default function ClassroomCard({ classroom }: { classroom: Classroom }) {
           </button>
           <button
             onClick={() => openClassroom(classroom.id)}
-            className="flex items-center gap-1 text-xs font-bold text-primary"
+            className="flex items-center gap-1 text-xs font-bold text-primary dark:text-blue-300"
           >
             Abrir turma
             <ArrowUpRight size={15} />

@@ -8,9 +8,10 @@ type TranscriptionProvider = Exclude<ConnectionMode, 'offline'>
 
 type UseAudioCaptureOptions = {
   onTranscript: (message: TranscriptMessage) => void
+  lessonId?: string | number
 }
 
-export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
+export function useAudioCapture({ onTranscript, lessonId }: UseAudioCaptureOptions) {
   const onTranscriptRef = useRef(onTranscript)
   useEffect(() => {
     onTranscriptRef.current = onTranscript
@@ -58,7 +59,7 @@ export function useAudioCapture({ onTranscript }: UseAudioCaptureOptions) {
     }
 
     console.log(`[WebSocket] Conectando ao backend em ${WS_URL}`)
-    const ws = new WebSocket(WS_URL)
+    const ws = new WebSocket(lessonId ? `${WS_URL}${WS_URL.includes('?') ? '&' : '?'}lesson_id=${encodeURIComponent(lessonId)}` : WS_URL)
     wsRef.current = ws
 
     ws.onopen = () => {

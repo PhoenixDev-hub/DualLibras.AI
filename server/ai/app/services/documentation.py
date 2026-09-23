@@ -8,8 +8,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import (PageBreak, Paragraph, SimpleDocTemplate,
-                                Spacer, Table, TableStyle)
+from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +84,7 @@ class DocumentationGenerator:
             story.append(Spacer(1, 0.2 * inch))
             story.append(Paragraph("FESTIVAL 2026", header_style))
             story.append(
-                Paragraph(
-                    "Sistema de Transcrição em Tempo Real com Libras", subheader_style
-                )
+                Paragraph("Sistema de Transcrição em Tempo Real com Libras", subheader_style)
             )
 
             now = datetime.now()
@@ -103,9 +100,7 @@ class DocumentationGenerator:
             footer_data = [["" for _ in range(1)]]
             footer_table = Table(footer_data, colWidths=[7 * inch])
             footer_table.setStyle(
-                TableStyle(
-                    [("LINEABOVE", (0, 0), (-1, -1), 2, colors.HexColor("#1a472a"))]
-                )
+                TableStyle([("LINEABOVE", (0, 0), (-1, -1), 2, colors.HexColor("#1a472a"))])
             )
             story.append(footer_table)
             story.append(Spacer(1, 0.3 * inch))
@@ -176,9 +171,7 @@ class DocumentationGenerator:
                 ["GET", "/upload-status", "Mostra status de armazenamento"],
                 ["GET", "/health", "Health check do servidor"],
             ]
-            endpoints_table = Table(
-                endpoints_data, colWidths=[1 * inch, 2 * inch, 3.5 * inch]
-            )
+            endpoints_table = Table(endpoints_data, colWidths=[1 * inch, 2 * inch, 3.5 * inch])
             endpoints_table.setStyle(
                 TableStyle(
                     [
@@ -209,9 +202,7 @@ class DocumentationGenerator:
             story.append(Spacer(1, 0.2 * inch))
             divider = [["" for _ in range(1)]]
             divider_table = Table(divider, colWidths=[7 * inch])
-            divider_table.setStyle(
-                TableStyle([("LINEABOVE", (0, 0), (-1, -1), 1, colors.grey)])
-            )
+            divider_table.setStyle(TableStyle([("LINEABOVE", (0, 0), (-1, -1), 1, colors.grey)]))
             story.append(divider_table)
 
             story.append(Spacer(1, 0.1 * inch))

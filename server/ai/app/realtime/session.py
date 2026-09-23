@@ -1,3 +1,4 @@
+from pathlib import Path
 import asyncio
 import json
 import logging
@@ -37,6 +38,7 @@ class ClientSession:
         self,
         websocket: WebSocket,
         transcript_manager: TranscriptManager | None = None,
+        transcript_dir: Path | None = None,
     ):
         self.websocket = websocket
         self.audio_buffer = AudioBuffer(max_size=SETTINGS.audio_queue_size)
@@ -47,7 +49,7 @@ class ClientSession:
         self.provider_task: asyncio.Task[Any] | None = None
         self.active = True
         self.mode: str | None = None
-        self.saver = TranscriptSaver() if SETTINGS.save_transcripts else None
+        self.saver = TranscriptSaver(transcript_dir) if SETTINGS.save_transcripts else None
         self.transcript_manager = transcript_manager
 
     async def send_to_client(self, message: dict[str, Any]) -> None:
@@ -66,7 +68,13 @@ class ClientSession:
             or not 1600 <= SETTINGS.chunk_size <= 32000
             or SETTINGS.chunk_size % 2
         ):
-            await self.send_to_client({"type": "error", "text": "Configure PCM16 mono, 16000 Hz e chunks pares de 1600 a 32000 bytes.", "error": True})
+            await self.send_to_client(
+                {
+                    "type": "error",
+                    "text": "Configure PCM16 mono, 16000 Hz e chunks pares de 1600 a 32000 bytes.",
+                    "error": True,
+                }
+            )
             await self.websocket.close()
             return
         await self.switch_provider("assemblyai", allow_fallback=False)
@@ -215,7 +223,13 @@ class ClientSession:
         return False
 
     async def _provider_failed(self) -> None:
-        await self.send_to_client({"type": "error", "text": "Transcrição interrompida. Inicie novamente para tentar outra vez.", "error": True})
+        await self.send_to_client(
+            {
+                "type": "error",
+                "text": "Transcrição interrompida. Inicie novamente para tentar outra vez.",
+                "error": True,
+            }
+        )
         await self.websocket.close()
 
     def _transcription_done(self, task: asyncio.Task) -> None:
@@ -258,10 +272,7 @@ class ClientSession:
             if self.saver:
                 self.saver.save_final(text, speaker)
 
-            if (
-                self.transcript_manager
-                and os.getenv("AUTO_SAVE_TRANSCRIPTS", "0") == "1"
-            ):
+            if self.transcript_manager and os.getenv("AUTO_SAVE_TRANSCRIPTS", "0") == "1":
                 formats = os.getenv("AUTO_SAVE_FORMATS", "pdf,txt,json").split(",")
                 try:
                     self.transcript_manager.save_transcript(
@@ -351,9 +362,7 @@ class ClientSession:
                         "Timeout aguardando gathering de ICE completar. Enviando SDP parcial."
                     )
 
-            await self.send_to_client(
-                {"type": "webrtc_answer", "sdp": pc.localDescription.sdp}
-            )
+            await self.send_to_client({"type": "webrtc_answer", "sdp": pc.localDescription.sdp})
         except Exception as exc:
             logger.error("Erro ao processar offer WebRTC: %s", exc)
 

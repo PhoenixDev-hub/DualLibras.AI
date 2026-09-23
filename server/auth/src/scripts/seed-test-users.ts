@@ -1,7 +1,7 @@
-import { prisma } from '../config/prisma';
-import { hashPassword } from '../utils/hash';
+import { prisma } from '../config/prisma'
+import { hashPassword } from '../utils/hash'
 
-const password = 'Teste@123';
+const password = 'Teste@123'
 
 const users = [
   {
@@ -27,10 +27,10 @@ const users = [
     email: 'admin.teste@duallibras.local',
     role: 'ADMIN' as const,
   },
-];
+]
 
 async function seed() {
-  const passwordHash = await hashPassword(password);
+  const passwordHash = await hashPassword(password)
 
   for (const user of users) {
     const created = await prisma.user.upsert({
@@ -46,7 +46,7 @@ async function seed() {
         passwordHash,
         role: user.role,
       },
-    });
+    })
 
     if (user.role === 'PROFESSOR') {
       await prisma.teacherProfile.upsert({
@@ -56,7 +56,7 @@ async function seed() {
           userId: created.id,
           ...user.profile,
         },
-      });
+      })
     }
 
     if (user.role === 'ALUNO') {
@@ -67,25 +67,25 @@ async function seed() {
           userId: created.id,
           ...user.profile,
         },
-      });
+      })
     }
-
-
   }
 
-  console.table(users.map((user) => ({
-    nome: user.name,
-    email: user.email,
-    perfil: user.role,
-    senha: password,
-  })));
+  console.table(
+    users.map((user) => ({
+      nome: user.name,
+      email: user.email,
+      perfil: user.role,
+      senha: password,
+    })),
+  )
 }
 
 seed()
   .catch((error) => {
-    console.error('Falha ao criar usuários de teste:', error);
-    process.exitCode = 1;
+    console.error('Falha ao criar usuários de teste:', error)
+    process.exitCode = 1
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

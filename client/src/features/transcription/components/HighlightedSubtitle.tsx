@@ -113,11 +113,13 @@ export default function HighlightedSubtitle({
 
   if (!text || !text.trim()) {
     return (
-      <div className="lesson-subtitle-empty flex flex-col items-center justify-center py-12 text-center text-slate-400 select-none">
-        <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900/80 border border-sky-500/20 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
-          <Volume2 className="h-8 w-8 text-sky-400/60 animate-pulse" />
+      <div className="lesson-subtitle-empty flex flex-col items-center justify-center py-12 text-center text-slate-400 light:text-slate-600 select-none">
+        <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900/80 light:bg-white/80 border border-sky-500/20 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
+          <Volume2 className="h-8 w-8 text-sky-400/60 light:text-sky-700/60 animate-pulse" />
         </div>
-        <p className="text-lg font-semibold text-slate-300">Aguardando a fala da aula...</p>
+        <p className="text-lg font-semibold text-slate-300 light:text-slate-700">
+          Aguardando a fala da aula...
+        </p>
         <p className="mt-1 text-xs text-slate-500 max-w-sm">
           Ative o microfone para acompanhar a transcrição e a tradução em Libras.
         </p>
@@ -131,10 +133,10 @@ export default function HighlightedSubtitle({
   return (
     <div className="lesson-subtitle relative w-full">
       {isTranslating && currentActiveWord && (
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-sky-400/40 bg-sky-950/70 px-3.5 py-1 text-xs font-bold text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.3)] backdrop-blur-md animate-fade-in">
-          <Sparkles className="h-3.5 w-3.5 text-sky-300 animate-spin" />
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-sky-400/40 bg-sky-950/70 px-3.5 py-1 text-xs font-bold text-sky-300 light:text-sky-700 shadow-[0_0_15px_rgba(56,189,248,0.3)] backdrop-blur-md animate-fade-in">
+          <Sparkles className="h-3.5 w-3.5 text-sky-300 light:text-sky-700 animate-spin" />
           <span>Guia de leitura:</span>
-          <span className="rounded bg-sky-500/30 px-2 py-0.5 font-black text-white underline decoration-sky-300 decoration-2">
+          <span className="rounded bg-sky-500/30 px-2 py-0.5 font-black text-white light:text-slate-900 underline decoration-sky-300 decoration-2">
             {currentActiveWord.replace(/[^a-zA-Z0-9áéíóúãõâêîôûçÁÉÍÓÚÃÕÂÊÎÔÛÇ]/g, '')}
           </span>
         </div>
@@ -142,7 +144,7 @@ export default function HighlightedSubtitle({
 
       <p
         className={`font-extrabold tracking-normal text-balance transition-all duration-200 ${FONT_SIZE_CLASSES[fontSize]} ${
-          error ? 'text-red-400' : 'text-slate-100'
+          error ? 'text-red-400 light:text-red-700' : 'text-slate-100 light:text-slate-800'
         }`}
         lang="pt-BR"
         aria-live="polite"
@@ -157,7 +159,7 @@ export default function HighlightedSubtitle({
             return (
               <span
                 key={`${token}-${index}`}
-                className="relative inline-block mx-1.5 px-3 py-1 rounded-xl font-black text-white bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 shadow-[0_0_24px_rgba(56,189,248,0.85),inset_0_1px_1px_rgba(255,255,255,0.4)] ring-2 ring-sky-300 scale-105 -translate-y-0.5 transition-all duration-150"
+                className="relative inline-block mx-1.5 px-3 py-1 rounded-xl font-black text-white light:text-slate-900 bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 shadow-[0_0_24px_rgba(56,189,248,0.85),inset_0_1px_1px_rgba(255,255,255,0.4)] ring-2 ring-sky-300 scale-105 -translate-y-0.5 transition-all duration-150"
               >
                 {token}
                 <span className="absolute -top-1.5 -right-1 flex h-2.5 w-2.5">
@@ -172,7 +174,7 @@ export default function HighlightedSubtitle({
             return (
               <span
                 key={`${token}-${index}`}
-                className="inline-block mx-1 font-bold text-slate-100 opacity-95 transition-opacity duration-200"
+                className="inline-block mx-1 font-bold text-slate-100 light:text-slate-800 opacity-95 transition-opacity duration-200"
               >
                 {token}
               </span>
@@ -183,7 +185,7 @@ export default function HighlightedSubtitle({
             return (
               <span
                 key={`${token}-${index}`}
-                className="inline-block mx-1 font-medium text-slate-400 opacity-60 transition-opacity duration-200"
+                className="inline-block mx-1 font-medium text-slate-400 light:text-slate-600 opacity-60 transition-opacity duration-200"
               >
                 {token}
               </span>

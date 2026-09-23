@@ -8,15 +8,16 @@
     "predev": "prisma generate",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prebuild": "prisma generate",
-    "build": "tsc",
-    "postinstall": "prisma generate",
+    "build": "tsc && tsc -p tsconfig.config.json",
     "start": "node dist/server.js",
     "seed:test-users": "npm run build && node dist/scripts/seed-test-users.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "database:admin-accounts": "npm run build && node dist/scripts/update-admin-accounts.js",
     "database:material-classroom": "npm run build && node dist/scripts/update-material-classroom.js",
-    "check:database": "npm run build && node dist/scripts/check-database.js"
+    "check:database": "npm run build && node dist/scripts/check-database.js",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:status": "prisma migrate status"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",

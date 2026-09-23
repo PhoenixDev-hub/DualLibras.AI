@@ -65,7 +65,7 @@ export default function ClassroomFormModal({
             defaultValue={editor === 'new' ? '' : editor.description}
           />
         </label>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 dark:text-slate-400">
           Nome e descrição são salvos no banco. A disciplina vem do perfil do professor.
         </p>
         <section className="flex justify-end gap-3">

@@ -1,0 +1,3 @@
+-r requirements.txt
+# In-process ASGI requests in offline concurrency regression tests.
+httpx>=0.28,<1

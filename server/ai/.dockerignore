@@ -17,3 +17,6 @@ venv
 .DS_Store
 transcripts/*
 !transcripts/.gitkeep
+
+.env
+.env.*

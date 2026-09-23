@@ -33,14 +33,14 @@ export default function AdminLessonPreview({ id, onClose }: { id: string; onClos
   return (
     <Modal title={lesson?.title ?? 'Detalhes da aula'} onClose={onClose}>
       {error ? (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="text-red-700 dark:text-red-300">
           {error}
         </p>
       ) : !lesson ? (
         <p role="status">Carregando aula…</p>
       ) : (
         <div className="space-y-5">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             {lesson.classroom.name} · {lesson.teacher.name} · {lessonLabels[lesson.status]}
           </p>
           <section>

@@ -11,8 +11,8 @@ function PracticeSymbols({ mode }: { mode: PracticeMode }) {
   const index = symbols.indexOf(symbol)
   const next = symbols[(index + 1) % symbols.length]
   return (
-    <div className="min-w-0 text-slate-800">
-      <p className="mb-5 text-sm text-slate-500">
+    <div className="min-w-0 text-slate-800 dark:text-slate-100">
+      <p className="mb-5 text-sm text-slate-500 dark:text-slate-400">
         Escolha {mode === 'numbers' ? 'um número de 0 a 9' : 'uma letra, incluindo Ç'} e pressione
         “Sinalizar em Libras” para ver o avatar.
       </p>
@@ -22,7 +22,7 @@ function PracticeSymbols({ mode }: { mode: PracticeMode }) {
             key={item}
             aria-pressed={symbol === item}
             aria-label={`${mode === 'numbers' ? 'Número' : 'Letra'} ${item}`}
-            className={`rounded-xl border p-4 text-2xl font-bold ${symbol === item ? 'border-primary bg-primary text-white' : 'border-slate-200 bg-white text-primary'}`}
+            className={`rounded-xl border p-4 text-2xl font-bold ${symbol === item ? 'border-primary bg-primary text-white' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-primary dark:text-blue-300'}`}
             onClick={() => {
               setAutoPlay(false)
               setSymbol(item)

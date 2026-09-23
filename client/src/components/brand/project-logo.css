@@ -1,0 +1,36 @@
+.project-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  color: var(--app-link, #285ca0);
+  font-family: 'Quicksand', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+.project-logo-icon {
+  display: block;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.project-logo-name {
+  white-space: nowrap;
+  letter-spacing: -0.035em;
+}
+.project-logo--inverse {
+  color: #fff;
+}
+@media (max-width: 720px) {
+  .project-logo {
+    gap: 8px;
+    font-size: 1.1rem;
+  }
+  .project-logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+}

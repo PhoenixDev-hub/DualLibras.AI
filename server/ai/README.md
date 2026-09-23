@@ -48,20 +48,20 @@ Use imports relativos dentro de `app`. Os antigos caminhos `server.app`, `app.tr
 
 O [exemplo de ambiente](.env.example) contém os nomes lidos pelo código e valores fictícios/padrão. Não copie credenciais reais para documentação.
 
-| Grupo | Variáveis e significado |
-| --- | --- |
-| Serviço | `PORT`, `LOG_LEVEL` |
-| AssemblyAI | `ASSEMBLYAI_API_KEY` (vazia por padrão), `SPEECH_MODEL` |
-| PCM | `AUDIO_SAMPLE_RATE=16000`, `AUDIO_CHANNELS=1`, `AUDIO_CHUNK_SIZE=1600`, fila `AUDIO_QUEUE_MAX_SIZE` |
-| Modelo local | `LOCAL_FALLBACK`, `LOCAL_FALLBACK_MODEL=medium`, `LOCAL_WHISPER_DEVICE=cpu`, `LOCAL_WHISPER_COMPUTE_TYPE=int8`, threads, beam, VAD, prompt e hotwords |
-| Janelas locais | `LOCAL_TRANSCRIPTION_CHUNK_SECONDS=2.5`, `LOCAL_TRANSCRIPTION_MIN_SECONDS=1.2` |
-| Conectividade | `INTERNET_PROBE_HOST`, `INTERNET_PROBE_PORT`, `INTERNET_PROBE_TIMEOUT` |
-| Gravação contínua | `SAVE_TRANSCRIPTS=1`, `TRANSCRIPT_OUTPUT_DIR=../../storage/transcripts/live` |
-| Exportações REST | `OUTPUT_PATH=../../storage` |
-| Materiais | `MATERIAL_OUTPUT_DIR=../../storage/materials/ai` |
-| Documentação PDF | `DOCUMENTATION_OUTPUT_DIR=../../storage/documentation` |
-| Exportação por trecho | `AUTO_SAVE_TRANSCRIPTS=0`, `AUTO_SAVE_FORMATS=pdf,txt,json` |
-| CLI | `AUDIO_DEVICE`, `LIST_AUDIO_DEVICES`, `USE_WEBRTC_VAD`, `VAD_MODE`, limiar/hold, timeouts, reconexão, prompts e métricas |
+| Grupo                 | Variáveis e significado                                                                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Serviço               | `PORT`, `LOG_LEVEL`                                                                                                                                   |
+| AssemblyAI            | `ASSEMBLYAI_API_KEY` (vazia por padrão), `SPEECH_MODEL`                                                                                               |
+| PCM                   | `AUDIO_SAMPLE_RATE=16000`, `AUDIO_CHANNELS=1`, `AUDIO_CHUNK_SIZE=1600`, fila `AUDIO_QUEUE_MAX_SIZE`                                                   |
+| Modelo local          | `LOCAL_FALLBACK`, `LOCAL_FALLBACK_MODEL=medium`, `LOCAL_WHISPER_DEVICE=cpu`, `LOCAL_WHISPER_COMPUTE_TYPE=int8`, threads, beam, VAD, prompt e hotwords |
+| Janelas locais        | `LOCAL_TRANSCRIPTION_CHUNK_SECONDS=2.5`, `LOCAL_TRANSCRIPTION_MIN_SECONDS=1.2`                                                                        |
+| Conectividade         | `INTERNET_PROBE_HOST`, `INTERNET_PROBE_PORT`, `INTERNET_PROBE_TIMEOUT`                                                                                |
+| Gravação contínua     | `SAVE_TRANSCRIPTS=1`, `TRANSCRIPT_OUTPUT_DIR=../../storage/transcripts/live`                                                                          |
+| Exportações REST      | `OUTPUT_PATH=../../storage`                                                                                                                           |
+| Materiais             | `MATERIAL_OUTPUT_DIR=../../storage/materials/ai`                                                                                                      |
+| Documentação PDF      | `DOCUMENTATION_OUTPUT_DIR=../../storage/documentation`                                                                                                |
+| Exportação por trecho | `AUTO_SAVE_TRANSCRIPTS=0`, `AUTO_SAVE_FORMATS=pdf,txt,json`                                                                                           |
+| CLI                   | `AUDIO_DEVICE`, `LIST_AUDIO_DEVICES`, `USE_WEBRTC_VAD`, `VAD_MODE`, limiar/hold, timeouts, reconexão, prompts e métricas                              |
 
 As variáveis de VAD da CLI não controlam o VAD do navegador. A API AssemblyAI envia `sample_rate` e `speech_model`; a CLI monta parâmetros adicionais. Veja [áudio e ruído](../../docs/AMBIENTE_BARULHENTO.md).
 

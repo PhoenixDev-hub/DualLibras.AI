@@ -4,11 +4,11 @@
 
 ## Aplicações e pontos de entrada
 
-| Aplicação | Stack observada | Entrada |
-| --- | --- | --- |
-| `client` | React 19, TypeScript, React Router 7, Vite 8, Tailwind 4 | `index.html`, `src/main.tsx`, `src/App.tsx` |
-| `server/auth` | Express 5, TypeScript, Zod, Prisma 7 e adapter PostgreSQL | `src/server.ts`, `src/app.ts` |
-| `server/ai` | FastAPI, Uvicorn, asyncio, AssemblyAI, Faster-Whisper, ReportLab | `main.py`, `app/api/app.py` |
+| Aplicação     | Stack observada                                                  | Entrada                                     |
+| ------------- | ---------------------------------------------------------------- | ------------------------------------------- |
+| `client`      | React 19, TypeScript, React Router 7, Vite 8, Tailwind 4         | `index.html`, `src/main.tsx`, `src/App.tsx` |
+| `server/auth` | Express 5, TypeScript, Zod, Prisma 7 e adapter PostgreSQL        | `src/server.ts`, `src/app.ts`               |
+| `server/ai`   | FastAPI, Uvicorn, asyncio, AssemblyAI, Faster-Whisper, ReportLab | `main.py`, `app/api/app.py`                 |
 
 Cada aplicação mantém suas dependências e configuração; não há orquestrador de monorepo ou framework de páginas implícitas. O Docker Compose descreve PostgreSQL, Express, IA e Nginx/frontend.
 

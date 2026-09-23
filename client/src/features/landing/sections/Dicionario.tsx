@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowRight, Hand } from 'lucide-react'
 import LibrasPractice from '../../libras/components/LibrasPractice'
 
 export default function Dicionario() {
@@ -6,47 +7,60 @@ export default function Dicionario() {
   return (
     <section
       id="dicionario"
-      className="relative bg-background-dark px-4 py-24"
+      className="edu-section edu-practice"
       aria-labelledby="dicionario-title"
     >
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-10 max-w-2xl">
-          <span className="font-ui text-xs font-semibold uppercase tracking-widest text-primary">
-            Dicionário · Libras
-          </span>
-          <h2
-            id="dicionario-title"
-            className="mt-4 font-ui text-4xl font-extrabold leading-tight text-text-light md:text-5xl"
-          >
-            Alfabeto e números
-            <br />
-            <span className="text-primary">em Libras.</span>
-          </h2>
-          <p className="mt-5 text-sm leading-relaxed text-gray-mid">
-            Explore as letras, incluindo Ç, e os números de 0 a 9. Acompanhe os sinais com o avatar
-            e avance no seu ritmo.
-          </p>
+      <div className="edu-container">
+        <div className="edu-practice-intro">
+          <div>
+            <span className="edu-eyebrow">
+              <Hand size={18} aria-hidden="true" /> Dicionário
+            </span>
+            <h2 id="dicionario-title">Aprenda Libras no seu ritmo.</h2>
+            <p>
+              Explore o alfabeto, incluindo o Ç, e os números de 0 a 9. Visualize os sinais com o
+              avatar e pratique enquanto aprende.
+            </p>
+          </div>
+          <div className="edu-letter-tiles" aria-hidden="true">
+            <span>A</span>
+            <span>B</span>
+            <span>C</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+          </div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-8">
+        <article className="edu-practice-panel">
           {open ? (
             <>
-              <button className="t-btn-secondary mb-6" onClick={() => setOpen(false)}>
+              <button
+                className="edu-button edu-button-outline"
+                aria-expanded={open}
+                aria-controls="edu-practice-content"
+                onClick={() => setOpen(false)}
+              >
                 Fechar prática
               </button>
-              <LibrasPractice />
+              <div id="edu-practice-content" className="edu-practice-content">
+                <LibrasPractice />
+              </div>
             </>
           ) : (
-            <div className="text-slate-800">
-              <h3 className="mb-3 text-xl font-bold">Experimente o avatar em Libras</h3>
-              <p className="mb-5 text-sm text-slate-500">
-                Escolha entre alfabeto e números e use o botão de próximo sinal para continuar.
-              </p>
-              <button className="t-btn" onClick={() => setOpen(true)}>
-                Praticar alfabeto e números
+            <>
+              <div>
+                <h3>Seu primeiro passo pode ser aqui</h3>
+                <p>
+                  Pratique as letras, incluindo Ç, e os números de 0 a 9. Não precisa de uma conta
+                  para experimentar.
+                </p>
+              </div>
+              <button className="edu-button" aria-expanded={open} onClick={() => setOpen(true)}>
+                Explorar alfabeto e números <ArrowRight size={18} aria-hidden="true" />
               </button>
-            </div>
+            </>
           )}
-        </div>
+        </article>
       </div>
     </section>
   )

@@ -1555,3 +1555,6 @@
 [00:12:09] Aluno: O que não seja o Cosbel.
 [00:12:12] Aluno: Não, o que realmente seja o Cosbel.
 [00:12:17] Aluno: Então você tá dizendo que não é o Cosbel de verdadeiro? Não.
+[00:00:03] Professor: Tá funcionando. Oi, oi, oi.
+[00:00:07] Professor: Tá.
+[00:00:14] Professor: Tá funcionando, coisa boa.

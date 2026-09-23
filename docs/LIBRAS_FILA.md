@@ -11,7 +11,6 @@ O VAD envia PCM silencioso durante as pausas, mantendo a linha do tempo para o
 AssemblyAI detectar o fim da fala. Referência:
 https://www.assemblyai.com/docs/streaming/message-sequence
 
-
 A saudação “Olá! Bem-vindo ao DualLibras.AI.” é reproduzida uma vez por página
 carregada. O envio começa quando a função `plugin.translate` está disponível.
 Não depende de `isWelcomeFinished`, pois essa flag pode ficar falsa após uma

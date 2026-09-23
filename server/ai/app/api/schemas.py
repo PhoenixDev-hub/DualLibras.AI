@@ -1,17 +1,14 @@
-from typing import Any
+from typing import Any, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 
 class SaveTranscriptRequest(BaseModel):
-    text: str = Field(..., min_length=1, description="Texto da transcrição")
-    title: str = Field(default="Transcrição", description="Título do documento")
-    formats: list[str] = Field(
-        default=["pdf", "txt", "json"], description="Formatos a salvar"
-    )
-    metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Dados adicionais"
-    )
+    text: str = Field(..., min_length=1, max_length=200000, description="Texto da transcrição")
+    title: str = Field(default="Transcrição", max_length=200, description="Título do documento")
+    formats: list[Literal["pdf", "txt", "json"]] = Field(default=["pdf", "txt", "json"], min_length=1, max_length=3, description="Formatos a salvar")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Dados adicionais")
 
 
 class TranscriptResponse(BaseModel):
@@ -29,11 +26,11 @@ class TranscriptListResponse(BaseModel):
 
 
 class MaterialIngestRequest(BaseModel):
-    material_id: str
-    filename: str
-    display_type: str
-    content_base64: str
-    uploaded_by: str | None = None
+    material_id: UUID
+    filename: str = Field(min_length=1, max_length=200)
+    display_type: str = Field(max_length=100)
+    content_base64: str = Field(max_length=48 * 1024 * 1024)
+    uploaded_by: UUID | None = None
 
 
 class MaterialIngestResponse(BaseModel):

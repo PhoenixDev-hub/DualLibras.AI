@@ -1,122 +1,71 @@
+import ThemeToggle from '../../theme/ThemeToggle'
+import ProjectLogo from '../../../components/brand/ProjectLogo'
 import { Menu, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-interface NavItem {
-  label: string
-  href: string
-}
-
-const navItems: NavItem[] = [
+const navItems = [
   { label: 'Início', href: '#inicio' },
-  { label: 'Problema', href: '#problema' },
-  { label: 'Funcionamento', href: '#funcionamento' },
+  { label: 'Como funciona', href: '#funcionamento' },
   { label: 'Dicionário', href: '#dicionario' },
-  { label: 'Tecnologias', href: '#tecnologias' },
-  { label: 'Sobre o Projeto', href: '#impacto' },
+  { label: 'Sobre o projeto', href: '#impacto' },
 ]
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
-
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : ''
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileOpen])
-
-  const linkClass =
-    'relative font-ui text-sm tracking-wide py-1 text-text-light/80 hover:text-primary transition-colors after:absolute after:left-0 after:-bottom-0.5 after:h-px after:bg-primary after:w-0 after:transition-all after:duration-300 hover:after:w-full'
-
-  const mobileLinkClass =
-    'block px-2 py-1 text-sm tracking-wide text-text-light/80 hover:text-primary transition-colors'
-
   return (
-    <header className="relative bg-background-dark sticky top-0 z-50 motion-safe:opacity-0 motion-safe:animate-[fadeInDown_0.5s_ease-out_forwards]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link
-            to="/"
-            className="text-2xl font-logo font-bold text-primary tracking-tight transition-transform duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
-          >
-            DualLibras.ai
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-8" aria-label="Navegação principal">
+    <header className="edu-header">
+      <a className="edu-skip-link" href="#conteudo">
+        Ir para o conteúdo
+      </a>
+      <div className="edu-container edu-header-inner">
+        <Link to="/" className="edu-brand" aria-label="DualLibras — início">
+          <ProjectLogo />
+        </Link>
+        <div className="edu-header-actions">
+          <nav className="edu-desktop-nav" aria-label="Navegação principal">
             {navItems.map((item) => (
-              <a key={item.label} href={item.href} className={linkClass}>
+              <a href={item.href} key={item.href}>
                 {item.label}
               </a>
             ))}
-            <div className="flex items-center ml-4 space-x-3">
-              <Link
-                to="/entrar"
-                className="px-4 py-2 font-ui text-sm font-semibold tracking-wide text-text-light/90 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastrar"
-                className="px-5 py-2 font-ui text-sm font-semibold tracking-wide text-text-light bg-gradient-to-r from-primary to-secondary rounded-full hover:brightness-110 hover:scale-[1.03] transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-dark"
-              >
-                Cadastrar
-              </Link>
-            </div>
+            <Link to="/entrar" className="edu-button edu-button-small">
+              Entrar
+            </Link>
           </nav>
-
+          <ThemeToggle />
           <button
-            onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden p-2 rounded-md text-text-light/80 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="edu-menu-toggle"
+            onClick={() => setMobileOpen((value) => !value)}
             aria-expanded={mobileOpen}
-            aria-controls="mobile-nav"
+            aria-controls="edu-mobile-nav"
             aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
           >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileOpen ? <X /> : <Menu />}
           </button>
         </div>
-
-        <div
-          id="mobile-nav"
-          className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-            mobileOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <nav
-            className="border-t border-primary/10 py-5 space-y-4 font-ui"
-            aria-label="Navegação mobile"
-          >
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className={mobileLinkClass}
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
-            <div className="flex flex-col gap-3 pt-3 border-t border-primary/10">
-              <Link
-                to="/entrar"
-                className="px-4 py-2 text-center text-sm font-semibold text-text-light/90 border border-primary/30 rounded-full hover:bg-primary/10 hover:text-primary transition-all"
-                onClick={() => setMobileOpen(false)}
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastrar"
-                className="px-4 py-2 text-center text-sm font-semibold text-text-light bg-gradient-to-r from-primary to-secondary rounded-full hover:brightness-110 transition-all"
-                onClick={() => setMobileOpen(false)}
-              >
-                Cadastrar
-              </Link>
-            </div>
-          </nav>
-        </div>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+      <nav
+        id="edu-mobile-nav"
+        className="edu-mobile-nav"
+        aria-label="Navegação mobile"
+        hidden={!mobileOpen}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setMobileOpen(false)
+        }}
+      >
+        {navItems.map((item) => (
+          <a href={item.href} key={item.href} onClick={() => setMobileOpen(false)}>
+            {item.label}
+          </a>
+        ))}
+        <Link to="/entrar" onClick={() => setMobileOpen(false)}>
+          Entrar na minha conta
+        </Link>
+        <Link to="/cadastrar" onClick={() => setMobileOpen(false)}>
+          Criar minha conta
+        </Link>
+      </nav>
     </header>
   )
 }

@@ -1,0 +1,271 @@
+:root {
+  color-scheme: light;
+  --app-background: #f5f7fb;
+  --app-surface: #ffffff;
+  --app-ink: #263d46;
+  --app-muted: #53666d;
+  --app-border: #cbd5e1;
+  --app-link: #285ca0;
+}
+:root.dark {
+  color-scheme: dark;
+  --app-background: #0b1220;
+  --app-surface: #172233;
+  --app-ink: #e5edf5;
+  --app-muted: #b1c0d0;
+  --app-border: #36475b;
+  --app-link: #93c5fd;
+}
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: var(--app-background);
+  color: var(--app-ink);
+}
+.theme-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  color: var(--app-link);
+  background: var(--app-surface);
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  border-color: var(--app-link);
+}
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--app-link);
+  outline-offset: 3px;
+}
+.theme-toggle-auth {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 40;
+}
+.theme-toggle-lesson {
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  z-index: 80;
+}
+.education-landing .edu-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+/* The landing retains its paper/notebook identity in both palettes. */
+html.dark .education-landing {
+  --edu-ink: var(--app-ink);
+  --edu-muted: var(--app-muted);
+  --edu-blue: var(--app-link);
+  --edu-paper: var(--app-background);
+}
+html.dark .education-landing .edu-header {
+  background: #0b1220f5;
+  border-color: var(--app-border);
+}
+html.dark .education-landing :is(.edu-values, .edu-about) {
+  background: #14251f;
+}
+html.dark .education-landing .edu-practice {
+  background: #132237;
+}
+html.dark
+  .education-landing
+  :is(.edu-notebook, .edu-practice-panel, .edu-invitation, .edu-letter-tiles span) {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+html.dark .education-landing .edu-notebook {
+  box-shadow:
+    9px 11px 0 #22322b,
+    0 18px 40px #00000030;
+}
+html.dark .education-landing .edu-notebook figcaption {
+  background: #263b30;
+  color: #bfdac8;
+}
+html.dark .education-landing .edu-notebook-page {
+  background-image: repeating-linear-gradient(transparent 0 31px, #93b3d01c 31px 32px);
+}
+html.dark .education-landing :is(.edu-eyebrow, .edu-cycle > span, .edu-letter-tiles span) {
+  color: #a8d2b8;
+}
+html.dark .education-landing :is(.edu-subject, .edu-cycle > span:first-child) {
+  color: #e4c17e;
+}
+html.dark .education-landing .edu-cycle > span:nth-of-type(2) {
+  color: #93c5fd;
+}
+html.dark .education-landing :is(.edu-cycle-arrow, .edu-step-number) {
+  color: #a5b6c7;
+}
+html.dark .education-landing .edu-notebook blockquote {
+  color: var(--app-ink);
+}
+html.dark .education-landing .edu-sticky-note {
+  background: #514226;
+  color: #f7e7b7;
+}
+html.dark .education-landing .edu-letter-tiles span:nth-child(2n) {
+  background: #443922;
+  color: #f0d69b;
+}
+html.dark .education-landing .edu-letter-tiles span:nth-child(3n) {
+  background: #243b56;
+  color: #b3d6ff;
+}
+html.dark .education-landing .edu-icon {
+  background: #294333;
+  color: #b4d9bd;
+}
+html.dark .education-landing .edu-value:nth-child(2) .edu-icon {
+  background: #493e27;
+  color: #f0d69b;
+}
+html.dark .education-landing .edu-value:nth-child(3) .edu-icon {
+  background: #243b56;
+  color: #b3d6ff;
+}
+html.dark .education-landing .edu-resources article > svg {
+  color: #a8d2b8;
+}
+html.dark .education-landing :is(.edu-steps > li, .edu-tech-details, .edu-footer-bottom) {
+  border-color: var(--app-border);
+}
+html.dark .education-landing .edu-button {
+  background: #285ca0;
+  border-color: #659cde;
+  color: #fff;
+}
+html.dark .education-landing .edu-button:hover {
+  background: #346bb0;
+}
+html.dark .education-landing .edu-button-outline {
+  background: transparent;
+  color: var(--app-link);
+  border-color: #526b85;
+}
+html.dark .education-landing .edu-button-outline:hover {
+  background: #22344b;
+}
+html.dark .education-landing .edu-skip-link {
+  background: var(--app-surface);
+}
+html.dark .education-landing :is(a, button, summary):focus-visible {
+  outline-color: var(--app-link);
+}
+/* Authentication and classroom entry use scoped tokens; brand buttons stay blue. */
+.room-page {
+  --color-background-dark: var(--app-background);
+  --color-text-light: var(--app-ink);
+  --color-gray-mid: var(--app-muted);
+}
+html.dark .auth-original {
+  --color-background-dark: var(--app-background);
+  --color-text-light: var(--app-ink);
+  --color-gray-mid: var(--app-muted);
+  --color-primary: #93c5fd;
+  --color-secondary: #25589b;
+}
+html.dark .auth-original .auth-art {
+  background-image:
+    radial-gradient(ellipse at 25% 30%, #294333 0%, transparent 65%),
+    linear-gradient(145deg, #14251f, #152438);
+}
+html.dark .auth-original :is(input:not([type='checkbox']), select) {
+  color: var(--app-ink);
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+html.dark .auth-original input::placeholder {
+  color: #a5b6c7;
+}
+html.dark .auth-original :is(input, select):focus {
+  border-color: var(--app-link);
+}
+html.dark .auth-original [role='alert'] {
+  background: #451f29;
+  color: #fecaca;
+  border-color: #9f4756;
+}
+html.dark .auth-original :is(a, button):focus-visible {
+  outline-color: var(--app-link);
+}
+/* Avatar rendering itself is untouched; only its surrounding UI changes theme. */
+html.dark .lesson-view .lesson-avatar {
+  background-image: linear-gradient(180deg, #172233, #132237 55%, #172233);
+}
+html.dark .lesson-view .lesson-avatar :is(.text-sky-200, .text-sky-300, .text-sky-400) {
+  color: #93c5fd;
+}
+html.dark .lesson-view .lesson-avatar button.bg-sky-500 {
+  color: white;
+}
+html.dark .lesson-view .lesson-subtitle > .inline-flex svg,
+html.dark .lesson-view .lesson-subtitle-empty svg {
+  color: #93c5fd;
+}
+html.dark.vlibras-stage-fullscreen .lesson-avatar[data-expanded='true'] {
+  color: var(--app-ink);
+  background: radial-gradient(ellipse at 50% 48%, #1b3552 0%, #132237 38%, #0b1220 72%);
+}
+html.dark.vlibras-stage-fullscreen
+  .lesson-avatar
+  :is(.avatar-focus-header, .avatar-stage-footer, .avatar-viewport) {
+  border-color: var(--app-border);
+}
+html.dark.vlibras-stage-fullscreen .lesson-avatar .avatar-viewport {
+  background: linear-gradient(180deg, #17223340, #17223390);
+}
+html.dark.vlibras-stage-fullscreen .lesson-avatar .avatar-stage-footer {
+  background: #172233ed;
+}
+html.dark :is(.avatar-focus-title, .avatar-focus-caption strong) {
+  color: var(--app-ink);
+}
+html.dark :is(.avatar-focus-eyebrow, .avatar-focus-exit kbd) {
+  color: var(--app-muted);
+}
+html.dark :is(.avatar-focus-exit, .avatar-focus-status) {
+  color: var(--app-link);
+  border-color: var(--app-border);
+  background: var(--app-surface);
+}
+html.dark :is(.avatar-focus-divider, .avatar-focus-exit kbd) {
+  border-color: var(--app-border);
+}
+html.dark.vlibras-stage-fullscreen .lesson-avatar button:focus-visible {
+  outline-color: var(--app-link);
+}
+html:not(.dark) .transcription-app {
+  background: var(--app-background);
+  color: var(--app-ink);
+}
+html:not(.dark) .transcription-app > header {
+  background: #fffffff2;
+}
+@media (max-width: 720px) {
+  .education-landing .edu-header-inner {
+    gap: 10px;
+  }
+  .education-landing .edu-header-actions {
+    gap: 6px;
+  }
+}
+
+html:not(.dark) .transcription-app .transcription-panel,
+html:not(.dark) .lesson-avatar {
+  box-shadow: 0 4px 20px #263d4610;
+}
+html:not(.dark) .transcription-app .transcription-panel {
+  background: #fff;
+}

@@ -27,6 +27,7 @@ export default function Dashboard() {
     contextValue,
     activeLesson,
     beginLesson,
+    finishActiveLesson,
     page,
     classroom,
     lesson,
@@ -125,7 +126,7 @@ export default function Dashboard() {
           </a>
         </div>
         {page === 'Assistir aula' && activeLesson ? (
-          <LiveLesson key={activeLesson.id} lesson={activeLesson} />
+          <LiveLesson key={activeLesson.id} lesson={activeLesson} onFinish={finishActiveLesson} />
         ) : lesson ? (
           <LessonDetails key={lesson.id} lesson={lesson} />
         ) : classroom ? (
@@ -167,10 +168,10 @@ export default function Dashboard() {
       )}
       {createdCode && (
         <Modal title="Sua turma está pronta!" onClose={() => setCreatedCode('')}>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Compartilhe este código para que os alunos entrem na turma.
           </p>
-          <p className="my-7 rounded-xl bg-blue-50 p-6 text-center font-mono text-3xl font-bold tracking-widest text-primary">
+          <p className="my-7 rounded-xl bg-blue-50 dark:bg-blue-950 p-6 text-center font-mono text-3xl font-bold tracking-widest text-primary dark:text-blue-300">
             {createdCode}
           </p>
           <button className="t-btn w-full" onClick={() => copy(createdCode)}>

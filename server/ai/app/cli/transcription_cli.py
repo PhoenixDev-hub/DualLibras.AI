@@ -127,15 +127,11 @@ class TerminalTranscript:
             await self._partial(text, speaker_label)
 
     async def _final(self, text: str, speaker_label: str | None = None) -> None:
-        speaker = (
-            f"Palestrante {speaker_label}" if speaker_label else classify_speaker(text)
-        )
+        speaker = f"Palestrante {speaker_label}" if speaker_label else classify_speaker(text)
         if self.live:
             self.live.stop()
         if console:
-            console.print(
-                Panel(Text(text, style="bold white"), title=f"Final - {speaker}")
-            )
+            console.print(Panel(Text(text, style="bold white"), title=f"Final - {speaker}"))
         else:
             clear_line(max(150, self.previous_line_size))
             print("-" * 60)
@@ -188,10 +184,7 @@ class TerminalTranscript:
         return (
             not self.partial_sent
             or len(text) - len(self.partial_sent) >= SETTINGS.partial_send_step
-            or (
-                text != self.partial_sent
-                and elapsed_ms >= SETTINGS.partial_send_interval_ms
-            )
+            or (text != self.partial_sent and elapsed_ms >= SETTINGS.partial_send_interval_ms)
         )
 
     def _reset(self) -> None:
@@ -384,10 +377,7 @@ def make_audio_queue(
     vad_silence_blocks = 0
     vad_hold_blocks = max(
         1,
-        int(
-            SETTINGS.vad_hold_silence_ms
-            / (SETTINGS.chunk_size / SETTINGS.sample_rate * 1000)
-        ),
+        int(SETTINGS.vad_hold_silence_ms / (SETTINGS.chunk_size / SETTINGS.sample_rate * 1000)),
     )
 
     def callback(indata, frames, time_info, status) -> None:
@@ -459,9 +449,7 @@ async def receive_json(ws: Any) -> dict[str, Any]:
     try:
         return json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise RecoverableTranscriptionError(
-            f"Resposta inválida da API: {raw!r}"
-        ) from exc
+        raise RecoverableTranscriptionError(f"Resposta inválida da API: {raw!r}") from exc
 
 
 def raise_api_error(message: dict[str, Any]) -> None:
@@ -489,9 +477,7 @@ async def wait_session_start(ws: Any) -> None:
         if message_type in ("Error", "error"):
             raise_api_error(message)
 
-        raise RecoverableTranscriptionError(
-            f"Resposta inesperada ao iniciar sessão: {message}"
-        )
+        raise RecoverableTranscriptionError(f"Resposta inesperada ao iniciar sessão: {message}")
 
 
 async def receive_transcripts(
@@ -559,9 +545,7 @@ async def run_session(
             saver = TranscriptSaver() if SETTINGS.save_transcripts else None
             tasks = [
                 asyncio.create_task(send_audio(ws, audio_buffer)),
-                asyncio.create_task(
-                    receive_transcripts(ws, on_text, audio_buffer.stats, saver)
-                ),
+                asyncio.create_task(receive_transcripts(ws, on_text, audio_buffer.stats, saver)),
             ]
             done, pending = await asyncio.wait(
                 tasks,

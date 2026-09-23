@@ -14,19 +14,19 @@ Conferência da documentação e do código do commit `988482e`, com complemento
 
 ## Resultados executados
 
-| Verificação | Resultado | Alcance |
-| --- | --- | --- |
-| `npm --prefix client run build` | Aprovado | TypeScript e bundle Vite |
-| `npm --prefix server/auth run build` | Aprovado | TypeScript com cliente Prisma já gerado |
-| `npm --prefix client run format:check` | Aprovado | Todos os arquivos cobertos por Prettier em `src` |
-| `npm --prefix client run lint` | Falhou | Dois erros e um aviso, detalhados abaixo |
-| `bash -n setup.sh build.sh` | Aprovado | Sintaxe; os scripts não foram executados |
-| `prisma validate` | Falhou | P1012, 103 erros de validação no schema |
-| Imports Python | Aprovado | `main`, `app.api.app` e `app.cli.transcription_cli` |
-| Funções de rota Python e arquivos | Aprovado | Chamadas diretas, conforme escopo abaixo |
-| Transporte HTTP via `TestClient` | Inconclusivo | A tentativa não concluiu e foi interrompida; não contabilizada como aprovação |
-| `docker compose version` | Indisponível | Docker respondeu `unknown command: docker compose` |
-| Links locais Markdown | Aprovado após complemento | O relatório ausente foi criado; destinos relativos conferidos |
+| Verificação                            | Resultado                 | Alcance                                                                       |
+| -------------------------------------- | ------------------------- | ----------------------------------------------------------------------------- |
+| `npm --prefix client run build`        | Aprovado                  | TypeScript e bundle Vite                                                      |
+| `npm --prefix server/auth run build`   | Aprovado                  | TypeScript com cliente Prisma já gerado                                       |
+| `npm --prefix client run format:check` | Aprovado                  | Todos os arquivos cobertos por Prettier em `src`                              |
+| `npm --prefix client run lint`         | Falhou                    | Dois erros e um aviso, detalhados abaixo                                      |
+| `bash -n setup.sh build.sh`            | Aprovado                  | Sintaxe; os scripts não foram executados                                      |
+| `prisma validate`                      | Falhou                    | P1012, 103 erros de validação no schema                                       |
+| Imports Python                         | Aprovado                  | `main`, `app.api.app` e `app.cli.transcription_cli`                           |
+| Funções de rota Python e arquivos      | Aprovado                  | Chamadas diretas, conforme escopo abaixo                                      |
+| Transporte HTTP via `TestClient`       | Inconclusivo              | A tentativa não concluiu e foi interrompida; não contabilizada como aprovação |
+| `docker compose version`               | Indisponível              | Docker respondeu `unknown command: docker compose`                            |
+| Links locais Markdown                  | Aprovado após complemento | O relatório ausente foi criado; destinos relativos conferidos                 |
 
 ### Lint e Prisma
 
@@ -77,15 +77,15 @@ Para uma conferência HTTP manual, inicie o serviço Python conforme seu [README
 
 ## Validações ainda pendentes
 
-| Área | O que falta conferir |
-| --- | --- |
-| Instalação limpa | Dependências em ambiente novo e geração Prisma após correção do schema |
-| Banco e contas | Cadastro, login, logout, permissões e persistência contra banco de teste |
-| HTTP Python | Requisições e downloads completos com serviço iniciado |
-| Áudio | Permissão do navegador, captura física, AssemblyAI, modelo local e troca de provedor |
-| WebRTC | Negociação e transporte nas condições reais de rede |
-| Interface | Roteiro manual do dashboard, responsividade, teclado e integração VLibras |
-| Docker | Instalação do Compose v2, build e execução dos quatro serviços |
-| Produção | Isolamento de usuários, concorrência de arquivos e demais limites da análise |
+| Área             | O que falta conferir                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| Instalação limpa | Dependências em ambiente novo e geração Prisma após correção do schema               |
+| Banco e contas   | Cadastro, login, logout, permissões e persistência contra banco de teste             |
+| HTTP Python      | Requisições e downloads completos com serviço iniciado                               |
+| Áudio            | Permissão do navegador, captura física, AssemblyAI, modelo local e troca de provedor |
+| WebRTC           | Negociação e transporte nas condições reais de rede                                  |
+| Interface        | Roteiro manual do dashboard, responsividade, teclado e integração VLibras            |
+| Docker           | Instalação do Compose v2, build e execução dos quatro serviços                       |
+| Produção         | Isolamento de usuários, concorrência de arquivos e demais limites da análise         |
 
 Não há script `test` nos manifests npm nem suíte Python versionada. Os guias da revisão de 12/09/2026 são contexto histórico; este relatório registra o que foi efetivamente repetido em 13/09/2026, sem reconstruir evidências ausentes. Consulte [limitações](ANALYSIS.md), [deploy](DEPLOYMENT.md) e [planejamento](Update.md) para as pendências de implementação.

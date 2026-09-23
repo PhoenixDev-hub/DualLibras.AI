@@ -13,7 +13,8 @@ import {
 } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import heroBg from '../../../assets/hero-bg.png'
+import ProjectLogo from '../../../components/brand/ProjectLogo'
+import '../auth.css'
 import { authApi } from '../../../services/authApi'
 
 type Role = 'PROFESSOR' | 'ALUNO'
@@ -101,11 +102,10 @@ export default function Cadastro() {
   }
 
   return (
-    <main className="min-h-screen flex bg-background-dark">
+    <main className="auth-original min-h-screen flex bg-background-dark">
       <section className="hidden lg:flex relative w-1/2 items-center justify-center overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center scale-110 blur-sm"
-          style={{ backgroundImage: `url(${heroBg})` }}
+          className="auth-art absolute inset-0 bg-cover bg-center scale-110 blur-sm"
           aria-hidden="true"
         />
         <div className="absolute inset-0 bg-primary/50 mix-blend-multiply" aria-hidden="true" />
@@ -116,7 +116,7 @@ export default function Cadastro() {
 
         <div className="relative z-10 max-w-md px-10 text-center">
           <Link to="/" className="text-3xl font-logo font-bold text-primary tracking-tight">
-            DualLibras.ai
+            <ProjectLogo />
           </Link>
           <h2 className="mt-6 font-ui font-extrabold text-text-light text-3xl leading-tight">
             Comece a incluir <span className="text-primary">todos os alunos hoje.</span>
@@ -133,7 +133,7 @@ export default function Cadastro() {
             to="/"
             className="lg:hidden inline-block mb-8 text-2xl font-logo font-bold text-primary tracking-tight"
           >
-            DualLibras.ai
+            <ProjectLogo />
           </Link>
 
           <span className="inline-flex items-center px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-logo text-xs uppercase tracking-[0.2em]">

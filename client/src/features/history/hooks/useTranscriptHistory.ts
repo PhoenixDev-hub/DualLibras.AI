@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { API_BASE } from '../../../config/backend'
-import transcriptSocket from '../../transcription/services/websocket'
+import type { TranscriptMessage } from '../../transcription/services/websocket'
 
 export type SavedGroup = {
   id: string
@@ -28,19 +28,18 @@ const formatFilenameDate = (timestamp: string) => {
 
 type UseTranscriptHistoryOptions = {
   onClearCurrentTranscript: () => void
+  getTranscript: () => TranscriptMessage[]
 }
 
-export function useTranscriptHistory({ onClearCurrentTranscript }: UseTranscriptHistoryOptions) {
+export function useTranscriptHistory({ onClearCurrentTranscript, getTranscript }: UseTranscriptHistoryOptions) {
   const [showPanel, setShowPanel] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [titulo, setTitulo] = useState('Aula de Acessibilidade')
   const [savedGroups, setSavedGroups] = useState<SavedGroup[]>([])
-  const [docGenerating, setDocGenerating] = useState(false)
-  const [docPath, setDocPath] = useState('')
 
   const carregarHistoricoSalvo = async () => {
     try {
-      const response = await fetch(`${API_BASE}/transcripts`)
+      const response = await fetch(`${API_BASE}/transcripts`, { credentials: 'include' })
       if (!response.ok) throw new Error('Erro ao listar arquivos')
       const data = (await response.json()) as {
         total: number
@@ -51,8 +50,7 @@ export function useTranscriptHistory({ onClearCurrentTranscript }: UseTranscript
 
       const groupsMap = new Map<string, Partial<SavedGroup>>()
       const getGroupId = (filename: string) => {
-        const match = filename.match(/transcricao_(\d{8}_\d{6})/)
-        return match ? match[1] : filename.split('.')[0]
+        return filename.replace(/^transcricao_/, '').replace(/(?:_metadata)?\.(pdf|txt|json)$/, '')
       }
 
       data.pdfs.forEach((pdf) => {
@@ -97,7 +95,7 @@ export function useTranscriptHistory({ onClearCurrentTranscript }: UseTranscript
   }
 
   const salvarAula = async () => {
-    const cache = transcriptSocket.getTranscriptCache()
+    const cache = getTranscript()
     if (cache.length === 0) {
       alert('Não há transcrição acumulada para salvar nesta sessão.')
       return
@@ -111,6 +109,7 @@ export function useTranscriptHistory({ onClearCurrentTranscript }: UseTranscript
     try {
       const response = await fetch(`${API_BASE}/save-transcript`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: fullText,
@@ -138,26 +137,10 @@ export function useTranscriptHistory({ onClearCurrentTranscript }: UseTranscript
 
   const limparTranscricaoAtual = () => {
     if (confirm('Tem certeza que deseja limpar a transcrição atual?')) {
-      transcriptSocket.clearTranscriptCache()
       onClearCurrentTranscript()
     }
   }
 
-  const gerarDocumentacao = async () => {
-    setDocGenerating(true)
-    try {
-      const response = await fetch(`${API_BASE}/documentation/generate`)
-      if (!response.ok) throw new Error('Erro ao gerar documento')
-      const data = await response.json()
-      setDocPath(data.file)
-      alert('Documentação PDF gerada com sucesso!')
-    } catch (error) {
-      console.error(error)
-      alert('Falha ao gerar documentação.')
-    } finally {
-      setDocGenerating(false)
-    }
-  }
 
   return {
     showPanel,
@@ -166,11 +149,8 @@ export function useTranscriptHistory({ onClearCurrentTranscript }: UseTranscript
     titulo,
     setTitulo,
     savedGroups,
-    docGenerating,
-    docPath,
     abrirPainel,
     salvarAula,
     limparTranscricaoAtual,
-    gerarDocumentacao,
   }
 }

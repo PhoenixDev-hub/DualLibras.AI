@@ -279,7 +279,7 @@ export default function AdminEditor({
                 />
               </Field>
               {editor.item && (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Ao transferir a sala, suas aulas também passam para o novo professor.
                 </p>
               )}
@@ -339,7 +339,7 @@ export default function AdminEditor({
                   aria-describedby="admin-password-hint"
                 />
               </Field>
-              <p id="admin-password-hint" className="text-xs text-slate-500">
+              <p id="admin-password-hint" className="text-xs text-slate-500 dark:text-slate-400">
                 {PASSWORD_HINT}
               </p>
               {editor.kind === 'password' && (
@@ -353,7 +353,7 @@ export default function AdminEditor({
                       required
                     />
                   </Field>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     As sessões atuais desta conta serão encerradas.
                   </p>
                 </>
@@ -362,7 +362,10 @@ export default function AdminEditor({
           )}
         </fieldset>
         {error && (
-          <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          <p
+            role="alert"
+            className="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-700 dark:text-red-300"
+          >
             {error}
           </p>
         )}

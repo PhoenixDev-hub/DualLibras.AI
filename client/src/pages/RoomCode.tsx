@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authApi } from '../services/authApi'
 import { useState } from 'react'
-import logoText from '../assets/LogoDualLibrasText.png'
+import ProjectLogo from '../components/brand/ProjectLogo'
 import RoomHeader from '../features/classrooms/layout/RoomHeader'
 import RoomCodeForm from '../features/classrooms/components/RoomCodeForm'
 
@@ -12,7 +12,7 @@ export default function RoomCode() {
   const [notice, setNotice] = useState('')
 
   return (
-    <section className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-background-dark font-text text-text-light">
+    <section className="room-page relative isolate flex min-h-dvh flex-col overflow-hidden bg-background-dark font-text text-text-light">
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_40%,#25589B55,transparent_65%)]"
@@ -38,11 +38,7 @@ export default function RoomCode() {
           aria-labelledby="room-title"
           className="flex w-full max-w-sm flex-col items-center text-center"
         >
-          <img
-            src={logoText}
-            alt="DualLibras"
-            className="mb-10 max-h-64 w-72 max-w-full object-contain"
-          />
+          <ProjectLogo className="mb-10" />
           <h1 id="room-title" className="mb-3 text-2xl font-bold">
             Entrar na sala
           </h1>

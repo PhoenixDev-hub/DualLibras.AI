@@ -1,3 +1,4 @@
+import ThemeToggle from '../../features/theme/ThemeToggle'
 import {
   ArrowLeft,
   Bell,
@@ -13,7 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import IconLogo from '../../assets/IconLogo.png'
+import ProjectLogo from '../brand/ProjectLogo'
 import type { DashboardUser } from '../../services/authApi'
 import type { LucideIcon } from 'lucide-react'
 import { initials } from '../../utils/initials'
@@ -63,7 +64,7 @@ export default function DashboardShell({
   }
   return (
     <main
-      className={`teacher-app min-h-screen bg-[#F5F7FB] font-text text-slate-800 ${collapsed ? 'sidebar-small' : ''}`}
+      className={`teacher-app min-h-screen bg-[#F5F7FB] dark:bg-slate-950 font-text text-slate-800 dark:text-slate-100 ${collapsed ? 'sidebar-small' : ''}`}
     >
       {mobile && (
         <button
@@ -74,16 +75,7 @@ export default function DashboardShell({
       )}
       <aside className={`teacher-sidebar ${mobile ? 'mobile-open' : ''}`}>
         <a href="/dashboard" className="flex h-24 items-center gap-3 px-5 text-white">
-          <img
-            src={IconLogo}
-            className="h-11 w-11 rounded-xl object-contain"
-            alt="LogoTipo DualLibras.AI"
-          />
-          {!collapsed && (
-            <span className="font-logo text-sm">
-              DualLibras<span className="text-blue-300">.AI</span>
-            </span>
-          )}
+          <ProjectLogo iconOnly={collapsed} className="project-logo--inverse" />
         </a>
         <button
           className="t-icon teacher-mobile-menu absolute right-2 top-2"
@@ -111,7 +103,7 @@ export default function DashboardShell({
                 onNavigate(label)
                 setMobile(false)
               }}
-              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-sm transition ${page === label ? 'bg-primary text-white shadow-lg shadow-black/10' : 'text-blue-100/70 hover:bg-white/10 hover:text-white'}`}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-sm transition ${page === label ? 'bg-primary text-white shadow-lg shadow-black/10' : 'text-blue-100/70 hover:bg-white/10 dark:hover:bg-slate-900/10 hover:text-white'}`}
             >
               <Icon size={19} />
               {!collapsed && label}
@@ -120,7 +112,7 @@ export default function DashboardShell({
         </nav>
         <footer className="mt-auto p-4">
           {!collapsed && (
-            <section className="mb-5 rounded-xl border border-white/10 bg-white/5 p-4">
+            <section className="mb-5 rounded-xl border border-white/10 bg-white/5 dark:bg-slate-900/5 p-4">
               <Hand size={23} className="mb-3 text-blue-300" />
               <p className="text-sm font-semibold text-white">
                 {student ? 'Aprender é conectar.' : 'Ensinar é conectar.'}
@@ -131,7 +123,7 @@ export default function DashboardShell({
             </section>
           )}
           <button
-            className="hidden w-full items-center justify-center gap-2 rounded-lg py-3 text-xs text-blue-100/60 hover:bg-white/10 md:flex"
+            className="hidden w-full items-center justify-center gap-2 rounded-lg py-3 text-xs text-blue-100/60 hover:bg-white/10 dark:hover:bg-slate-900/10 md:flex"
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           >
@@ -141,7 +133,7 @@ export default function DashboardShell({
         </footer>
       </aside>
       <section className="teacher-main">
-        <header className="teacher-topbar flex min-h-24 flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+        <header className="teacher-topbar flex min-h-24 flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-4 sm:px-6">
           <button
             className="t-icon teacher-mobile-menu"
             onClick={() => {
@@ -164,7 +156,7 @@ export default function DashboardShell({
                     {index > 0 && (
                       <ChevronRight
                         size={14}
-                        className="shrink-0 text-slate-400"
+                        className="shrink-0 text-slate-400 dark:text-slate-400"
                         aria-hidden="true"
                       />
                     )}
@@ -172,7 +164,7 @@ export default function DashboardShell({
                       <span
                         aria-current="page"
                         title={item.label}
-                        className="max-w-48 truncate font-semibold text-primary"
+                        className="max-w-48 truncate font-semibold text-primary dark:text-blue-300"
                       >
                         {item.label}
                       </span>
@@ -181,7 +173,7 @@ export default function DashboardShell({
                         type="button"
                         onClick={item.onClick}
                         title={item.label}
-                        className="inline-flex min-h-9 max-w-40 items-center gap-1.5 rounded-md text-slate-500 hover:text-primary"
+                        className="inline-flex min-h-9 max-w-40 items-center gap-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300"
                       >
                         {index === 0 && <Home size={15} aria-hidden="true" className="shrink-0" />}
                         <span className="truncate">{item.label}</span>
@@ -205,14 +197,15 @@ export default function DashboardShell({
                 name="query"
                 aria-label={searchPlaceholder}
                 placeholder={searchPlaceholder}
-                className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none"
               />
-              <button className="hidden rounded border border-slate-200 px-2 py-1 text-[10px] sm:block">
+              <button className="hidden rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-[10px] sm:block">
                 Buscar
               </button>
             </form>
           )}
           <section className="flex shrink-0 items-center gap-2 sm:gap-5">
+            <ThemeToggle />
             {!student && (
               <button
                 className="t-icon relative"
@@ -223,13 +216,13 @@ export default function DashboardShell({
                 <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
               </button>
             )}
-            <span className="h-8 border-l border-slate-200" />
+            <span className="h-8 border-l border-slate-200 dark:border-slate-700" />
             {student ? (
               <div className="flex items-center gap-3 text-left" aria-label="Minha conta">
                 <span className="t-avatar">{initials(teacher?.name ?? '')}</span>
                 <span className="hidden sm:block">
                   <strong className="block max-w-36 truncate text-xs">{teacher?.name}</strong>
-                  <span className="text-[11px] text-slate-400">Aluno</span>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-400">Aluno</span>
                 </span>
               </div>
             ) : (
@@ -242,7 +235,9 @@ export default function DashboardShell({
                 <span className="t-avatar">{initials(teacher?.name ?? '')}</span>
                 <span className="hidden xl:block">
                   <strong className="block max-w-36 truncate text-xs">{teacher?.name}</strong>
-                  <span className="text-[11px] text-slate-400">{teacher?.access.roleLabel}</span>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-400">
+                    {teacher?.access.roleLabel}
+                  </span>
                 </span>
               </button>
             )}
@@ -252,7 +247,7 @@ export default function DashboardShell({
               disabled={signingOut}
               aria-label={signingOut ? 'Saindo da conta' : 'Sair da conta'}
               title="Sair da conta"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 text-sm font-semibold text-slate-600 dark:text-slate-300 transition-colors hover:border-rose-200 dark:hover:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-700 dark:hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
             >
               {signingOut ? (
                 <LoaderCircle size={17} className="animate-spin" aria-hidden="true" />
@@ -267,7 +262,7 @@ export default function DashboardShell({
           {onBack && (
             <button
               onClick={onBack}
-              className="mb-5 flex items-center gap-2 text-sm text-slate-500 hover:text-primary md:hidden"
+              className="mb-5 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 md:hidden"
             >
               <ArrowLeft size={16} />
               Voltar
@@ -275,7 +270,7 @@ export default function DashboardShell({
           )}
           {children}
         </section>
-        <footer className="px-9 pb-6 text-xs text-slate-400">
+        <footer className="px-9 pb-6 text-xs text-slate-400 dark:text-slate-400">
           DualLibras.AI · Aprendizagem sem barreiras{' '}
           <span className="float-right">Conta conectada</span>
         </footer>

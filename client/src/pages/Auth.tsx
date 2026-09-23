@@ -1,3 +1,4 @@
+import ThemeToggle from '../features/theme/ThemeToggle'
 import Cadastro from '../features/auth/pages/Cadastro'
 import Login from '../features/auth/pages/Login'
 
@@ -6,5 +7,10 @@ interface AuthProps {
 }
 
 export default function Auth({ mode }: AuthProps) {
-  return mode === 'login' ? <Login /> : <Cadastro />
+  return (
+    <>
+      <ThemeToggle className="theme-toggle-auth" />
+      {mode === 'login' ? <Login /> : <Cadastro />}
+    </>
+  )
 }

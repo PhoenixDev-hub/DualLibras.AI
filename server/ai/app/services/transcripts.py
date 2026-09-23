@@ -5,6 +5,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from threading import Lock
+from uuid import uuid4
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -18,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 class TranscriptManager:
+    _font_lock = Lock()
+    _fonts_registered = False
+
     def __init__(self, base_path: Optional[str] = None):
         self.base_path = Path(base_path or os.getenv("OUTPUT_PATH", "../../storage"))
         self.transcripts_dir = self.base_path / "transcripts"
@@ -36,9 +41,17 @@ class TranscriptManager:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         if extension and not extension.startswith("."):
             extension = f".{extension}"
-        return f"transcricao_{timestamp}{extension}"
+        return f"transcricao_{timestamp}_{uuid4().hex}{extension}"
 
     def _register_fonts(self) -> None:
+        # ReportLab's registry is global; load the font once, safely across workers.
+        with self._font_lock:
+            if TranscriptManager._fonts_registered:
+                return
+            self._load_fonts()
+            TranscriptManager._fonts_registered = True
+
+    def _load_fonts(self) -> None:
         try:
             font_paths = [
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -127,9 +140,7 @@ class TranscriptManager:
 
             story.append(Spacer(1, 0.3 * inch))
             story.append(Paragraph("—" * 50, meta_style))
-            footer_text = (
-                f"Arquivo: {filename} | Gerado automaticamente pelo Festival 2026"
-            )
+            footer_text = f"Arquivo: {filename} | Gerado automaticamente pelo Festival 2026"
             story.append(Paragraph(f"<small>{footer_text}</small>", meta_style))
 
             doc.build(story)
@@ -166,9 +177,7 @@ class TranscriptManager:
         filepath = self.metadata_dir / filename
 
         try:
-            filepath.write_text(
-                json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
+            filepath.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
             logger.info(f"JSON de metadados salvo: {filepath}")
             return filepath
         except Exception as e:
@@ -214,9 +223,7 @@ class TranscriptManager:
                 filename=f"{base_filename}_metadata.json",
             )
 
-        logger.info(
-            f"Transcrição salva em {len(results)} formato(s): {', '.join(results.keys())}"
-        )
+        logger.info(f"Transcrição salva em {len(results)} formato(s): {', '.join(results.keys())}")
         return results
 
     def list_transcripts(self) -> dict[str, list[str]]:

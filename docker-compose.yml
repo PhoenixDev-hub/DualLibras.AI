@@ -3,14 +3,14 @@ services:
     image: postgres:15-alpine
     container_name: duallibras-db
     restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-festival}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-festival}
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,15 +23,26 @@ services:
       dockerfile: Dockerfile
     container_name: duallibras-auth
     restart: unless-stopped
-    ports:
-      - "4000:4000"
-    env_file:
-      - .env
     environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=4000
+      - DATABASE_URL=${DATABASE_URL:?Configure DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL:-}
+      - JWT_SECRET=${JWT_SECRET:?Configure JWT_SECRET}
+      - AI_INTERNAL_TOKEN=${AI_INTERNAL_TOKEN:?Configure AI_INTERNAL_TOKEN}
+      - CORS_ORIGIN=${PUBLIC_ORIGIN:?Configure PUBLIC_ORIGIN com a origem HTTPS}
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
+      - AUTH_COOKIE_NAME=festival_session
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - TRUST_PROXY=1
+      - AUTH_LOGIN_LIMIT=${AUTH_LOGIN_LIMIT:-20}
+      - AUTH_SIGNUP_LIMIT=${AUTH_SIGNUP_LIMIT:-5}
+      - CLASSROOM_JOIN_LIMIT=${CLASSROOM_JOIN_LIMIT:-20}
+      - MATERIAL_MAX_BYTES=${MATERIAL_MAX_BYTES:-26214400}
       - AI_BACKEND_URL=http://backend:5455
       - MATERIAL_UPLOAD_DIR=/app/storage/materials/auth
     volumes:
-      - ./storage:/app/storage
+      - auth-materials:/app/storage/materials/auth
     depends_on:
       db:
         condition: service_healthy
@@ -43,10 +54,19 @@ services:
       context: ./server/ai
       dockerfile: Dockerfile
     container_name: duallibras-backend
-    ports:
-      - "5455:5455"
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
+      - AUTH_BACKEND_URL=http://auth:4000
+      - AI_INTERNAL_TOKEN=${AI_INTERNAL_TOKEN:?Configure AI_INTERNAL_TOKEN}
+      - CORS_ORIGIN=${PUBLIC_ORIGIN:?Configure PUBLIC_ORIGIN}
+      - AI_REQUESTS_PER_MINUTE=${AI_REQUESTS_PER_MINUTE:-60}
+      - AI_HTTP_MAX_BYTES=${AI_HTTP_MAX_BYTES:-37748736}
+      - MATERIAL_MAX_BYTES=${MATERIAL_MAX_BYTES:-26214400}
+      - AI_MAX_SESSIONS=${AI_MAX_SESSIONS:-4}
+      - AI_MAX_SESSIONS_PER_USER=${AI_MAX_SESSIONS_PER_USER:-1}
+      - AI_SESSION_MAX_SECONDS=${AI_SESSION_MAX_SECONDS:-3600}
+      - AI_AUTH_RECHECK_SECONDS=${AI_AUTH_RECHECK_SECONDS:-5}
+      - AI_WS_STARTS_PER_MINUTE=${AI_WS_STARTS_PER_MINUTE:-6}
       - AUDIO_SAMPLE_RATE=16000
       - AUDIO_CHANNELS=1
       - AUDIO_CHUNK_SIZE=1600
@@ -78,9 +98,15 @@ services:
       - LOG_LEVEL=INFO
       - PORT=5455
     volumes:
-      - ./storage:/app/storage
+      - ai-storage:/app/storage
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5455/health', timeout=5)"]
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request; urllib.request.urlopen('http://localhost:5455/health', timeout=5)",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -94,19 +120,19 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        VITE_BACKEND_HTTP_URL: ${VITE_BACKEND_HTTP_URL:-http://localhost:5455}
-        VITE_BACKEND_WS_URL: ${VITE_BACKEND_WS_URL:-ws://localhost:5455/ws}
-        VITE_AUTH_BACKEND_HTTP_URL: ${VITE_AUTH_BACKEND_HTTP_URL:-http://localhost:4000}
+        VITE_BACKEND_HTTP_URL: /api/ai
+        VITE_BACKEND_WS_URL: ''
+        VITE_AUTH_BACKEND_HTTP_URL: /api/auth
     container_name: duallibras-frontend
     ports:
-      - "80:80"
+      - '${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-8080}:80'
     depends_on:
       backend:
         condition: service_healthy
       auth:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost/']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -120,7 +146,9 @@ networks:
     driver: bridge
 
 volumes:
-  transcripts:
+  auth-materials:
+    driver: local
+  ai-storage:
     driver: local
   db-data:
     driver: local

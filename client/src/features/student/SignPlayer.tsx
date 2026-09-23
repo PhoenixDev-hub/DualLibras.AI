@@ -35,7 +35,7 @@ export default function SignPlayer({
         <div>
           <h2 className="font-bold">{title}</h2>
           {progress && (
-            <p className="mt-1 text-xs text-slate-500" aria-live="polite">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
               {progress}
             </p>
           )}
@@ -74,7 +74,7 @@ export default function SignPlayer({
           <RotateCcw size={16} /> Tentar novamente
         </button>
       )}
-      <p className="text-sm text-slate-500" role="status">
+      <p className="text-sm text-slate-500 dark:text-slate-400" role="status">
         {playingText || 'Selecione sinalizar para acompanhar o conteúdo com o avatar.'}
       </p>
       <VLibras

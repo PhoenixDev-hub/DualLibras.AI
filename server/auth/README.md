@@ -28,15 +28,15 @@ npm run dev
 
 **Bloqueio de instalação limpa:** `prisma validate` encontra 103 erros P1012 nas relações multilinha do schema atual. O build local passou usando o cliente já gerado. A validação/generação precisa ser corrigida antes de assumir uma instalação nova operacional. Schema e dados foram preservados nesta reorganização.
 
-| Script | Efeito |
-| --- | --- |
-| `dev` | `ts-node-dev` inicia `src/server.ts` |
-| `build` | TypeScript gera `dist` |
-| `start` | Executa `dist/server.js` após build |
-| `prisma:generate` | Gera o cliente Prisma; não cria tabelas |
-| `prisma:migrate` | `prisma migrate dev`; modifica banco/histórico, não executado nesta revisão |
+| Script            | Efeito                                                                            |
+| ----------------- | --------------------------------------------------------------------------------- |
+| `dev`             | `ts-node-dev` inicia `src/server.ts`                                              |
+| `build`           | TypeScript gera `dist`                                                            |
+| `start`           | Executa `dist/server.js` após build                                               |
+| `prisma:generate` | Gera o cliente Prisma; não cria tabelas                                           |
+| `prisma:migrate`  | `prisma migrate dev`; modifica banco/histórico, não executado nesta revisão       |
 | `seed:test-users` | Build e `dist/scripts/seed-test-users.js`; faz upsert de usuários/perfis de teste |
-| `check:database` | Build e `dist/scripts/check-database.js`; executa `SELECT 1` |
+| `check:database`  | Build e `dist/scripts/check-database.js`; executa `SELECT 1`                      |
 
 Não existe script de lint ou suíte de testes configurada neste serviço. O diagnóstico de banco captura erros no console, sem garantir código de saída diferente de zero; não o use como health check automatizado sem revisão.
 

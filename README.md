@@ -114,12 +114,12 @@ npm run dev
 
 ## Endereços e configuração
 
-| Serviço | Desenvolvimento | Configuração |
-| --- | --- | --- |
-| Frontend | `http://localhost:5173` (ou porta livre informada pelo Vite) | [client/.env.example](client/.env.example) |
-| Express | `http://localhost:4000` | [server/auth/.env.example](server/auth/.env.example) |
-| FastAPI | `http://localhost:5455` e `ws://localhost:5455/ws` | [server/ai/.env.example](server/ai/.env.example) |
-| Docker Compose | frontend em `http://localhost` | [.env.example](.env.example), [deploy](docs/DEPLOYMENT.md) |
+| Serviço        | Desenvolvimento                                              | Configuração                                               |
+| -------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| Frontend       | `http://localhost:5173` (ou porta livre informada pelo Vite) | [client/.env.example](client/.env.example)                 |
+| Express        | `http://localhost:4000`                                      | [server/auth/.env.example](server/auth/.env.example)       |
+| FastAPI        | `http://localhost:5455` e `ws://localhost:5455/ws`           | [server/ai/.env.example](server/ai/.env.example)           |
+| Docker Compose | frontend em `http://localhost`                               | [.env.example](.env.example), [deploy](docs/DEPLOYMENT.md) |
 
 As variáveis `VITE_*` são públicas e incorporadas ao bundle durante o build. A API de contas usa `VITE_AUTH_BACKEND_HTTP_URL`, não `VITE_AUTH_URL`. Nunca coloque tokens privados ou senhas em variáveis do frontend.
 

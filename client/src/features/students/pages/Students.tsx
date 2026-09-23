@@ -42,7 +42,7 @@ export default function Students({ classroomId }: { classroomId?: string | numbe
           <span className="t-avatar">MO</span>
           <section>
             <h3 className="text-sm font-bold">{room?.teacherName ?? teacher?.name}</h3>
-            <p className="text-xs text-slate-500">Professor responsável</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Professor responsável</p>
           </section>
         </section>
       )}
@@ -65,7 +65,7 @@ export default function Students({ classroomId }: { classroomId?: string | numbe
         )}
       </section>
       {filtered.length ? (
-        <section className="t-card divide-y divide-slate-100">
+        <section className="t-card divide-y divide-slate-100 dark:divide-slate-700">
           {filtered.map((student) => (
             <article key={student.id} className="flex items-center gap-3 p-4">
               <button
@@ -75,7 +75,7 @@ export default function Students({ classroomId }: { classroomId?: string | numbe
                 <span className="t-avatar">{initials(student.name)}</span>
                 <section>
                   <h3 className="text-sm font-semibold">{student.name}</h3>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     {classroomId
                       ? `Entrou em ${student.joined}`
                       : classrooms
@@ -106,12 +106,14 @@ export default function Students({ classroomId }: { classroomId?: string | numbe
             <span className="t-avatar">{initials(selected.name)}</span>
             <h3 className="font-bold">{selected.name}</h3>
           </section>
-          <p className="my-5 text-sm text-slate-500">Participa desde {selected.joined}</p>
+          <p className="my-5 text-sm text-slate-500 dark:text-slate-400">
+            Participa desde {selected.joined}
+          </p>
           <h4 className="mb-3 text-sm font-bold">Turmas em comum</h4>
           {classrooms
             .filter((item) => selected.classroomIds.includes(item.id))
             .map((item) => (
-              <p className="mb-2 rounded-lg bg-blue-50 p-3 text-sm" key={item.id}>
+              <p className="mb-2 rounded-lg bg-blue-50 dark:bg-blue-950 p-3 text-sm" key={item.id}>
                 {item.name} · {item.subject}
               </p>
             ))}
@@ -119,7 +121,7 @@ export default function Students({ classroomId }: { classroomId?: string | numbe
       )}
       {removing && (
         <Modal title="Remover aluno da turma?" onClose={() => setRemoving(null)}>
-          <p className="mb-6 text-sm text-slate-500">
+          <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
             {removing.name} será removido apenas desta turma.
           </p>
           <section className="flex justify-end gap-3">

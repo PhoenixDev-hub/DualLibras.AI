@@ -1,9 +1,9 @@
-import { Router } from 'express';
-import { materialController } from '../controllers/material.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
+import { Router } from 'express'
+import { materialController } from '../controllers/material.controller'
+import { authMiddleware } from '../middlewares/auth.middleware'
 
-export const materialRoutes = Router();
+export const materialRoutes = Router()
 
-materialRoutes.get('/options', authMiddleware, materialController.options);
-materialRoutes.get('/', authMiddleware, materialController.list);
-materialRoutes.post('/', authMiddleware, materialController.upload);
+materialRoutes.get('/options', authMiddleware, materialController.options)
+materialRoutes.get('/', authMiddleware, materialController.list)
+materialRoutes.post('/', authMiddleware, materialController.upload)

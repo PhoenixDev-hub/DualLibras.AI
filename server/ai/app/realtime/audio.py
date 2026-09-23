@@ -1,4 +1,5 @@
 from __future__ import annotations
+from uuid import uuid4
 
 import asyncio
 import json
@@ -91,14 +92,9 @@ def format_timestamp(seconds: float) -> str:
 
 def classify_speaker(text: str) -> str:
     lower = text.lower()
-    if any(
-        keyword in lower
-        for keyword in ("professor", "professora", "docente", "instrutor")
-    ):
+    if any(keyword in lower for keyword in ("professor", "professora", "docente", "instrutor")):
         return "Professor"
-    if any(
-        keyword in lower for keyword in ("aluno", "aluna", "turma", "pessoal", "gente")
-    ):
+    if any(keyword in lower for keyword in ("aluno", "aluna", "turma", "pessoal", "gente")):
         return "Aluno"
     if "?" in lower or any(
         keyword in lower for keyword in ("por que", "como", "quando", "onde", "o que")
@@ -108,9 +104,9 @@ def classify_speaker(text: str) -> str:
 
 
 class TranscriptSaver:
-    def __init__(self) -> None:
+    def __init__(self, directory: Path | None = None) -> None:
         self.entries: list[dict[str, Any]] = []
-        self.dir = Path(SETTINGS.transcript_output_dir)
+        self.dir = directory or (Path(SETTINGS.transcript_output_dir) / str(uuid4()))
         self.dir.mkdir(parents=True, exist_ok=True)
         self.start_at = time.monotonic()
         self.text_file = self.dir / "transcricao.txt"
@@ -132,9 +128,7 @@ class TranscriptSaver:
 
     def _append_txt(self, entry: dict[str, Any]) -> None:
         with self.text_file.open("a", encoding="utf-8") as handle:
-            handle.write(
-                f"[{entry['timestamp']}] {entry['speaker']}: {entry['text']}\n"
-            )
+            handle.write(f"[{entry['timestamp']}] {entry['speaker']}: {entry['text']}\n")
 
     def _write_json(self) -> None:
         with self.json_file.open("w", encoding="utf-8") as handle:

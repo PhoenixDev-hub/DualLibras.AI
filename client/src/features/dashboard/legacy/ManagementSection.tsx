@@ -1,5 +1,5 @@
-import { CheckCircle2, Plus } from 'lucide-react'
-import { getIcon, type DashboardSection } from './dashboardData'
+import { CheckCircle2, Plus, LayoutDashboard } from 'lucide-react'
+import { iconMap, type DashboardSection } from './dashboardData'
 import type { DashboardData } from '../../../services/authApi'
 
 type ManagementSectionProps = {
@@ -16,7 +16,7 @@ export default function ManagementSection({
   onUploadMaterial,
 }: ManagementSectionProps) {
   const content = dashboard.managementSections[section]
-  const Icon = getIcon(content.icon)
+  const Icon = iconMap[content.icon] ?? LayoutDashboard
   const canUse = (capability?: string) =>
     capability ? dashboard.access.capabilities[capability] : true
   const isClassroomSection = section === 'Minhas Turmas'

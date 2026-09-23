@@ -17,7 +17,7 @@
   margin-left: 5.5rem;
 }
 .t-card {
-  @apply rounded-2xl border border-slate-200/80 bg-white;
+  @apply rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-900;
   box-shadow: 0 3px 12px #04133b03;
 }
 .t-btn,
@@ -29,37 +29,37 @@
   @apply bg-primary text-white shadow-sm hover:bg-secondary;
 }
 .t-btn-secondary {
-  @apply border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50;
+  @apply border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-blue-200 dark:hover:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950;
 }
 .t-btn-danger {
-  @apply bg-red-50 text-red-700 hover:bg-red-100;
+  @apply bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950;
 }
 .t-icon {
   @apply inline-flex items-center justify-center rounded-lg p-2 hover:bg-slate-400/10;
 }
 .t-avatar {
-  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-xs font-bold text-primary;
+  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 text-xs font-bold text-primary dark:text-blue-300;
 }
 .t-badge {
-  @apply inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700;
+  @apply inline-flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-950 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300;
 }
 .t-badge-neutral {
-  @apply inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500;
+  @apply inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400;
 }
 .t-label {
-  @apply block text-sm font-semibold text-slate-600;
+  @apply block text-sm font-semibold text-slate-600 dark:text-slate-300;
 }
 .t-input {
-  @apply mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-700;
+  @apply mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm font-normal text-slate-700 dark:text-slate-200;
 }
 select.t-input {
   @apply mt-0 inline-block;
 }
 .t-search {
-  @apply flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-400 transition-[border-color,box-shadow,color];
+  @apply flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-slate-400 dark:text-slate-400 transition-[border-color,box-shadow,color];
 }
 .t-search input {
-  @apply min-w-0 w-full bg-transparent text-sm text-slate-700 outline-none;
+  @apply min-w-0 w-full bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none;
 }
 .class-banner {
   background-image:
@@ -77,7 +77,7 @@ select.t-input {
     linear-gradient(120deg, #57558f, #8073af);
 }
 .teacher-modal {
-  @apply fixed rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl font-text;
+  @apply fixed rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-2xl font-text;
   margin: auto;
   width: min(540px, calc(100vw - 32px));
   max-height: 90dvh;
@@ -88,7 +88,7 @@ select.t-input {
   backdrop-filter: blur(4px);
 }
 .teacher-toast {
-  @apply fixed bottom-5 right-5 z-[100] flex max-w-lg items-start gap-5 rounded-xl border border-blue-100 bg-white p-5 text-sm text-slate-700 shadow-xl;
+  @apply fixed bottom-5 right-5 z-[100] flex max-w-lg items-start gap-5 rounded-xl border border-blue-100 dark:border-blue-800 bg-white dark:bg-slate-900 p-5 text-sm text-slate-700 dark:text-slate-200 shadow-xl;
   max-width: calc(100vw - 40px);
 }
 .teacher-app button,
@@ -137,9 +137,8 @@ select.t-input {
   }
 }
 
-
 .lesson-view .lesson-avatar {
-  @apply rounded-2xl border-slate-200/80 bg-white text-slate-800;
+  @apply rounded-2xl border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100;
   background-image: linear-gradient(180deg, #fff 0%, #eff6ff 55%, #fff 100%);
   box-shadow: 0 3px 12px #04133b03;
 }
@@ -148,63 +147,62 @@ select.t-input {
 }
 .lesson-view .lesson-avatar header,
 .lesson-view .lesson-avatar footer {
-  @apply border-slate-200;
+  @apply border-slate-200 dark:border-slate-700;
 }
 .lesson-view .lesson-avatar :is(.text-slate-100, .text-slate-300),
 .lesson-view .lesson-subtitle-empty .text-slate-300,
 .lesson-view .lesson-subtitle .text-slate-100 {
-  @apply text-slate-800;
+  @apply text-slate-800 dark:text-slate-100;
 }
 .lesson-view .lesson-avatar .text-slate-400,
 .lesson-view .lesson-subtitle-empty,
 .lesson-view .lesson-subtitle .text-slate-400 {
-  @apply text-slate-600;
+  @apply text-slate-600 dark:text-slate-300;
   opacity: 1;
 }
 .lesson-view .lesson-avatar :is(.text-sky-200, .text-sky-300, .text-sky-400) {
-  @apply text-primary;
+  @apply text-primary dark:text-blue-300;
 }
 .lesson-view .lesson-avatar header > div:first-child > div:first-child,
 .lesson-view .lesson-avatar header > div:last-child,
 .lesson-view .lesson-avatar footer .flex.rounded-lg,
 .lesson-view .lesson-subtitle-empty > div {
-  @apply border-blue-100 bg-blue-50 text-primary shadow-none;
+  @apply border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 text-primary dark:text-blue-300 shadow-none;
 }
 .lesson-view .lesson-avatar header > div.border-red-500\/50 {
-  @apply border-red-200 bg-red-50 text-red-700;
+  @apply border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300;
 }
 .lesson-view .lesson-avatar :is(.text-red-300, .text-red-300\/80, .text-red-400) {
-  @apply text-red-700;
+  @apply text-red-700 dark:text-red-300;
 }
 .lesson-view .lesson-avatar button:hover {
-  @apply bg-blue-100 text-primary;
+  @apply bg-blue-100 dark:bg-blue-950 text-primary dark:text-blue-300;
 }
 .lesson-view .lesson-avatar button.bg-sky-500 {
   @apply bg-primary text-white shadow-sm;
 }
 .lesson-view .lesson-avatar .absolute.bottom-6 {
-  @apply border-blue-200 bg-white text-primary shadow-sm;
+  @apply border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-900 text-primary dark:text-blue-300 shadow-sm;
 }
 .lesson-view .lesson-subtitle-empty svg {
-  @apply text-primary;
+  @apply text-primary dark:text-blue-300;
 }
 .lesson-view .lesson-subtitle > .inline-flex {
-  @apply border-blue-100 bg-blue-50 text-primary shadow-none;
+  @apply border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 text-primary dark:text-blue-300 shadow-none;
 }
 .lesson-view .lesson-subtitle > .inline-flex svg {
-  @apply text-primary;
+  @apply text-primary dark:text-blue-300;
 }
 .lesson-view .lesson-subtitle > .inline-flex span.rounded {
-  @apply bg-blue-100 text-primary decoration-blue-300;
+  @apply bg-blue-100 dark:bg-blue-950 text-primary dark:text-blue-300 decoration-blue-300;
 }
 .lesson-view .lesson-subtitle p > span.bg-gradient-to-r {
   @apply bg-primary text-white ring-blue-200 shadow-sm;
   background-image: none;
 }
 .lesson-view .lesson-subtitle .text-red-400 {
-  @apply text-red-700;
+  @apply text-red-700 dark:text-red-300;
 }
-
 
 @media (min-width: 768px) {
   .teacher-app .teacher-mobile-menu {

@@ -58,7 +58,7 @@ export default function RoomCodeForm({ onJoin }: Props) {
       </label>
       <button
         disabled={pending}
-        className="mt-4 inline-flex min-h-13 w-full items-center justify-center gap-3 rounded-lg bg-primary px-5 py-3 font-ui font-bold text-text-light transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-text-light disabled:opacity-60"
+        className="mt-4 inline-flex min-h-13 w-full items-center justify-center gap-3 rounded-lg bg-primary px-5 py-3 font-ui font-bold text-white transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-text-light disabled:opacity-60"
       >
         {pending ? 'Entrando…' : 'Entrar na sala'}
       </button>

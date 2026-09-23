@@ -1,6 +1,6 @@
 import { LogOut } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import logoTipo from '../../../assets/Logotipo.png'
+import ProjectLogo from '../../../components/brand/ProjectLogo'
 import { getIcon, getInitials, type DashboardSection } from './dashboardData'
 import { authApi, type DashboardData, type DashboardUser } from '../../../services/authApi'
 
@@ -28,7 +28,7 @@ export default function DashboardSidebar({
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-slate-200 bg-white px-5 py-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:flex lg:flex-col">
       <Link to="/" className="flex items-center" aria-label="DualLibras.AI">
-        <img src={logoTipo} alt="DualLibras.AI" className="h-10 w-auto max-w-52 object-contain" />
+        <ProjectLogo />
       </Link>
 
       <nav className="mt-9 flex flex-1 flex-col gap-1" aria-label="Navegação principal">

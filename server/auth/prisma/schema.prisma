@@ -8,7 +8,6 @@ datasource db {
   provider = "postgresql"
 }
 
-
 enum Role {
   PROFESSOR
   ALUNO
@@ -35,15 +34,14 @@ enum SessionStatus {
   CANCELADA
 }
 
-
 model User {
-  id           String @id @default(uuid())
-  name         String
-  email        String @unique
-  passwordHash String
-  isActive     Boolean @default(true)
-  sessionVersion Int @default(0)
-  role         Role
+  id             String  @id @default(uuid())
+  name           String
+  email          String  @unique
+  passwordHash   String
+  isActive       Boolean @default(true)
+  sessionVersion Int     @default(0)
+  role           Role
 
   schoolId String?
   school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
@@ -69,7 +67,6 @@ model User {
   @@index([role])
   @@index([schoolId])
 }
-
 
 model TeacherProfile {
   id     String @id @default(uuid())
@@ -97,11 +94,8 @@ model StudentProfile {
   updatedAt DateTime @updatedAt
 }
 
-
-
-
 model School {
-  id    String @id @default(uuid())
+  id    String  @id @default(uuid())
   name  String
   city  String?
   state String?
@@ -112,7 +106,6 @@ model School {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Classroom {
   id String @id @default(uuid())
@@ -130,7 +123,7 @@ model Classroom {
 
   school School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
-  members ClassroomMember[]
+  members   ClassroomMember[]
   materials Material[]
 
   lessons Lesson[]
@@ -144,7 +137,6 @@ model Classroom {
   @@index([schoolId])
 }
 
-
 model ClassroomMember {
   classroomId String
   userId      String
@@ -156,10 +148,8 @@ model ClassroomMember {
   joinedAt DateTime @default(now())
 
   @@id([classroomId, userId])
-
   @@index([userId])
 }
-
 
 model Lesson {
   id String @id @default(uuid())
@@ -201,7 +191,6 @@ model Lesson {
   @@index([status])
 }
 
-
 model Material {
   id String @id @default(uuid())
 
@@ -211,7 +200,7 @@ model Material {
 
   lessonId     String?
   classroomId  String?
-  classroom Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  classroom    Classroom? @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   uploadedById String
 
   lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -225,7 +214,6 @@ model Material {
   @@index([uploadedById])
   @@index([classroomId])
 }
-
 
 model TranscriptionSession {
   id String @id @default(uuid())
@@ -244,7 +232,7 @@ model TranscriptionSession {
 
   segments TranscriptSegment[]
 
-  startedAt  DateTime @default(now())
+  startedAt  DateTime  @default(now())
   finishedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -254,7 +242,6 @@ model TranscriptionSession {
   @@index([lessonId])
   @@index([status])
 }
-
 
 model TranscriptSegment {
   id String @id @default(uuid())
@@ -273,7 +260,6 @@ model TranscriptSegment {
   @@index([sessionId])
 }
 
-
 model Summary {
   id String @id @default(uuid())
 
@@ -286,7 +272,6 @@ model Summary {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Glossary {
   id String @id @default(uuid())
@@ -314,7 +299,6 @@ model Glossary {
   @@index([classroomId])
   @@index([subject])
 }
-
 
 model GlossaryTerm {
   id String @id @default(uuid())
